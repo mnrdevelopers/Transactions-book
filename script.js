@@ -3,17 +3,9 @@ document.getElementById("theme-toggle").addEventListener("click", function () {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-    // Initialize SI No and Customer No
-    let siNo = 1;
-    let customerNo = 1;
-
     // Set current date automatically
     let today = new Date().toLocaleDateString();
     document.getElementById("date").textContent = today;
-
-    // Set initial Customer Name and SI No
-    document.getElementById("si-no").textContent = siNo;
-    document.getElementById("customer-name").textContent = `Customer ${customerNo}`;
 
     // Add Item Button
     document.getElementById("add-item").addEventListener("click", addItem);
@@ -92,8 +84,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const transactionData = {
             storeName: "RK Fashions",
             date: document.getElementById("date").textContent,
-            siNo: siNo,
-            customerName: `Customer ${customerNo}`,
+            siNo: document.getElementById("si-no").textContent,
+            customerName: document.getElementById("customer-name").textContent,
             items: items,
             paymentMode: document.getElementById("payment-mode").value,
             totalAmount: document.getElementById("total-amount").value,
@@ -117,14 +109,9 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("transaction-form").reset();
             document.getElementById("items-container").innerHTML = "";
             addItem(); // Add a default item row
-
-            // Increment SI No and Customer No for the next transaction
-            siNo++;
-            customerNo++;
-
-            // Update SI No and Customer Name
+            // Update SI No for the next transaction
+            let siNo = parseInt(document.getElementById("si-no").textContent) + 1;
             document.getElementById("si-no").textContent = siNo;
-            document.getElementById("customer-name").textContent = `Customer ${customerNo}`;
         }).catch(error => {
             console.error("Error:", error);
             alert("There was an error generating the bill. Please try again.");
