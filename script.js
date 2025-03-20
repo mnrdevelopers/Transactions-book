@@ -4,8 +4,15 @@ document.getElementById("theme-toggle").addEventListener("click", function () {
 
 document.addEventListener("DOMContentLoaded", function () {
     // Set current date automatically
-    let today = new Date().toLocaleDateString();
-    document.getElementById("date").textContent = today;
+    let today = new Date();
+    let day = String(today.getDate()).padStart(2, '0'); // Get day (e.g., 20)
+    let formattedDate = today.toLocaleDateString();
+    document.getElementById("date").textContent = formattedDate;
+
+    // Initialize SI No
+    let transactionCounter = 1; // Counter for transactions
+    let siNo = `${day}${transactionCounter}`; // e.g., 201, 202, etc.
+    document.getElementById("si-no").textContent = siNo;
 
     // Add Item Button
     document.getElementById("add-item").addEventListener("click", addItem);
@@ -85,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
             storeName: "RK Fashions",
             date: document.getElementById("date").textContent,
             siNo: document.getElementById("si-no").textContent,
-            customerName: document.getElementById("customer-name").textContent,
+            customerName: document.getElementById("customer-name").value, // Get customer name from input
             items: items,
             paymentMode: document.getElementById("payment-mode").value,
             totalAmount: document.getElementById("total-amount").value,
@@ -110,8 +117,8 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("items-container").innerHTML = "";
             addItem(); // Add a default item row
             // Update SI No for the next transaction
-            let siNo = parseInt(document.getElementById("si-no").textContent) + 1;
-            document.getElementById("si-no").textContent = siNo;
+            transactionCounter++;
+            document.getElementById("si-no").textContent = `${day}${transactionCounter}`;
         }).catch(error => {
             console.error("Error:", error);
             alert("There was an error generating the bill. Please try again.");
