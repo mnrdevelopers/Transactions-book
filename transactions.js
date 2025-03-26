@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 async function loadTransactions() {
     try {
-        const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec");
+        const response = await fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec");
         const data = await response.json();
         
         // Process data from Google Sheets
@@ -336,7 +336,7 @@ async function saveEditedTransaction(e) {
     };
     
     try {
-        const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=update", {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=update", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -366,7 +366,7 @@ async function deleteTransaction(e) {
     }
     
     try {
-        const response = await fetch(`https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=delete&siNo=${encodeURIComponent(siNo)}`);
+        const response = await fetch(`https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=delete&siNo=${encodeURIComponent(siNo)}`);
         const result = await response.text();
         
         if (result === "Deleted") {
