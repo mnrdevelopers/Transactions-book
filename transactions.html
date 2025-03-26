@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Transaction History</h1>
+            <button id="theme-toggle">Toggle Theme</button>
+        </header>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search transactions...">
+                <button id="search-btn">Search</button>
+            </div>
+            <div class="filters">
+                <select id="date-filter">
+                    <option value="">All Dates</option>
+                </select>
+                <select id="payment-filter">
+                    <option value="">All Payments</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="UPI">UPI</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="transaction-table-container">
+            <table id="transactions-table">
+                <thead>
+                    <tr>
+                        <th>SI No</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Profit</th>
+                        <th>Payment</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="transactions-body">
+                    <!-- Transactions will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <button id="prev-btn">Previous</button>
+            <span id="page-info">Page 1 of 1</span>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <!-- Edit Transaction Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit Transaction</h2>
+            <form id="edit-form">
+                <input type="hidden" id="edit-si-no">
+                <div class="form-group">
+                    <label>Customer Name:</label>
+                    <input type="text" id="edit-customer" required>
+                </div>
+                <div id="edit-items-container">
+                    <!-- Items will be added here -->
+                </div>
+                <button type="button" id="add-edit-item">Add Item</button>
+                <div class="form-group">
+                    <label>Payment Mode:</label>
+                    <select id="edit-payment" required>
+                        <option value="Cash">Cash</option>
+                        <option value="Card">Card</option>
+                        <option value="UPI">UPI</option>
+                    </select>
+                </div>
+                <div class="form-group totals">
+                    <label>Total Amount: ₹<span id="edit-total">0.00</span></label>
+                    <label>Total Profit: ₹<span id="edit-profit">0.00</span></label>
+                </div>
+                <button type="submit">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="transactions.js"></script>
+</body>
+</html>
