@@ -528,6 +528,34 @@ button[type="submit"]:hover {
     color: #aaa;
 }
 
+/* Date Headers */
+.date-header {
+    background-color: #f5f5f5;
+    font-size: 1.1em;
+    border-left: 4px solid var(--primary);
+}
+
+.dark-theme .date-header {
+    background-color: #2a2a2a;
+}
+
+.date-header td {
+    padding: 12px 15px;
+    font-weight: bold;
+}
+
+.transaction-row {
+    transition: background-color 0.2s ease;
+}
+
+.transaction-row:hover {
+    background-color: rgba(67, 97, 238, 0.1);
+}
+
+.dark-theme .transaction-row:hover {
+    background-color: rgba(67, 97, 238, 0.2);
+}
+
 @media (max-width: 768px) {
     .controls {
         flex-direction: column;
