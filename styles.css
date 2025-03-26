@@ -13,7 +13,7 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: Times New Roman, sans-serif;
     background: var(--bg-color);
     color: var(--text-color);
     transition: background 0.5s, color 0.5s;
