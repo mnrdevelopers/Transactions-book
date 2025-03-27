@@ -141,34 +141,55 @@ function processReportData(transactions, period) {
 
 function groupByPeriod(transactions, period) {
     const groups = [];
+    const groupsMap = new Map();
     
-    // This is a simplified version - you'll need to implement proper grouping
-    // based on your date format and the selected period
-    
-    if (period === 'daily') {
-        // Group by day
-        const dayGroups = {};
-        
-        transactions.forEach(transaction => {
-            const date = transaction.dateString;
-            if (!dayGroups[date]) {
-                dayGroups[date] = {
-                    date,
-                    transactions: [],
-                    totalSales: 0,
-                    totalProfit: 0
-                };
-            }
-            
-            dayGroups[date].transactions.push(transaction);
-            dayGroups[date].totalSales += transaction.totalAmount;
-            dayGroups[date].totalProfit += transaction.totalProfit;
-        });
-        
-        // Convert to array
-        for (const date in dayGroups) {
-            groups.push(dayGroups[date]);
+    transactions.forEach(transaction => {
+        // Ensure we have a valid date object
+        let dateObj = new Date(transaction.date);
+        if (isNaN(dateObj.getTime())) {
+            console.warn("Invalid date in transaction:", transaction.date);
+            dateObj = new Date(); // Fallback to current date
         }
+        
+        // Create period key based on selected period
+        let periodKey;
+        switch(period) {
+            case 'daily':
+                periodKey = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+                break;
+            case 'weekly':
+                const year = dateObj.getFullYear();
+                const week = getWeekNumber(dateObj);
+                periodKey = `${year}-W${week.toString().padStart(2, '0')}`;
+                break;
+            case 'monthly':
+                periodKey = `${dateObj.getFullYear()}-${(dateObj.getMonth()+1).toString().padStart(2, '0')}`;
+                break;
+            case 'yearly':
+                periodKey = dateObj.getFullYear().toString();
+                break;
+        }
+        
+        if (!groupsMap.has(periodKey)) {
+            groupsMap.set(periodKey, {
+                date: dateObj,
+                periodKey,
+                transactions: [],
+                totalSales: 0,
+                totalProfit: 0
+            });
+        }
+        
+        const group = groupsMap.get(periodKey);
+        group.transactions.push(transaction);
+        group.totalSales += transaction.totalAmount;
+        group.totalProfit += transaction.totalProfit;
+    });
+    
+    // Convert map to array and sort by date
+    const sortedGroups = Array.from(groupsMap.values()).sort((a, b) => a.date - b.date);
+    return sortedGroups;
+}
         
         // Sort by date
         groups.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -214,16 +235,38 @@ function prepareChartData(groups, period) {
     const profitData = [];
     
     groups.forEach(group => {
-        // Format label based on period
+        // Format label based on period with proper date handling
         let label;
-        if (period === 'daily') {
-            label = new Date(group.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-        } else if (period === 'weekly') {
-            label = `Week ${getWeekNumber(new Date(group.date))}`;
-        } else if (period === 'monthly') {
-            label = new Date(group.date).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
-        } else if (period === 'yearly') {
-            label = new Date(group.date).getFullYear();
+        const dateObj = new Date(group.date);
+        
+        if (isNaN(dateObj.getTime())) {
+            console.warn("Invalid date:", group.date);
+            label = "N/A";
+        } else {
+            switch(period) {
+                case 'daily':
+                    label = dateObj.toLocaleDateString('en-IN', { 
+                        day: 'numeric', 
+                        month: 'short' 
+                    });
+                    break;
+                case 'weekly':
+                    label = `Week ${getWeekNumber(dateObj)} (${dateObj.toLocaleDateString('en-IN', { 
+                        month: 'short' 
+                    })})`;
+                    break;
+                case 'monthly':
+                    label = dateObj.toLocaleDateString('en-IN', { 
+                        month: 'short', 
+                        year: 'numeric' 
+                    });
+                    break;
+                case 'yearly':
+                    label = dateObj.getFullYear().toString();
+                    break;
+                default:
+                    label = dateObj.toLocaleDateString();
+            }
         }
         
         labels.push(label);
@@ -253,12 +296,10 @@ function prepareChartData(groups, period) {
 }
 
 function renderChart(chartData) {
-    // Destroy previous chart if exists
     if (salesChart) {
         salesChart.destroy();
     }
     
-    // Create new chart
     const ctx = elements.salesChart.getContext('2d');
     salesChart = new Chart(ctx, {
         type: 'bar',
@@ -267,8 +308,18 @@ function renderChart(chartData) {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Period'
+                    }
+                },
                 y: {
                     beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Amount (₹)'
+                    },
                     ticks: {
                         callback: function(value) {
                             return '₹' + value.toLocaleString('en-IN');
@@ -280,9 +331,15 @@ function renderChart(chartData) {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return context.dataset.label + ': ₹' + context.raw.toLocaleString('en-IN');
+                            return `${context.dataset.label}: ₹${context.raw.toLocaleString('en-IN', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            })}`;
                         }
                     }
+                },
+                legend: {
+                    position: 'top',
                 }
             }
         }
