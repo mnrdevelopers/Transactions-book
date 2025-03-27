@@ -1,11 +1,9 @@
-// Configuration
 const PAGE_SIZE = 10;
 let currentPage = 1;
 let totalPages = 1;
 let allTransactions = [];
 let filteredTransactions = [];
 
-// DOM Elements
 const elements = {
     searchInput: document.getElementById("search-input"),
     searchBtn: document.getElementById("search-btn"),
@@ -19,20 +17,12 @@ const elements = {
     transactionDetails: document.getElementById("transaction-details")
 };
 
-// Initialize the page
 document.addEventListener("DOMContentLoaded", function() {
-    // Theme toggle
     document.getElementById("theme-toggle")?.addEventListener("click", toggleTheme);
-    
-    // Load saved theme
     if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-theme');
     }
-    
-    // Load transactions
     loadTransactions();
-    
-    // Setup event listeners
     setupEventListeners();
 });
 
@@ -48,50 +38,36 @@ function setupEventListeners() {
     document.querySelector(".close").addEventListener("click", closeModal);
 }
 
-function toggleTheme() {
-    document.body.classList.toggle("dark-theme");
-    localStorage.setItem('darkMode', document.body.classList.contains('dark-theme'));
-}
-
 async function loadTransactions() {
     try {
         showLoading();
+        const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=getTransactions");
         
-        const scriptUrl = "https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec";
-        const response = await fetch(scriptUrl);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const result = await response.json();
+        if (result.status === "error") throw new Error(result.message);
         
-        const data = await response.json();
-        allTransactions = await processSheetData(data);
-        
-        // Update date filter options
+        allTransactions = await processSheetData(result.data);
         updateDateFilter();
-        
-        // Initial filter and render
         filterTransactions();
     } catch (error) {
         console.error("Error loading transactions:", error);
-        showError("Failed to load transactions. Please try again.");
+        showError(`Failed to load transactions: ${error.message}`);
     }
 }
 
 async function processSheetData(sheetData) {
     const transactionsMap = new Map();
-    
-    // Skip header row if it exists
     const startRow = sheetData[0][0] === "Store Name" ? 1 : 0;
     
     for (let i = startRow; i < sheetData.length; i++) {
         const row = sheetData[i];
-        const siNo = String(row[2]); // Ensure SI No is a string
-        const date = parseDate(row[1]); // Parse date properly
+        const siNo = String(row[2]);
+        const date = parseDate(row[1]);
         const dateString = formatDateForDisplay(date);
         
         if (!transactionsMap.has(siNo)) {
-            // Get maintenance for this date
             const maintenance = await getMaintenanceForDate(dateString);
             
             transactionsMap.set(siNo, {
@@ -109,7 +85,6 @@ async function processSheetData(sheetData) {
             });
         }
         
-        // Add item to transaction
         transactionsMap.get(siNo).items.push({
             itemName: String(row[4]),
             quantity: parseFloat(row[5]) || 0,
@@ -124,13 +99,10 @@ async function processSheetData(sheetData) {
 
 async function getMaintenanceForDate(date) {
     try {
-        const scriptUrl = `https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=getMaintenanceForDate&date=${date}`;
-        const response = await fetch(scriptUrl);
-        
+        const response = await fetch(`https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=getMaintenanceForDate&date=${date}`);
         if (!response.ok) return 0;
-        
-        const data = await response.json();
-        return parseFloat(data.total) || 0;
+        const result = await response.json();
+        return result.data?.total || 0;
     } catch (error) {
         console.error("Error fetching maintenance:", error);
         return 0;
