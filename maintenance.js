@@ -1,10 +1,8 @@
-// Configuration
 const PAGE_SIZE = 10;
 let currentPage = 1;
 let totalPages = 1;
 let allMaintenance = [];
 
-// DOM Elements
 const elements = {
     form: document.getElementById("maintenance-form"),
     dateInput: document.getElementById("maintenance-date"),
@@ -17,42 +15,34 @@ const elements = {
     pageInfo: document.getElementById("maintenance-page-info")
 };
 
-// Initialize
 document.addEventListener("DOMContentLoaded", function() {
-    // Set default date to today
     const today = new Date().toISOString().split('T')[0];
     elements.dateInput.value = today;
-    
-    // Theme toggle
     document.getElementById("theme-toggle")?.addEventListener("click", toggleTheme);
-    
-    // Load saved theme
     if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-theme');
     }
-    
-    // Load maintenance records
     loadMaintenance();
-    
-    // Form submission
-    elements.form.addEventListener("submit", submitMaintenance);
-    
-    // Pagination
-    elements.prevBtn.addEventListener("click", goToPrevPage);
-    elements.nextBtn.addEventListener("click", goToPrevPage);
+    setupEventListeners();
 });
+
+function setupEventListeners() {
+    elements.form.addEventListener("submit", submitMaintenance);
+    elements.prevBtn.addEventListener("click", goToPrevPage);
+    elements.nextBtn.addEventListener("click", goToNextPage);
+}
 
 async function loadMaintenance() {
     try {
         showLoading();
-        
-        const scriptUrl = "https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=getMaintenance";
-        const response = await fetch(scriptUrl);
+        const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=getMaintenance");
         
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
-        const data = await response.json();
-        allMaintenance = data.map(item => ({
+        const result = await response.json();
+        if (result.status === "error") throw new Error(result.message);
+        
+        allMaintenance = result.data.slice(1).map(item => ({
             id: item[0],
             date: formatDate(item[1]),
             amount: parseFloat(item[2]),
@@ -63,7 +53,7 @@ async function loadMaintenance() {
         renderMaintenance();
     } catch (error) {
         console.error("Error loading maintenance:", error);
-        showError("Failed to load maintenance records. Please try again.");
+        showError(`Failed to load maintenance: ${error.message}`);
     }
 }
 
@@ -71,6 +61,7 @@ async function submitMaintenance(e) {
     e.preventDefault();
     
     const maintenanceData = {
+        action: "addMaintenance",
         date: elements.dateInput.value,
         amount: elements.amountInput.value,
         description: elements.descriptionInput.value,
@@ -78,8 +69,7 @@ async function submitMaintenance(e) {
     };
     
     try {
-        const scriptUrl = "https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=addMaintenance";
-        const response = await fetch(scriptUrl, {
+        const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -87,15 +77,15 @@ async function submitMaintenance(e) {
             body: JSON.stringify(maintenanceData)
         });
         
-        if (!response.ok) throw new Error("Failed to save maintenance");
+        const result = await response.json();
+        if (result.status === "error") throw new Error(result.message);
         
-        // Reset form and reload data
         elements.form.reset();
         elements.dateInput.value = new Date().toISOString().split('T')[0];
         loadMaintenance();
     } catch (error) {
         console.error("Error saving maintenance:", error);
-        alert("Failed to save maintenance record. Please try again.");
+        alert(`Failed to save maintenance: ${error.message}`);
     }
 }
 
