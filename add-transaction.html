@@ -31,22 +31,7 @@
         <!-- Transaction Form -->
         <form id="transaction-form">
             <div id="items-container">
-                <!-- Item Row Template -->
-                <div class="item-row">
-                    <label>Item Name:</label>
-                    <input type="text" class="item-name" required>
-
-                    <label>Quantity:</label>
-                    <input type="number" class="quantity" required>
-
-                    <label>Purchase Price:</label>
-                    <input type="number" class="purchase-price" required>
-
-                    <label>Sale Price:</label>
-                    <input type="number" class="sale-price" required>
-
-                    <button type="button" class="remove-item" onclick="removeItem(this)">Remove</button>
-                </div>
+                <!-- Items will be added here dynamically -->
             </div>
 
             <!-- Add Item Button -->
@@ -60,12 +45,21 @@
                 <option value="UPI">UPI</option>
             </select>
 
+            <!-- Maintenance Section -->
+            <div class="maintenance-section">
+                <label>Shop Maintenance (₹):</label>
+                <input type="number" id="maintenance-amount" min="0" step="0.01" value="0">
+            </div>
+
             <!-- Totals -->
             <label>Total Amount:</label>
             <input type="text" id="total-amount" disabled>
 
-            <label>Total Profit:</label>
+            <label>Gross Profit:</label>
             <input type="text" id="total-profit" disabled>
+
+            <label>Net Profit (After Maintenance):</label>
+            <input type="text" id="net-profit" disabled>
 
             <!-- Submit Button -->
             <button type="submit">Generate Bill</button>
