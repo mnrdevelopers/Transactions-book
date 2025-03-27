@@ -21,13 +21,18 @@ const elements = {
 
 // Initialize the page
 document.addEventListener("DOMContentLoaded", function() {
+    // Theme toggle
     document.getElementById("theme-toggle")?.addEventListener("click", toggleTheme);
     
+    // Load saved theme
     if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-theme');
     }
     
+    // Load transactions
     loadTransactions();
+    
+    // Setup event listeners
     setupEventListeners();
 });
 
@@ -61,7 +66,11 @@ async function loadTransactions() {
         
         const data = await response.json();
         allTransactions = processSheetData(data);
+        
+        // Update date filter options
         updateDateFilter();
+        
+        // Initial filter and render
         filterTransactions();
     } catch (error) {
         console.error("Error loading transactions:", error);
@@ -77,8 +86,8 @@ function processSheetData(sheetData) {
     
     for (let i = startRow; i < sheetData.length; i++) {
         const row = sheetData[i];
-        const siNo = String(row[2]);
-        const date = parseDate(row[1]);
+        const siNo = String(row[2]); // Ensure SI No is a string
+        const date = parseDate(row[1]); // Parse date properly
         
         if (!transactionsMap.has(siNo)) {
             transactionsMap.set(siNo, {
@@ -88,22 +97,12 @@ function processSheetData(sheetData) {
                 siNo: siNo,
                 customerName: String(row[3]),
                 items: [],
-                maintenanceItems: [],
                 paymentMode: row[8],
                 totalAmount: parseFloat(row[9]) || 0,
                 grossProfit: parseFloat(row[10]) || 0,
-                maintenanceTotal: parseFloat(row[12]) || 0,
-                netProfit: parseFloat(row[14]) || 0
+                maintenanceAmount: parseFloat(row[11]) || 0,
+                netProfit: parseFloat(row[12]) || 0
             });
-            
-            // Add maintenance items if they exist
-            if (row[11] && row[12] > 0) {
-                transactionsMap.get(siNo).maintenanceItems.push({
-                    category: row[11],
-                    amount: parseFloat(row[12]) || 0,
-                    notes: row[13] || ""
-                });
-            }
         }
         
         // Add item to transaction
@@ -120,15 +119,25 @@ function processSheetData(sheetData) {
 }
 
 function parseDate(dateValue) {
-    if (dateValue instanceof Date) return dateValue;
+    // Try different date formats
+    if (dateValue instanceof Date) {
+        return dateValue;
+    }
+    
     if (typeof dateValue === 'string') {
+        // Try ISO format first
         let date = new Date(dateValue);
         if (!isNaN(date)) return date;
+        
+        // Try common spreadsheet formats
         date = new Date(dateValue.replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$2/$1/$3'));
         if (!isNaN(date)) return date;
+        
         date = new Date(dateValue.replace(/(\d{4})-(\d{2})-(\d{2})/, '$2/$3/$1'));
         if (!isNaN(date)) return date;
     }
+    
+    // Fallback to current date if parsing fails
     console.warn("Could not parse date:", dateValue);
     return new Date();
 }
@@ -153,9 +162,11 @@ function filterTransactions() {
     const paymentFilter = elements.paymentFilter.value;
     
     filteredTransactions = allTransactions.filter(transaction => {
+        // Ensure all fields are strings before calling toLowerCase()
         const siNo = String(transaction.siNo || "").toLowerCase();
         const customerName = String(transaction.customerName || "").toLowerCase();
         
+        // Search filter
         const matchesSearch = 
             siNo.includes(searchTerm) ||
             customerName.includes(searchTerm) ||
@@ -163,7 +174,10 @@ function filterTransactions() {
                 String(item.itemName || "").toLowerCase().includes(searchTerm)
             );
         
+        // Date filter
         const matchesDate = dateFilter === "" || transaction.dateString === dateFilter;
+        
+        // Payment filter
         const matchesPayment = paymentFilter === "" || transaction.paymentMode === paymentFilter;
         
         return matchesSearch && matchesDate && matchesPayment;
@@ -192,10 +206,13 @@ function renderTransactions() {
         return;
     }
 
+    // Group transactions by date
     const groupedTransactions = groupByDate(pageTransactions);
-    let currentDateHeader = null;
     
+    // Render grouped transactions
+    let currentDateHeader = null;
     groupedTransactions.forEach(transaction => {
+        // Add date header if this is a new date
         if (transaction.dateString !== currentDateHeader) {
             currentDateHeader = transaction.dateString;
             const dateHeader = document.createElement("tr");
@@ -208,15 +225,11 @@ function renderTransactions() {
             elements.transactionsBody.appendChild(dateHeader);
         }
         
+        // Add transaction row
         const itemCount = transaction.items.length;
         const itemsSummary = itemCount === 1 
             ? transaction.items[0].itemName 
             : `${itemCount} items`;
-        
-        const maintenanceCount = transaction.maintenanceItems.length;
-        const maintenanceSummary = maintenanceCount > 0 
-            ? `${maintenanceCount} maintenance items` 
-            : "None";
         
         const row = document.createElement("tr");
         row.className = "transaction-row";
@@ -227,7 +240,7 @@ function renderTransactions() {
             <td>${itemsSummary}</td>
             <td>₹${transaction.totalAmount.toFixed(2)}</td>
             <td>₹${transaction.grossProfit.toFixed(2)}</td>
-            <td>₹${transaction.maintenanceTotal.toFixed(2)}</td>
+            <td>₹${transaction.maintenanceAmount.toFixed(2)}</td>
             <td>₹${transaction.netProfit.toFixed(2)}</td>
             <td>${transaction.paymentMode}</td>
             <td class="actions">
@@ -237,8 +250,65 @@ function renderTransactions() {
         elements.transactionsBody.appendChild(row);
     });
     
+    // Update pagination
     updatePagination();
+    
+    // Add event listeners to view buttons
     setupRowEventListeners();
+}
+
+function groupByDate(transactions) {
+    // First sort by date (newest first)
+    const sorted = [...transactions].sort((a, b) => {
+        return b.date - a.date;
+    });
+    
+    return sorted;
+}
+
+function getDateHeaderText(date) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const transactionDate = new Date(date);
+    transactionDate.setHours(0, 0, 0, 0);
+    
+    if (transactionDate.getTime() === today.getTime()) {
+        return "Today";
+    } else if (transactionDate.getTime() === yesterday.getTime()) {
+        return "Yesterday";
+    } else {
+        return formatDateHeader(transactionDate);
+    }
+}
+
+function formatDateHeader(date) {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString(undefined, options);
+}
+
+function formatDateForDisplay(date) {
+    try {
+        const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+        return date.toLocaleDateString(undefined, options);
+    } catch {
+        return "Invalid Date";
+    }
+}
+
+function updatePagination() {
+    elements.pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    elements.prevBtn.disabled = currentPage === 1;
+    elements.nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+}
+
+function setupRowEventListeners() {
+    document.querySelectorAll(".view-btn").forEach(btn => {
+        btn.addEventListener("click", viewTransactionDetails);
+    });
 }
 
 function viewTransactionDetails(e) {
@@ -275,39 +345,6 @@ function viewTransactionDetails(e) {
         </table>
     `;
     
-    // Format maintenance details if any
-    let maintenanceHtml = "";
-    if (transaction.maintenanceItems.length > 0) {
-        maintenanceHtml = `
-            <div class="maintenance-details">
-                <h3>Maintenance</h3>
-                <table class="items-table">
-                    <thead>
-                        <tr>
-                            <th>Category</th>
-                            <th>Amount</th>
-                            <th>Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${transaction.maintenanceItems.map(item => `
-                            <tr>
-                                <td>${item.category}</td>
-                                <td>₹${item.amount.toFixed(2)}</td>
-                                <td>${item.notes || '-'}</td>
-                            </tr>
-                        `).join("")}
-                        <tr>
-                            <td><strong>Total</strong></td>
-                            <td><strong>₹${transaction.maintenanceTotal.toFixed(2)}</strong></td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        `;
-    }
-    
     // Create transaction details HTML
     elements.transactionDetails.innerHTML = `
         <div class="transaction-header">
@@ -322,17 +359,15 @@ function viewTransactionDetails(e) {
             ${itemsHtml}
         </div>
         
-        ${maintenanceHtml}
-        
         <div class="transaction-totals">
             <p><strong>Total Amount:</strong> ₹${transaction.totalAmount.toFixed(2)}</p>
             <p><strong>Gross Profit:</strong> ₹${transaction.grossProfit.toFixed(2)}</p>
-            ${transaction.maintenanceItems.length > 0 ? 
-              `<p><strong>Total Maintenance:</strong> ₹${transaction.maintenanceTotal.toFixed(2)}</p>` : ''}
+            <p><strong>Maintenance:</strong> ₹${transaction.maintenanceAmount.toFixed(2)}</p>
             <p><strong>Net Profit:</strong> ₹${transaction.netProfit.toFixed(2)}</p>
         </div>
     `;
     
+    // Show modal
     elements.viewModal.style.display = "block";
 }
 
