@@ -142,69 +142,84 @@ function processReportData(transactions, period) {
 }
 
 function groupByPeriod(transactions, period) {
-    const groups = [];
     const groupsMap = new Map();
-    
+
     transactions.forEach(transaction => {
-        // Ensure we have a valid date object
-        let dateObj = new Date(transaction.date);
-        if (isNaN(dateObj.getTime())) {
+        // Parse the date and validate it
+        let date = new Date(transaction.date);
+        if (isNaN(date.getTime())) {
             console.warn("Invalid date in transaction:", transaction.date);
-            dateObj = new Date(); // Fallback to current date
+            date = new Date(); // Fallback to current date
         }
+
+        // Create appropriate period key based on selected period
+        let periodKey, periodStart, periodEnd;
         
-        // Create period key based on selected period
-        let periodKey;
         switch(period) {
             case 'daily':
-                periodKey = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+                periodKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+                periodStart = new Date(date.setHours(0, 0, 0, 0));
+                periodEnd = new Date(date.setHours(23, 59, 59, 999));
                 break;
+                
             case 'weekly':
-                const year = dateObj.getFullYear();
-                const week = getWeekNumber(dateObj);
-                periodKey = `${year}-W${week.toString().padStart(2, '0')}`;
+                const weekStart = getWeekStartDate(date);
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                
+                periodKey = `Week ${getWeekNumber(date)} (${weekStart.toLocaleDateString('en-IN', { 
+                    day: '2-digit', 
+                    month: 'short' 
+                })} - ${weekEnd.toLocaleDateString('en-IN', { 
+                    day: '2-digit', 
+                    month: 'short' 
+                })})`;
+                periodStart = weekStart;
+                periodEnd = weekEnd;
                 break;
+                
             case 'monthly':
-                periodKey = `${dateObj.getFullYear()}-${(dateObj.getMonth()+1).toString().padStart(2, '0')}`;
+                periodKey = date.toLocaleDateString('en-IN', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                });
+                periodStart = new Date(date.getFullYear(), date.getMonth(), 1);
+                periodEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
                 break;
+                
             case 'yearly':
-                periodKey = dateObj.getFullYear().toString();
+                periodKey = date.getFullYear().toString();
+                periodStart = new Date(date.getFullYear(), 0, 1);
+                periodEnd = new Date(date.getFullYear(), 11, 31);
                 break;
         }
-        
+
         if (!groupsMap.has(periodKey)) {
             groupsMap.set(periodKey, {
-                date: dateObj,
                 periodKey,
+                periodStart,
+                periodEnd,
                 transactions: [],
                 totalSales: 0,
                 totalProfit: 0
             });
         }
-        
+
         const group = groupsMap.get(periodKey);
         group.transactions.push(transaction);
         group.totalSales += transaction.totalAmount;
         group.totalProfit += transaction.totalProfit;
     });
-    
-    // Convert map to array and sort by date
-    const sortedGroups = Array.from(groupsMap.values()).sort((a, b) => a.date - b.date);
-    return sortedGroups;
+
+    // Sort groups by period start date
+    return Array.from(groupsMap.values()).sort((a, b) => a.periodStart - b.periodStart);
 }
-        
-        // Sort by date
-        groups.sort((a, b) => new Date(a.date) - new Date(b.date));
-        
-    } else if (period === 'weekly') {
-        // Group by week (similar logic but group by week number)
-    } else if (period === 'monthly') {
-        // Group by month
-    } else if (period === 'yearly') {
-        // Group by year
-    }
-    
-    return groups;
+
+// Helper function to get start of week (Sunday)
+function getWeekStartDate(date) {
+    const day = date.getDay();
+    const diff = date.getDate() - day;
+    return new Date(date.setDate(diff));
 }
 
 function calculateSummary(groups) {
