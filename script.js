@@ -1,47 +1,33 @@
-// Theme toggle (works on all pages)
+// Theme toggle
 document.getElementById("theme-toggle")?.addEventListener("click", function() {
     document.body.classList.toggle("dark-theme");
 });
 
-// Transaction page specific code
 if (document.getElementById("transaction-form")) {
-    // Initialize counter from localStorage or start at 1
     let transactionCounter = parseInt(localStorage.getItem('transactionCounter')) || 1;
     const today = new Date();
     const day = String(today.getDate()).padStart(2, '0');
     
-    // Set initial values
     document.getElementById("date").textContent = today.toLocaleDateString();
     document.getElementById("si-no").textContent = `${day}${String(transactionCounter).padStart(2, '0')}`;
 
-    // Add first item
+    // Initialize form
     addItem();
-
-    // Add item button
     document.getElementById("add-item").addEventListener("click", addItem);
+    document.getElementById("add-maintenance").addEventListener("click", addMaintenanceItem);
 
-    // Handle input changes for calculations
+    // Event listeners
     document.getElementById("items-container").addEventListener("input", function(e) {
         if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
             calculateTotals();
         }
     });
 
-    // Handle maintenance amount changes
-    document.getElementById("maintenance-amount").addEventListener("input", calculateTotals);
-
-    // Form submission
     document.getElementById("transaction-form").addEventListener("submit", function(e) {
         e.preventDefault();
-        
-        // Validate form
         if (!validateForm()) return;
-        
-        // Generate and display bill
         const billData = prepareBillData();
         displayBillPreview(billData);
-        
-        // Submit to server
         submitBill(billData);
     });
 
@@ -52,31 +38,57 @@ if (document.getElementById("transaction-form")) {
         newItem.innerHTML = `
             <label>Item Name:</label>
             <input type="text" class="item-name" required>
-            
             <label>Quantity:</label>
             <input type="number" class="quantity" min="1" value="1" required>
-            
             <label>Purchase Price (₹):</label>
             <input type="number" class="purchase-price" min="0" step="0.01" required>
-            
             <label>Sale Price (₹):</label>
             <input type="number" class="sale-price" min="0" step="0.01" required>
-            
             <button type="button" class="remove-item">Remove</button>
         `;
         itemsContainer.appendChild(newItem);
         
-        // Add remove event
         newItem.querySelector(".remove-item").addEventListener("click", function() {
             newItem.remove();
             calculateTotals();
         });
     }
 
+    function addMaintenanceItem() {
+        const container = document.getElementById("maintenance-container");
+        const item = document.createElement("div");
+        item.className = "maintenance-item";
+        item.innerHTML = `
+            <div class="maintenance-row">
+                <select class="maintenance-category" required>
+                    <option value="">Select Category</option>
+                    <option value="Rent">Rent</option>
+                    <option value="Electricity">Electricity</option>
+                    <option value="Cleaning">Cleaning</option>
+                    <option value="Repairs">Repairs</option>
+                    <option value="Staff">Staff</option>
+                    <option value="Other">Other</option>
+                </select>
+                <input type="number" class="maintenance-amount" min="0" step="0.01" placeholder="Amount" required>
+                <button type="button" class="remove-maintenance">×</button>
+            </div>
+            <input type="text" class="maintenance-notes" placeholder="Notes (optional)">
+        `;
+        container.appendChild(item);
+        
+        item.querySelector(".remove-maintenance").addEventListener("click", function() {
+            item.remove();
+            calculateTotals();
+        });
+        
+        item.querySelector(".maintenance-amount").addEventListener("input", calculateTotals);
+    }
+
     function calculateTotals() {
         let totalAmount = 0;
         let totalProfit = 0;
         
+        // Calculate items totals
         document.querySelectorAll(".item-row").forEach(row => {
             const qty = parseFloat(row.querySelector(".quantity").value) || 0;
             const sale = parseFloat(row.querySelector(".sale-price").value) || 0;
@@ -86,43 +98,52 @@ if (document.getElementById("transaction-form")) {
             totalProfit += qty * (sale - purchase);
         });
         
-        const maintenance = parseFloat(document.getElementById("maintenance-amount").value) || 0;
-        const netProfit = totalProfit - maintenance;
+        // Calculate maintenance total
+        let maintenanceTotal = 0;
+        document.querySelectorAll(".maintenance-item").forEach(item => {
+            const amount = parseFloat(item.querySelector(".maintenance-amount").value) || 0;
+            maintenanceTotal += amount;
+        });
+        
+        const netProfit = totalProfit - maintenanceTotal;
         
         document.getElementById("total-amount").value = totalAmount.toFixed(2);
         document.getElementById("total-profit").value = totalProfit.toFixed(2);
+        document.getElementById("total-maintenance").value = maintenanceTotal.toFixed(2);
         document.getElementById("net-profit").value = netProfit.toFixed(2);
     }
 
     function validateForm() {
-        // Check customer name
         if (!document.getElementById("customer-name").value.trim()) {
             alert("Please enter customer name");
             return false;
         }
         
-        // Check at least one item exists
         if (document.querySelectorAll(".item-row").length === 0) {
             alert("Please add at least one item");
             return false;
         }
         
-        // Validate all items
-        let valid = true;
-        document.querySelectorAll(".item-row").forEach(row => {
-            const qty = row.querySelector(".quantity").value;
-            const sale = row.querySelector(".sale-price").value;
+        // Validate maintenance items
+        let validMaintenance = true;
+        document.querySelectorAll(".maintenance-item").forEach(item => {
+            const category = item.querySelector(".maintenance-category").value;
+            const amount = item.querySelector(".maintenance-amount").value;
             
-            if (!qty || !sale || isNaN(qty) || isNaN(sale)) {
-                row.style.border = "1px solid red";
-                valid = false;
+            if ((category && !amount) || (!category && amount)) {
+                item.style.border = "1px solid red";
+                validMaintenance = false;
             } else {
-                row.style.border = "";
+                item.style.border = "";
             }
         });
         
-        if (!valid) alert("Please check all item fields");
-        return valid;
+        if (!validMaintenance) {
+            alert("Please complete all maintenance items (both category and amount)");
+            return false;
+        }
+        
+        return true;
     }
 
     function prepareBillData() {
@@ -137,9 +158,24 @@ if (document.getElementById("transaction-form")) {
             });
         });
         
-        const maintenanceAmount = parseFloat(document.getElementById("maintenance-amount").value) || 0;
+        const maintenanceItems = [];
+        document.querySelectorAll(".maintenance-item").forEach(item => {
+            const category = item.querySelector(".maintenance-category").value;
+            const amount = parseFloat(item.querySelector(".maintenance-amount").value) || 0;
+            const notes = item.querySelector(".maintenance-notes").value;
+            
+            if (category && amount > 0) {
+                maintenanceItems.push({
+                    category: category,
+                    amount: amount,
+                    notes: notes
+                });
+            }
+        });
+        
         const totalProfit = parseFloat(document.getElementById("total-profit").value) || 0;
-        const netProfit = totalProfit - maintenanceAmount;
+        const maintenanceTotal = maintenanceItems.reduce((sum, item) => sum + item.amount, 0);
+        const netProfit = totalProfit - maintenanceTotal;
         
         return {
             storeName: "RK Fashions",
@@ -147,10 +183,11 @@ if (document.getElementById("transaction-form")) {
             siNo: document.getElementById("si-no").textContent,
             customerName: document.getElementById("customer-name").value,
             items: items,
+            maintenanceItems: maintenanceItems,
             paymentMode: document.getElementById("payment-mode").value,
             totalAmount: document.getElementById("total-amount").value,
             totalProfit: totalProfit.toFixed(2),
-            maintenanceAmount: maintenanceAmount.toFixed(2),
+            maintenanceTotal: maintenanceTotal.toFixed(2),
             netProfit: netProfit.toFixed(2)
         };
     }
@@ -163,7 +200,7 @@ if (document.getElementById("transaction-form")) {
                 <p>Date: ${data.date} | Bill No: ${data.siNo}</p>
                 <p>Customer: ${data.customerName}</p>
             </div>
-            <table>
+            <table class="items-table">
                 <thead>
                     <tr>
                         <th>Item</th>
@@ -193,6 +230,34 @@ if (document.getElementById("transaction-form")) {
                         <td colspan="3">Total Amount</td>
                         <td>₹${data.totalAmount}</td>
                     </tr>
+        `;
+        
+        if (data.maintenanceItems.length > 0) {
+            html += `
+                    <tr>
+                        <td colspan="4"><strong>Maintenance Details</strong></td>
+                    </tr>
+            `;
+            
+            data.maintenanceItems.forEach(item => {
+                html += `
+                    <tr>
+                        <td colspan="2">${item.category}</td>
+                        <td>${item.notes || '-'}</td>
+                        <td>₹${item.amount.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    <tr>
+                        <td colspan="3">Total Maintenance</td>
+                        <td>₹${data.maintenanceTotal}</td>
+                    </tr>
+            `;
+        }
+        
+        html += `
                     <tr>
                         <td colspan="3">Payment Mode</td>
                         <td>${data.paymentMode}</td>
@@ -200,10 +265,6 @@ if (document.getElementById("transaction-form")) {
                     <tr>
                         <td colspan="3">Gross Profit</td>
                         <td>₹${data.totalProfit}</td>
-                    </tr>
-                    <tr>
-                        <td colspan="3">Maintenance</td>
-                        <td>₹${data.maintenanceAmount}</td>
                     </tr>
                     <tr>
                         <td colspan="3">Net Profit</td>
@@ -226,18 +287,21 @@ if (document.getElementById("transaction-form")) {
             body: JSON.stringify(data)
         })
         .then(() => {
-            // Increment counter
             transactionCounter++;
             localStorage.setItem('transactionCounter', transactionCounter);
             document.getElementById("si-no").textContent = `${day}${String(transactionCounter).padStart(2, '0')}`;
             
-            // Reset form but keep customer name
+            // Reset form
             const customerName = document.getElementById("customer-name").value;
             document.getElementById("transaction-form").reset();
             document.getElementById("customer-name").value = customerName;
             document.getElementById("items-container").innerHTML = "";
-            document.getElementById("maintenance-amount").value = "0";
-            addItem(); // Add new empty item
+            document.getElementById("maintenance-container").innerHTML = "";
+            document.getElementById("total-amount").value = "0.00";
+            document.getElementById("total-profit").value = "0.00";
+            document.getElementById("total-maintenance").value = "0.00";
+            document.getElementById("net-profit").value = "0.00";
+            addItem();
             
             alert("Bill saved successfully!");
         })
