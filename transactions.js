@@ -1,9 +1,11 @@
+// Configuration
 const PAGE_SIZE = 10;
 let currentPage = 1;
 let totalPages = 1;
 let allTransactions = [];
 let filteredTransactions = [];
 
+// DOM Elements
 const elements = {
     searchInput: document.getElementById("search-input"),
     searchBtn: document.getElementById("search-btn"),
@@ -17,12 +19,20 @@ const elements = {
     transactionDetails: document.getElementById("transaction-details")
 };
 
+// Initialize the page
 document.addEventListener("DOMContentLoaded", function() {
+    // Theme toggle
     document.getElementById("theme-toggle")?.addEventListener("click", toggleTheme);
+    
+    // Load saved theme
     if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-theme');
     }
+    
+    // Load transactions
     loadTransactions();
+    
+    // Setup event listeners
     setupEventListeners();
 });
 
@@ -38,53 +48,64 @@ function setupEventListeners() {
     document.querySelector(".close").addEventListener("click", closeModal);
 }
 
+function toggleTheme() {
+    document.body.classList.toggle("dark-theme");
+    localStorage.setItem('darkMode', document.body.classList.contains('dark-theme'));
+}
+
 async function loadTransactions() {
     try {
         showLoading();
-        const response = await fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=getTransactions");
         
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec";
+        const response = await fetch(scriptUrl);
         
-        const result = await response.json();
-        if (result.status === "error") throw new Error(result.message);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
-        allTransactions = await processSheetData(result.data);
+        const data = await response.json();
+        allTransactions = processSheetData(data);
+        
+        // Update date filter options
         updateDateFilter();
+        
+        // Initial filter and render
         filterTransactions();
     } catch (error) {
         console.error("Error loading transactions:", error);
-        showError(`Failed to load transactions: ${error.message}`);
+        showError("Failed to load transactions. Please try again.");
     }
 }
 
-async function processSheetData(sheetData) {
+function processSheetData(sheetData) {
     const transactionsMap = new Map();
+    
+    // Skip header row if it exists
     const startRow = sheetData[0][0] === "Store Name" ? 1 : 0;
     
     for (let i = startRow; i < sheetData.length; i++) {
         const row = sheetData[i];
-        const siNo = String(row[2]);
-        const date = parseDate(row[1]);
-        const dateString = formatDateForDisplay(date);
+        const siNo = String(row[2]); // Ensure SI No is a string
+        const date = parseDate(row[1]); // Parse date properly
         
         if (!transactionsMap.has(siNo)) {
-            const maintenance = await getMaintenanceForDate(dateString);
-            
             transactionsMap.set(siNo, {
                 storeName: row[0],
                 date: date,
-                dateString: dateString,
+                dateString: formatDateForDisplay(date),
                 siNo: siNo,
                 customerName: String(row[3]),
                 items: [],
                 paymentMode: row[8],
                 totalAmount: parseFloat(row[9]) || 0,
                 grossProfit: parseFloat(row[10]) || 0,
-                maintenanceAmount: maintenance,
-                netProfit: (parseFloat(row[10]) || 0) - maintenance
+                maintenanceAmount: parseFloat(row[11]) || 0,
+                netProfit: parseFloat(row[12]) || 0
             });
         }
         
+        // Add item to transaction
         transactionsMap.get(siNo).items.push({
             itemName: String(row[4]),
             quantity: parseFloat(row[5]) || 0,
@@ -95,18 +116,6 @@ async function processSheetData(sheetData) {
     }
     
     return Array.from(transactionsMap.values());
-}
-
-async function getMaintenanceForDate(date) {
-    try {
-        const response = await fetch(`https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=getMaintenanceForDate&date=${date}`);
-        if (!response.ok) return 0;
-        const result = await response.json();
-        return result.data?.total || 0;
-    } catch (error) {
-        console.error("Error fetching maintenance:", error);
-        return 0;
-    }
 }
 
 function parseDate(dateValue) {
