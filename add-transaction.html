@@ -45,11 +45,14 @@
                 <option value="UPI">UPI</option>
             </select>
 
-            <!-- Maintenance Section -->
-            <div class="maintenance-section">
-                <label>Shop Maintenance (₹):</label>
-                <input type="number" id="maintenance-amount" min="0" step="0.01" value="0">
-            </div>
+           <!-- Replace the simple maintenance input with this -->
+<div class="maintenance-section">
+    <h3>Shop Maintenance</h3>
+    <div id="maintenance-container">
+        <!-- Maintenance items will be added here -->
+    </div>
+    <button type="button" id="add-maintenance">Add Maintenance Item</button>
+</div>
 
             <!-- Totals -->
             <label>Total Amount:</label>
