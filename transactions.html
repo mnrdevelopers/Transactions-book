@@ -10,7 +10,10 @@
     <div class="container">
         <header>
             <h1>Transaction History</h1>
-            <button id="theme-toggle">Toggle Theme</button>
+            <div class="header-actions">
+                <button id="theme-toggle">Toggle Theme</button>
+                <a href="maintenance.html" class="btn maintenance-btn">View Maintenance</a>
+            </div>
         </header>
 
         <div class="controls">
@@ -40,14 +43,16 @@
                         <th>Customer</th>
                         <th>Items</th>
                         <th>Total</th>
-                        <th>Profit</th>
+                        <th>Gross Profit</th>
+                        <th>Maintenance</th>
+                        <th>Net Profit</th>
                         <th>Payment</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="transactions-body">
                     <tr>
-                        <td colspan="8" class="loading-spinner">
+                        <td colspan="10" class="loading-spinner">
                             <div class="spinner"></div>
                             Loading transactions...
                         </td>
