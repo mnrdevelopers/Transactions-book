@@ -35,7 +35,7 @@ function setupEventListeners() {
 async function loadMaintenance() {
     try {
         showLoading();
-        const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=getMaintenance");
+        const response = await fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=getMaintenance");
         
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
@@ -69,7 +69,7 @@ async function submitMaintenance(e) {
     };
     
     try {
-        const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
