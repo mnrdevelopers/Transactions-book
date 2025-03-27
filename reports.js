@@ -50,24 +50,26 @@ function setupEventListeners() {
 }
 
 function updateSummaryCards(summary) {
-    // Update total sales
     elements.totalSales.textContent = `₹${summary.totalSales.toLocaleString('en-IN', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     })}`;
     
-    // Update total profit
     elements.totalProfit.textContent = `₹${summary.totalProfit.toLocaleString('en-IN', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     })}`;
     
-    // Update transaction count
-    elements.totalTransactions.textContent = summary.transactionCount;
+    elements.totalTransactions.textContent = summary.transactionCount.toLocaleString('en-IN');
     
-    // Update change indicators
-    updateChangeIndicator(elements.totalSales.parentElement.querySelector('.change'), summary.salesChange);
-    updateChangeIndicator(elements.totalProfit.parentElement.querySelector('.change'), summary.profitChange);
+    updateChangeIndicator(
+        elements.totalSales.parentElement.querySelector('.change'), 
+        summary.salesChange
+    );
+    updateChangeIndicator(
+        elements.totalProfit.parentElement.querySelector('.change'), 
+        summary.profitChange
+    );
 }
 
 function updateChangeIndicator(element, change) {
