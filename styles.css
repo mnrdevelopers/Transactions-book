@@ -158,24 +158,6 @@ button[type="submit"]:hover {
     transform: scale(1.05);
 }
 
-/* Maintenance Section */
-.maintenance-section {
-    margin: 15px 0;
-}
-
-.maintenance-section label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-.maintenance-section input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
 /* Bill Preview Section */
 .bill-preview {
     margin-top: 30px;
