@@ -118,29 +118,32 @@ if (document.getElementById("transaction-form")) {
         return valid;
     }
 
-    function prepareBillData() {
-        const items = [];
-        document.querySelectorAll(".item-row").forEach(row => {
-            items.push({
-                itemName: row.querySelector(".item-name").value,
-                quantity: row.querySelector(".quantity").value,
-                purchasePrice: row.querySelector(".purchase-price").value,
-                salePrice: row.querySelector(".sale-price").value,
-                total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
-            });
+   function prepareBillData() {
+    const items = [];
+    document.querySelectorAll(".item-row").forEach(row => {
+        items.push({
+            itemName: row.querySelector(".item-name").value,
+            quantity: row.querySelector(".quantity").value,
+            purchasePrice: row.querySelector(".purchase-price").value,
+            salePrice: row.querySelector(".sale-price").value,
+            total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
         });
-        
-        return {
-            storeName: "RK Fashions",
-            date: document.getElementById("date").textContent,
-            siNo: document.getElementById("si-no").textContent,
-            customerName: document.getElementById("customer-name").value,
-            items: items,
-            paymentMode: document.getElementById("payment-mode").value,
-            totalAmount: document.getElementById("total-amount").value,
-            totalProfit: document.getElementById("total-profit").value
-        };
-    }
+    });
+    
+    return {
+        action: "addTransaction", // Add this
+        storeName: "RK Fashions",
+        date: document.getElementById("date").textContent,
+        siNo: document.getElementById("si-no").textContent,
+        customerName: document.getElementById("customer-name").value,
+        items: items,
+        paymentMode: document.getElementById("payment-mode").value,
+        totalAmount: document.getElementById("total-amount").value,
+        totalProfit: document.getElementById("total-profit").value,
+        maintenanceAmount: 0, // Add default value
+        netProfit: document.getElementById("total-profit").value // Same as totalProfit initially
+    };
+}
 
     function displayBillPreview(data) {
         const preview = document.getElementById("bill-details");
