@@ -1,6 +1,7 @@
 // Theme toggle (works on all pages)
 document.getElementById("theme-toggle")?.addEventListener("click", function() {
     document.body.classList.toggle("dark-theme");
+    localStorage.setItem('darkMode', document.body.classList.contains('dark-theme'));
 });
 
 // Transaction page specific code
@@ -118,32 +119,32 @@ if (document.getElementById("transaction-form")) {
         return valid;
     }
 
-   function prepareBillData() {
-    const items = [];
-    document.querySelectorAll(".item-row").forEach(row => {
-        items.push({
-            itemName: row.querySelector(".item-name").value,
-            quantity: row.querySelector(".quantity").value,
-            purchasePrice: row.querySelector(".purchase-price").value,
-            salePrice: row.querySelector(".sale-price").value,
-            total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
+    function prepareBillData() {
+        const items = [];
+        document.querySelectorAll(".item-row").forEach(row => {
+            items.push({
+                itemName: row.querySelector(".item-name").value,
+                quantity: row.querySelector(".quantity").value,
+                purchasePrice: row.querySelector(".purchase-price").value,
+                salePrice: row.querySelector(".sale-price").value,
+                total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
+            });
         });
-    });
-    
-    return {
-        action: "addTransaction", // Add this
-        storeName: "RK Fashions",
-        date: document.getElementById("date").textContent,
-        siNo: document.getElementById("si-no").textContent,
-        customerName: document.getElementById("customer-name").value,
-        items: items,
-        paymentMode: document.getElementById("payment-mode").value,
-        totalAmount: document.getElementById("total-amount").value,
-        totalProfit: document.getElementById("total-profit").value,
-        maintenanceAmount: 0, // Add default value
-        netProfit: document.getElementById("total-profit").value // Same as totalProfit initially
-    };
-}
+        
+        return {
+            action: "addTransaction",
+            storeName: "RK Fashions",
+            date: document.getElementById("date").textContent,
+            siNo: document.getElementById("si-no").textContent,
+            customerName: document.getElementById("customer-name").value,
+            items: items,
+            paymentMode: document.getElementById("payment-mode").value,
+            totalAmount: document.getElementById("total-amount").value,
+            totalProfit: document.getElementById("total-profit").value,
+            maintenanceAmount: 0,
+            netProfit: document.getElementById("total-profit").value
+        };
+    }
 
     function displayBillPreview(data) {
         const preview = document.getElementById("bill-details");
@@ -197,13 +198,22 @@ if (document.getElementById("transaction-form")) {
     function submitBill(data) {
         fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
             method: "POST",
-            mode: "no-cors",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(data)
         })
-        .then(() => {
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (result.status === "error") {
+                throw new Error(result.message);
+            }
+            
             // Increment counter
             transactionCounter++;
             localStorage.setItem('transactionCounter', transactionCounter);
@@ -214,13 +224,13 @@ if (document.getElementById("transaction-form")) {
             document.getElementById("transaction-form").reset();
             document.getElementById("customer-name").value = customerName;
             document.getElementById("items-container").innerHTML = "";
-            addItem(); // Add new empty item
+            addItem();
             
             alert("Bill saved successfully!");
         })
         .catch(error => {
             console.error("Error:", error);
-            alert("Error saving bill. Please try again.");
+            alert(`Error saving bill: ${error.message}`);
         });
     }
 }
