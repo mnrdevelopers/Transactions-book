@@ -3,20 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transaction History</title>
+    <title>Transaction History - RK Fashions</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
+        <!-- Navigation -->
+        <div class="nav-buttons">
+            <a href="dashboard.html" class="nav-btn">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="add-transaction.html" class="nav-btn">
+                <i class="fas fa-plus-circle"></i> Add Transaction
+            </a>
+        </div>
+
         <header>
             <h1>Transaction History</h1>
-            <button id="theme-toggle">Toggle Theme</button>
         </header>
 
         <div class="controls">
             <div class="search-box">
                 <input type="text" id="search-input" placeholder="Search transactions...">
-                <button id="search-btn">🔍 Search</button>
+                <button id="search-btn"><i class="fas fa-search"></i></button>
             </div>
             <div class="filters">
                 <select id="date-filter">
@@ -40,14 +50,13 @@
                         <th>Customer</th>
                         <th>Items</th>
                         <th>Total</th>
-                        <th>Profit</th>
                         <th>Payment</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="transactions-body">
                     <tr>
-                        <td colspan="8" class="loading-spinner">
+                        <td colspan="7" class="loading-spinner">
                             <div class="spinner"></div>
                             Loading transactions...
                         </td>
@@ -57,9 +66,9 @@
         </div>
 
         <div class="pagination">
-            <button id="prev-btn" disabled>← Previous</button>
+            <button id="prev-btn" disabled><i class="fas fa-chevron-left"></i> Previous</button>
             <span id="page-info">Page 1 of 1</span>
-            <button id="next-btn" disabled>Next →</button>
+            <button id="next-btn" disabled>Next <i class="fas fa-chevron-right"></i></button>
         </div>
     </div>
 
@@ -67,7 +76,7 @@
     <div id="view-modal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2>Transaction Details</h2>
+            <h2><i class="fas fa-receipt"></i> Transaction Details</h2>
             <div id="transaction-details"></div>
         </div>
     </div>
