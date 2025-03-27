@@ -49,6 +49,40 @@ function setupEventListeners() {
     elements.searchInput.addEventListener('input', filterTransactions);
 }
 
+function updateSummaryCards(summary) {
+    // Update total sales
+    elements.totalSales.textContent = `₹${summary.totalSales.toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    })}`;
+    
+    // Update total profit
+    elements.totalProfit.textContent = `₹${summary.totalProfit.toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    })}`;
+    
+    // Update transaction count
+    elements.totalTransactions.textContent = summary.transactionCount;
+    
+    // Update change indicators
+    updateChangeIndicator(elements.totalSales.parentElement.querySelector('.change'), summary.salesChange);
+    updateChangeIndicator(elements.totalProfit.parentElement.querySelector('.change'), summary.profitChange);
+}
+
+function updateChangeIndicator(element, change) {
+    if (change > 0) {
+        element.className = 'change positive';
+        element.innerHTML = `<i class="fas fa-arrow-up"></i> ${Math.abs(change)}%`;
+    } else if (change < 0) {
+        element.className = 'change negative';
+        element.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(change)}%`;
+    } else {
+        element.className = 'change neutral';
+        element.innerHTML = '-';
+    }
+}
+
 async function loadReport() {
     try {
         // Get the selected date
