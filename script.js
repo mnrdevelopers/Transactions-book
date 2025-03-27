@@ -1,8 +1,3 @@
-// Theme toggle (works on all pages)
-document.getElementById("theme-toggle")?.addEventListener("click", function() {
-    document.body.classList.toggle("dark-theme");
-});
-
 // Transaction page specific code
 if (document.getElementById("transaction-form")) {
     // Initialize counter from localStorage or start at 1
