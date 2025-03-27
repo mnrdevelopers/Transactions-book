@@ -65,7 +65,7 @@ async function loadTransactions() {
         }
         
         const data = await response.json();
-        allTransactions = processSheetData(data);
+        allTransactions = await processSheetData(data);
         
         // Update date filter options
         updateDateFilter();
@@ -78,7 +78,7 @@ async function loadTransactions() {
     }
 }
 
-function processSheetData(sheetData) {
+async function processSheetData(sheetData) {
     const transactionsMap = new Map();
     
     // Skip header row if it exists
@@ -88,18 +88,24 @@ function processSheetData(sheetData) {
         const row = sheetData[i];
         const siNo = String(row[2]); // Ensure SI No is a string
         const date = parseDate(row[1]); // Parse date properly
+        const dateString = formatDateForDisplay(date);
         
         if (!transactionsMap.has(siNo)) {
+            // Get maintenance for this date
+            const maintenance = await getMaintenanceForDate(dateString);
+            
             transactionsMap.set(siNo, {
                 storeName: row[0],
                 date: date,
-                dateString: formatDateForDisplay(date),
+                dateString: dateString,
                 siNo: siNo,
                 customerName: String(row[3]),
                 items: [],
                 paymentMode: row[8],
                 totalAmount: parseFloat(row[9]) || 0,
-                totalProfit: parseFloat(row[10]) || 0
+                grossProfit: parseFloat(row[10]) || 0,
+                maintenanceAmount: maintenance,
+                netProfit: (parseFloat(row[10]) || 0) - maintenance
             });
         }
         
@@ -114,6 +120,21 @@ function processSheetData(sheetData) {
     }
     
     return Array.from(transactionsMap.values());
+}
+
+async function getMaintenanceForDate(date) {
+    try {
+        const scriptUrl = `https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=getMaintenanceForDate&date=${date}`;
+        const response = await fetch(scriptUrl);
+        
+        if (!response.ok) return 0;
+        
+        const data = await response.json();
+        return parseFloat(data.total) || 0;
+    } catch (error) {
+        console.error("Error fetching maintenance:", error);
+        return 0;
+    }
 }
 
 function parseDate(dateValue) {
@@ -196,7 +217,7 @@ function renderTransactions() {
     if (pageTransactions.length === 0) {
         elements.transactionsBody.innerHTML = `
             <tr>
-                <td colspan="8" class="no-results">
+                <td colspan="10" class="no-results">
                     No transactions found matching your criteria
                 </td>
             </tr>
@@ -216,7 +237,7 @@ function renderTransactions() {
             const dateHeader = document.createElement("tr");
             dateHeader.className = "date-header";
             dateHeader.innerHTML = `
-                <td colspan="8">
+                <td colspan="10">
                     <strong>${getDateHeaderText(transaction.date)}</strong>
                 </td>
             `;
@@ -237,7 +258,9 @@ function renderTransactions() {
             <td>${transaction.customerName}</td>
             <td>${itemsSummary}</td>
             <td>₹${transaction.totalAmount.toFixed(2)}</td>
-            <td>₹${transaction.totalProfit.toFixed(2)}</td>
+            <td>₹${transaction.grossProfit.toFixed(2)}</td>
+            <td>₹${transaction.maintenanceAmount.toFixed(2)}</td>
+            <td>₹${transaction.netProfit.toFixed(2)}</td>
             <td>${transaction.paymentMode}</td>
             <td class="actions">
                 <button class="view-btn" data-si-no="${transaction.siNo}">View</button>
@@ -357,7 +380,9 @@ function viewTransactionDetails(e) {
         
         <div class="transaction-totals">
             <p><strong>Total Amount:</strong> ₹${transaction.totalAmount.toFixed(2)}</p>
-            <p><strong>Total Profit:</strong> ₹${transaction.totalProfit.toFixed(2)}</p>
+            <p><strong>Gross Profit:</strong> ₹${transaction.grossProfit.toFixed(2)}</p>
+            <p><strong>Maintenance:</strong> ₹${transaction.maintenanceAmount.toFixed(2)}</p>
+            <p><strong>Net Profit:</strong> ₹${transaction.netProfit.toFixed(2)}</p>
         </div>
     `;
     
@@ -386,7 +411,7 @@ function closeModal() {
 function showLoading() {
     elements.transactionsBody.innerHTML = `
         <tr>
-            <td colspan="8" class="loading-spinner">
+            <td colspan="10" class="loading-spinner">
                 <div class="spinner"></div>
                 Loading transactions...
             </td>
@@ -397,7 +422,7 @@ function showLoading() {
 function showError(message) {
     elements.transactionsBody.innerHTML = `
         <tr>
-            <td colspan="8" class="error-message">
+            <td colspan="10" class="error-message">
                 ${message}
                 <button onclick="loadTransactions()">Retry</button>
             </td>
