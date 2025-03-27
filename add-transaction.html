@@ -8,7 +8,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Store Header -->
         <header>
             <div class="store-info">
                 <strong><h1>RK Fashions</h1></strong>
@@ -20,7 +19,6 @@
             </div>
         </header>
 
-        <!-- Bill Details -->
         <div class="bill-details">
             <p><strong>SI No:</strong> <span id="si-no"></span></p>
             <p><strong>Date:</strong> <span id="date"></span></p>
@@ -28,16 +26,20 @@
             <input type="text" id="customer-name" required>
         </div>
 
-        <!-- Transaction Form -->
         <form id="transaction-form">
             <div id="items-container">
                 <!-- Items will be added here dynamically -->
             </div>
-
-            <!-- Add Item Button -->
             <button type="button" id="add-item">Add Item</button>
 
-            <!-- Payment Mode -->
+            <div class="maintenance-section">
+                <h3>Shop Maintenance</h3>
+                <div id="maintenance-container">
+                    <!-- Maintenance items will be added here -->
+                </div>
+                <button type="button" id="add-maintenance">Add Maintenance Item</button>
+            </div>
+
             <label>Payment Mode:</label>
             <select id="payment-mode">
                 <option value="Cash">Cash</option>
@@ -45,30 +47,23 @@
                 <option value="UPI">UPI</option>
             </select>
 
-           <!-- Replace the simple maintenance input with this -->
-<div class="maintenance-section">
-    <h3>Shop Maintenance</h3>
-    <div id="maintenance-container">
-        <!-- Maintenance items will be added here -->
-    </div>
-    <button type="button" id="add-maintenance">Add Maintenance Item</button>
-</div>
+            <div class="totals">
+                <label>Total Amount:</label>
+                <input type="text" id="total-amount" disabled>
+                
+                <label>Gross Profit:</label>
+                <input type="text" id="total-profit" disabled>
+                
+                <label>Total Maintenance:</label>
+                <input type="text" id="total-maintenance" disabled>
+                
+                <label>Net Profit:</label>
+                <input type="text" id="net-profit" disabled>
+            </div>
 
-            <!-- Totals -->
-            <label>Total Amount:</label>
-            <input type="text" id="total-amount" disabled>
-
-            <label>Gross Profit:</label>
-            <input type="text" id="total-profit" disabled>
-
-            <label>Net Profit (After Maintenance):</label>
-            <input type="text" id="net-profit" disabled>
-
-            <!-- Submit Button -->
             <button type="submit">Generate Bill</button>
         </form>
 
-        <!-- Bill Preview Section -->
         <div id="bill-preview" class="bill-preview">
             <h2>Generated Bill</h2>
             <div id="bill-details"></div>
