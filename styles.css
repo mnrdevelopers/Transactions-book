@@ -363,7 +363,7 @@ button[type="submit"]:hover {
     }
 
     .item-row input {
-        width: 100%;
+        width: 90%;
         padding: 8px;
         font-size: 14px;
     }
@@ -386,7 +386,7 @@ button[type="submit"]:hover {
     }
 
     #transactions-table {
-        width: 100%;
+        width: 90%;
         min-width: 600px; /* Allows horizontal scrolling */
         font-size: 14px;
     }
