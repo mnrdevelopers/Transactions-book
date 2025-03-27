@@ -27,9 +27,6 @@ if (document.getElementById("transaction-form")) {
         }
     });
 
-    // Handle maintenance amount changes
-    document.getElementById("maintenance-amount").addEventListener("input", calculateTotals);
-
     // Form submission
     document.getElementById("transaction-form").addEventListener("submit", function(e) {
         e.preventDefault();
@@ -86,12 +83,8 @@ if (document.getElementById("transaction-form")) {
             totalProfit += qty * (sale - purchase);
         });
         
-        const maintenance = parseFloat(document.getElementById("maintenance-amount").value) || 0;
-        const netProfit = totalProfit - maintenance;
-        
         document.getElementById("total-amount").value = totalAmount.toFixed(2);
         document.getElementById("total-profit").value = totalProfit.toFixed(2);
-        document.getElementById("net-profit").value = netProfit.toFixed(2);
     }
 
     function validateForm() {
@@ -137,10 +130,6 @@ if (document.getElementById("transaction-form")) {
             });
         });
         
-        const maintenanceAmount = parseFloat(document.getElementById("maintenance-amount").value) || 0;
-        const totalProfit = parseFloat(document.getElementById("total-profit").value) || 0;
-        const netProfit = totalProfit - maintenanceAmount;
-        
         return {
             storeName: "RK Fashions",
             date: document.getElementById("date").textContent,
@@ -149,9 +138,7 @@ if (document.getElementById("transaction-form")) {
             items: items,
             paymentMode: document.getElementById("payment-mode").value,
             totalAmount: document.getElementById("total-amount").value,
-            totalProfit: totalProfit.toFixed(2),
-            maintenanceAmount: maintenanceAmount.toFixed(2),
-            netProfit: netProfit.toFixed(2)
+            totalProfit: document.getElementById("total-profit").value
         };
     }
 
@@ -197,18 +184,6 @@ if (document.getElementById("transaction-form")) {
                         <td colspan="3">Payment Mode</td>
                         <td>${data.paymentMode}</td>
                     </tr>
-                    <tr>
-                        <td colspan="3">Gross Profit</td>
-                        <td>₹${data.totalProfit}</td>
-                    </tr>
-                    <tr>
-                        <td colspan="3">Maintenance</td>
-                        <td>₹${data.maintenanceAmount}</td>
-                    </tr>
-                    <tr>
-                        <td colspan="3">Net Profit</td>
-                        <td>₹${data.netProfit}</td>
-                    </tr>
                 </tfoot>
             </table>
         `;
@@ -236,7 +211,6 @@ if (document.getElementById("transaction-form")) {
             document.getElementById("transaction-form").reset();
             document.getElementById("customer-name").value = customerName;
             document.getElementById("items-container").innerHTML = "";
-            document.getElementById("maintenance-amount").value = "0";
             addItem(); // Add new empty item
             
             alert("Bill saved successfully!");
