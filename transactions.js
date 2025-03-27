@@ -99,9 +99,7 @@ function processSheetData(sheetData) {
                 items: [],
                 paymentMode: row[8],
                 totalAmount: parseFloat(row[9]) || 0,
-                grossProfit: parseFloat(row[10]) || 0,
-                maintenanceAmount: parseFloat(row[11]) || 0,
-                netProfit: parseFloat(row[12]) || 0
+                totalProfit: parseFloat(row[10]) || 0
             });
         }
         
@@ -198,7 +196,7 @@ function renderTransactions() {
     if (pageTransactions.length === 0) {
         elements.transactionsBody.innerHTML = `
             <tr>
-                <td colspan="10" class="no-results">
+                <td colspan="8" class="no-results">
                     No transactions found matching your criteria
                 </td>
             </tr>
@@ -218,7 +216,7 @@ function renderTransactions() {
             const dateHeader = document.createElement("tr");
             dateHeader.className = "date-header";
             dateHeader.innerHTML = `
-                <td colspan="10">
+                <td colspan="8">
                     <strong>${getDateHeaderText(transaction.date)}</strong>
                 </td>
             `;
@@ -239,9 +237,7 @@ function renderTransactions() {
             <td>${transaction.customerName}</td>
             <td>${itemsSummary}</td>
             <td>₹${transaction.totalAmount.toFixed(2)}</td>
-            <td>₹${transaction.grossProfit.toFixed(2)}</td>
-            <td>₹${transaction.maintenanceAmount.toFixed(2)}</td>
-            <td>₹${transaction.netProfit.toFixed(2)}</td>
+            <td>₹${transaction.totalProfit.toFixed(2)}</td>
             <td>${transaction.paymentMode}</td>
             <td class="actions">
                 <button class="view-btn" data-si-no="${transaction.siNo}">View</button>
@@ -361,9 +357,7 @@ function viewTransactionDetails(e) {
         
         <div class="transaction-totals">
             <p><strong>Total Amount:</strong> ₹${transaction.totalAmount.toFixed(2)}</p>
-            <p><strong>Gross Profit:</strong> ₹${transaction.grossProfit.toFixed(2)}</p>
-            <p><strong>Maintenance:</strong> ₹${transaction.maintenanceAmount.toFixed(2)}</p>
-            <p><strong>Net Profit:</strong> ₹${transaction.netProfit.toFixed(2)}</p>
+            <p><strong>Total Profit:</strong> ₹${transaction.totalProfit.toFixed(2)}</p>
         </div>
     `;
     
@@ -392,7 +386,7 @@ function closeModal() {
 function showLoading() {
     elements.transactionsBody.innerHTML = `
         <tr>
-            <td colspan="10" class="loading-spinner">
+            <td colspan="8" class="loading-spinner">
                 <div class="spinner"></div>
                 Loading transactions...
             </td>
@@ -403,7 +397,7 @@ function showLoading() {
 function showError(message) {
     elements.transactionsBody.innerHTML = `
         <tr>
-            <td colspan="10" class="error-message">
+            <td colspan="8" class="error-message">
                 ${message}
                 <button onclick="loadTransactions()">Retry</button>
             </td>
