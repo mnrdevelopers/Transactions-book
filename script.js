@@ -1,7 +1,6 @@
 // Theme toggle (works on all pages)
 document.getElementById("theme-toggle")?.addEventListener("click", function() {
     document.body.classList.toggle("dark-theme");
-    localStorage.setItem('darkMode', document.body.classList.contains('dark-theme'));
 });
 
 // Transaction page specific code
@@ -27,6 +26,9 @@ if (document.getElementById("transaction-form")) {
             calculateTotals();
         }
     });
+
+    // Handle maintenance amount changes
+    document.getElementById("maintenance-amount").addEventListener("input", calculateTotals);
 
     // Form submission
     document.getElementById("transaction-form").addEventListener("submit", function(e) {
@@ -84,8 +86,12 @@ if (document.getElementById("transaction-form")) {
             totalProfit += qty * (sale - purchase);
         });
         
+        const maintenance = parseFloat(document.getElementById("maintenance-amount").value) || 0;
+        const netProfit = totalProfit - maintenance;
+        
         document.getElementById("total-amount").value = totalAmount.toFixed(2);
         document.getElementById("total-profit").value = totalProfit.toFixed(2);
+        document.getElementById("net-profit").value = netProfit.toFixed(2);
     }
 
     function validateForm() {
@@ -131,8 +137,11 @@ if (document.getElementById("transaction-form")) {
             });
         });
         
+        const maintenanceAmount = parseFloat(document.getElementById("maintenance-amount").value) || 0;
+        const totalProfit = parseFloat(document.getElementById("total-profit").value) || 0;
+        const netProfit = totalProfit - maintenanceAmount;
+        
         return {
-            action: "addTransaction",
             storeName: "RK Fashions",
             date: document.getElementById("date").textContent,
             siNo: document.getElementById("si-no").textContent,
@@ -140,9 +149,9 @@ if (document.getElementById("transaction-form")) {
             items: items,
             paymentMode: document.getElementById("payment-mode").value,
             totalAmount: document.getElementById("total-amount").value,
-            totalProfit: document.getElementById("total-profit").value,
-            maintenanceAmount: 0,
-            netProfit: document.getElementById("total-profit").value
+            totalProfit: totalProfit.toFixed(2),
+            maintenanceAmount: maintenanceAmount.toFixed(2),
+            netProfit: netProfit.toFixed(2)
         };
     }
 
@@ -188,6 +197,18 @@ if (document.getElementById("transaction-form")) {
                         <td colspan="3">Payment Mode</td>
                         <td>${data.paymentMode}</td>
                     </tr>
+                    <tr>
+                        <td colspan="3">Gross Profit</td>
+                        <td>₹${data.totalProfit}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">Maintenance</td>
+                        <td>₹${data.maintenanceAmount}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">Net Profit</td>
+                        <td>₹${data.netProfit}</td>
+                    </tr>
                 </tfoot>
             </table>
         `;
@@ -198,22 +219,13 @@ if (document.getElementById("transaction-form")) {
     function submitBill(data) {
         fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
             method: "POST",
+            mode: "no-cors",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(data)
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(result => {
-            if (result.status === "error") {
-                throw new Error(result.message);
-            }
-            
+        .then(() => {
             // Increment counter
             transactionCounter++;
             localStorage.setItem('transactionCounter', transactionCounter);
@@ -224,13 +236,14 @@ if (document.getElementById("transaction-form")) {
             document.getElementById("transaction-form").reset();
             document.getElementById("customer-name").value = customerName;
             document.getElementById("items-container").innerHTML = "";
-            addItem();
+            document.getElementById("maintenance-amount").value = "0";
+            addItem(); // Add new empty item
             
             alert("Bill saved successfully!");
         })
         .catch(error => {
             console.error("Error:", error);
-            alert(`Error saving bill: ${error.message}`);
+            alert("Error saving bill. Please try again.");
         });
     }
 }
