@@ -309,7 +309,73 @@ function getWeekNumber(date) {
     return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
 }
 
-// Reuse your existing processSheetData function from transactions.js
 function processSheetData(sheetData) {
-    // Your existing implementation from transactions.js
+    const transactionsMap = new Map();
+    
+    // Skip header row if it exists
+    const startRow = sheetData[0][0] === "Store Name" ? 1 : 0;
+    
+    for (let i = startRow; i < sheetData.length; i++) {
+        const row = sheetData[i];
+        const siNo = String(row[2]); // Ensure SI No is a string
+        const date = parseDate(row[1]); // Parse date properly
+        
+        if (!transactionsMap.has(siNo)) {
+            transactionsMap.set(siNo, {
+                storeName: row[0],
+                date: date,
+                dateString: formatDateForDisplay(date),
+                siNo: siNo,
+                customerName: String(row[3]),
+                items: [],
+                paymentMode: row[8],
+                totalAmount: parseFloat(row[9]) || 0,
+                totalProfit: parseFloat(row[10]) || 0
+            });
+        }
+        
+        // Add item to transaction
+        transactionsMap.get(siNo).items.push({
+            itemName: String(row[4]),
+            quantity: parseFloat(row[5]) || 0,
+            purchasePrice: parseFloat(row[6]) || 0,
+            salePrice: parseFloat(row[7]) || 0,
+            itemTotal: (parseFloat(row[5]) || 0) * (parseFloat(row[7]) || 0)
+        });
+    }
+    
+    return Array.from(transactionsMap.values());
+}
+
+function parseDate(dateValue) {
+    // Try different date formats
+    if (dateValue instanceof Date) {
+        return dateValue;
+    }
+    
+    if (typeof dateValue === 'string') {
+        // Try ISO format first
+        let date = new Date(dateValue);
+        if (!isNaN(date)) return date;
+        
+        // Try common spreadsheet formats
+        date = new Date(dateValue.replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$2/$1/$3'));
+        if (!isNaN(date)) return date;
+        
+        date = new Date(dateValue.replace(/(\d{4})-(\d{2})-(\d{2})/, '$2/$3/$1'));
+        if (!isNaN(date)) return date;
+    }
+    
+    // Fallback to current date if parsing fails
+    console.warn("Could not parse date:", dateValue);
+    return new Date();
+}
+
+function formatDateForDisplay(date) {
+    try {
+        const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+        return date.toLocaleDateString(undefined, options);
+    } catch {
+        return "Invalid Date";
+    }
 }
