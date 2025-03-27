@@ -158,6 +158,24 @@ button[type="submit"]:hover {
     transform: scale(1.05);
 }
 
+/* Maintenance Section */
+.maintenance-section {
+    margin: 15px 0;
+}
+
+.maintenance-section label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.maintenance-section input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
 /* Bill Preview Section */
 .bill-preview {
     margin-top: 30px;
@@ -554,63 +572,6 @@ button[type="submit"]:hover {
 
 .dark-theme .transaction-row:hover {
     background-color: rgba(67, 97, 238, 0.2);
-}
-
-/* Maintenance Page Styles */
-.maintenance-table-container {
-    margin-top: 20px;
-    overflow-x: auto;
-}
-
-#maintenance-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-#maintenance-table th, 
-#maintenance-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-#maintenance-table th {
-    background-color: darkblue;
-    color: white;
-    position: sticky;
-    top: 0;
-}
-
-#maintenance-table tr:hover {
-    background-color: rgba(67, 97, 238, 0.1);
-}
-
-.dark-theme #maintenance-table tr:hover {
-    background-color: rgba(67, 97, 238, 0.2);
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-.form-group textarea {
-    resize: vertical;
-    min-height: 80px;
 }
 
 @media (max-width: 768px) {
