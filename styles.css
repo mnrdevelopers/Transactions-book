@@ -253,7 +253,7 @@ button[type="submit"]:hover {
 #transactions-table th {
     background-color: darkblue;
     color: white;
-    position: sticky;
+    position: relative;
     top: 0;
 }
 
