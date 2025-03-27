@@ -349,6 +349,11 @@ button[type="submit"]:hover {
         padding: 8px;
         font-size: 14px;
     }
+
+    #transactions-table {
+    width: 80%;
+    border-collapse: collapse;
+}
     
     .modal-content {
         width: 95%;
