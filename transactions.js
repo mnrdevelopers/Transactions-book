@@ -41,7 +41,7 @@ function setupEventListeners() {
 async function loadTransactions() {
     try {
         showLoading();
-        const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=getTransactions");
+        const response = await fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=getTransactions");
         
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
@@ -99,7 +99,7 @@ async function processSheetData(sheetData) {
 
 async function getMaintenanceForDate(date) {
     try {
-        const response = await fetch(`https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=getMaintenanceForDate&date=${date}`);
+        const response = await fetch(`https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=getMaintenanceForDate&date=${date}`);
         if (!response.ok) return 0;
         const result = await response.json();
         return result.data?.total || 0;
