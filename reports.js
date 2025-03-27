@@ -85,24 +85,21 @@ function updateChangeIndicator(element, change) {
     }
 }
 
+let reportData = []; // Store the current report data at module level
+
 async function loadReport() {
     try {
-        // Get the selected date
-        const selectedDate = elements.reportDate.value;
-        
-        // Show loading state
         showLoading();
-        
-        // Fetch transactions from your API
+        const selectedDate = elements.reportDate.value;
         const transactions = await fetchTransactions(selectedDate, currentPeriod);
         
-        // Process data for the selected period
-        const reportData = processReportData(transactions, currentPeriod);
+        // Process data and store it
+        reportData = groupByPeriod(transactions, currentPeriod);
+        const chartData = prepareChartData(reportData, currentPeriod);
         
-        // Update UI
-        updateSummaryCards(reportData.summary);
-        renderChart(reportData.chartData);
-        renderTransactionsTable(reportData.transactions);
+        updateSummaryCards(calculateSummary(reportData));
+        renderChart(chartData);
+        renderTransactionsTable(reportData.flatMap(g => g.transactions));
         
     } catch (error) {
         console.error('Error loading report:', error);
@@ -252,38 +249,29 @@ function prepareChartData(groups, period) {
     const profitData = [];
     
     groups.forEach(group => {
-        // Format label based on period with proper date handling
+        // Format label based on period
         let label;
-        const dateObj = new Date(group.date);
-        
-        if (isNaN(dateObj.getTime())) {
-            console.warn("Invalid date:", group.date);
-            label = "N/A";
-        } else {
-            switch(period) {
-                case 'daily':
-                    label = dateObj.toLocaleDateString('en-IN', { 
-                        day: 'numeric', 
-                        month: 'short' 
-                    });
-                    break;
-                case 'weekly':
-                    label = `Week ${getWeekNumber(dateObj)} (${dateObj.toLocaleDateString('en-IN', { 
-                        month: 'short' 
-                    })})`;
-                    break;
-                case 'monthly':
-                    label = dateObj.toLocaleDateString('en-IN', { 
-                        month: 'short', 
-                        year: 'numeric' 
-                    });
-                    break;
-                case 'yearly':
-                    label = dateObj.getFullYear().toString();
-                    break;
-                default:
-                    label = dateObj.toLocaleDateString();
-            }
+        switch(period) {
+            case 'daily':
+                label = group.periodStart.toLocaleDateString('en-IN', { 
+                    day: 'numeric', 
+                    month: 'short' 
+                });
+                break;
+                
+            case 'weekly':
+                label = `Week ${getWeekNumber(group.periodStart)}`;
+                break;
+                
+            case 'monthly':
+                label = group.periodStart.toLocaleDateString('en-IN', { 
+                    month: 'short' 
+                });
+                break;
+                
+            case 'yearly':
+                label = group.periodStart.getFullYear().toString();
+                break;
         }
         
         labels.push(label);
@@ -328,7 +316,7 @@ function renderChart(chartData) {
                 x: {
                     title: {
                         display: true,
-                        text: 'Period'
+                        text: getPeriodLabel(currentPeriod)
                     }
                 },
                 y: {
@@ -347,6 +335,9 @@ function renderChart(chartData) {
             plugins: {
                 tooltip: {
                     callbacks: {
+                        title: function(context) {
+                            return getTooltipTitle(context, currentPeriod);
+                        },
                         label: function(context) {
                             return `${context.dataset.label}: ₹${context.raw.toLocaleString('en-IN', {
                                 minimumFractionDigits: 2,
@@ -354,13 +345,56 @@ function renderChart(chartData) {
                             })}`;
                         }
                     }
-                },
-                legend: {
-                    position: 'top',
                 }
             }
         }
     });
+}
+
+function getPeriodLabel(period) {
+    switch(period) {
+        case 'daily': return 'Days';
+        case 'weekly': return 'Weeks';
+        case 'monthly': return 'Months';
+        case 'yearly': return 'Years';
+        default: return 'Period';
+    }
+}
+
+function getTooltipTitle(context, period) {
+    const index = context[0].dataIndex;
+    const group = reportData[index]; // Assuming reportData is accessible
+    
+    switch(period) {
+        case 'daily':
+            return group.periodStart.toLocaleDateString('en-IN', { 
+                weekday: 'long', 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+            });
+            
+        case 'weekly':
+            return `Week ${getWeekNumber(group.periodStart)} (${group.periodStart.toLocaleDateString('en-IN', { 
+                day: 'numeric', 
+                month: 'short' 
+            })} - ${group.periodEnd.toLocaleDateString('en-IN', { 
+                day: 'numeric', 
+                month: 'short' 
+            })})`;
+            
+        case 'monthly':
+            return group.periodStart.toLocaleDateString('en-IN', { 
+                month: 'long', 
+                year: 'numeric' 
+            });
+            
+        case 'yearly':
+            return group.periodStart.getFullYear().toString();
+            
+        default:
+            return group.periodKey;
+    }
 }
 
 function renderTransactionsTable(transactions) {
