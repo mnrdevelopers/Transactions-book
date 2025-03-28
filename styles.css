@@ -1139,3 +1139,251 @@ button[type="submit"]:hover {
         margin: 3px;
     }
 }
+
+/* Mobile Responsive Additions */
+@media (max-width: 800px) {
+    /* Main container adjustments */
+    .container {
+        padding: 10px;
+        margin: 10px auto;
+    }
+
+    /* Card layout adjustments */
+    .card {
+        padding: 15px;
+    }
+
+    /* Form improvements for mobile */
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 12px;
+        font-size: 16px; /* Larger touch targets */
+    }
+
+    /* Button sizing for mobile */
+    .submit-btn,
+    .generate-btn,
+    .save-btn,
+    .cancel-btn {
+        padding: 12px;
+        font-size: 16px;
+        width: 100%;
+    }
+
+    /* Report controls stacking */
+    .report-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .period-selector {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .period-btn {
+        flex: 1 1 100px;
+        text-align: center;
+        padding: 10px;
+    }
+
+    .date-filter {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    /* Summary cards stacking */
+    .summary-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-card {
+        padding: 12px;
+    }
+
+    /* Table controls adjustments */
+    .table-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filters {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filters select {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .search-box {
+        min-width: 100%;
+    }
+
+    /* Table optimizations */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #transactions-table {
+        min-width: 600px; /* Allows horizontal scrolling */
+    }
+
+    #transactions-table th,
+    #transactions-table td {
+        padding: 8px 6px;
+        font-size: 14px;
+    }
+
+    /* Modal adjustments */
+    .modal-content {
+        width: 95%;
+        padding: 15px;
+        max-height: 85vh;
+    }
+
+    /* Action buttons in table */
+    .actions {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .actions button {
+        width: 100%;
+        padding: 8px;
+    }
+
+    /* Pagination adjustments */
+    .pagination {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .pagination button {
+        flex: 1 1 100px;
+        padding: 10px;
+    }
+
+    /* Loading spinner */
+    .loading-spinner {
+        padding: 15px;
+    }
+
+    /* Status badges */
+    .status-badge {
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+}
+
+/* Very small devices (e.g., iPhone 5/SE) */
+@media (max-width: 320px) {
+    .period-btn {
+        flex: 1 1 80px;
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    #transactions-table {
+        min-width: 300px;
+        font-size: 13px;
+    }
+
+    #transactions-table th,
+    #transactions-table td {
+        padding: 6px 4px;
+    }
+
+    .summary-card .amount {
+        font-size: 20px;
+    }
+}
+
+/* Tablet adjustments (600px-900px) */
+@media (min-width: 601px) and (max-width: 900px) {
+    .form-row {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .summary-cards {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    #transactions-table {
+        font-size: 14px;
+    }
+}
+
+/* Orientation-specific adjustments */
+@media screen and (max-width: 900px) and (orientation: landscape) {
+    .modal-content {
+        max-height: 70vh;
+    }
+
+    .table-container {
+        max-height: 40vh;
+        overflow-y: auto;
+    }
+}
+
+/* High-density displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .submit-btn,
+    .generate-btn,
+    .save-btn,
+    .cancel-btn,
+    .actions button {
+        border-width: 0.5px;
+    }
+}
+
+/* Accessibility improvements for mobile */
+@media (max-width: 800px) {
+    /* Larger tap targets */
+    button, [role="button"], input[type="submit"], input[type="reset"], input[type="button"] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Form labels */
+    .form-group label {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    /* Focus states */
+    input:focus, select:focus, textarea:focus, button:focus {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .nav-buttons,
+    .report-controls,
+    .table-controls,
+    .actions,
+    .modal {
+        display: none !important;
+    }
+
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+    }
+
+    #transactions-table {
+        width: 100%;
+        min-width: auto;
+    }
+}
