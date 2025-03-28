@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Maintenance - RK Fashions</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <div class="nav-buttons">
+            <a href="dashboard.html" class="nav-btn">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="reports.html" class="nav-btn">
+                <i class="fas fa-chart-bar"></i> Sales Reports
+            </a>
+        </div>
+
+        <header>
+            <h1><i class="fas fa-tools"></i> Shop Maintenance</h1>
+            <p>Track and manage maintenance activities</p>
+        </header>
+
+        <div class="maintenance-container">
+            <!-- Add New Maintenance Form -->
+            <div class="card">
+                <h2><i class="fas fa-plus-circle"></i> Add Maintenance Record</h2>
+                <form id="maintenance-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <select id="category" required>
+                                <option value="">Select Category</option>
+                                <!-- Filled dynamically -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="vendor">Vendor</label>
+                            <select id="vendor" required>
+                                <option value="">Select Vendor</option>
+                                <!-- Filled dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <input type="text" id="description" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="amount">Amount (₹)</label>
+                            <input type="number" id="amount" min="0" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="payment-method">Payment Method</label>
+                            <select id="payment-method" required>
+                                <option value="Cash">Cash</option>
+                                <option value="Card">Card</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" rows="3"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i> Save Record
+                    </button>
+                </form>
+            </div>
+
+            <!-- Reports Section -->
+            <div class="card">
+                <h2><i class="fas fa-chart-pie"></i> Maintenance Reports</h2>
+                <div class="report-controls">
+                    <div class="period-selector">
+                        <button class="period-btn active" data-period="weekly">Weekly</button>
+                        <button class="period-btn" data-period="monthly">Monthly</button>
+                        <button class="period-btn" data-period="yearly">Yearly</button>
+                    </div>
+                    <div class="date-filter">
+                        <input type="date" id="report-date">
+                        <button id="generate-report" class="generate-btn">
+                            <i class="fas fa-sync-alt"></i> Generate
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <h3>Total Spent</h3>
+                        <p class="amount" id="total-spent">₹0.00</p>
+                        <p class="change"><span id="spent-change">0%</span> vs last period</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Transactions</h3>
+                        <p class="amount" id="total-transactions">0</p>
+                        <p class="change"><span id="transactions-change">0%</span> vs last period</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Top Category</h3>
+                        <p class="amount" id="top-category">-</p>
+                        <p class="change" id="top-category-amount">₹0.00</p>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="maintenance-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Transactions Table -->
+            <div class="card">
+                <h2><i class="fas fa-list"></i> Maintenance Transactions</h2>
+                <div class="table-controls">
+                    <div class="filters">
+                        <select id="filter-category">
+                            <option value="">All Categories</option>
+                        </select>
+                        <select id="filter-vendor">
+                            <option value="">All Vendors</option>
+                        </select>
+                        <select id="filter-status">
+                            <option value="">All Statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="search-transactions" placeholder="Search transactions...">
+                        <button id="search-btn"><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table id="transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>ID</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Vendor</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-body">
+                            <!-- Filled dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination">
+                    <button id="prev-btn" disabled><i class="fas fa-chevron-left"></i> Previous</button>
+                    <span id="page-info">Page 1 of 1</span>
+                    <button id="next-btn" disabled>Next <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Transaction Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2><i class="fas fa-edit"></i> Edit Maintenance Record</h2>
+            <form id="edit-form">
+                <input type="hidden" id="edit-id">
+                <!-- Form fields same as add form, filled dynamically -->
+                <div class="form-actions">
+                    <button type="submit" class="save-btn"><i class="fas fa-save"></i> Save Changes</button>
+                    <button type="button" id="cancel-edit" class="cancel-btn"><i class="fas fa-times"></i> Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="maintenance.js"></script>
+</body>
+</html>
