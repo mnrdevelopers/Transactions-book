@@ -31,6 +31,7 @@
             width: 400px;
             position: relative;
             overflow: hidden;
+            animation: fadeIn 0.5s ease-out;
         }
         
         .splash-container::before {
@@ -129,6 +130,11 @@
             }
         }
         
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
         @media (max-width: 480px) {
             .splash-container {
                 padding: 20px;
@@ -159,5 +165,12 @@
         </div>
         <div class="version">Version 1.0</div>
     </div>
+
+    <script>
+        // Redirect to dashboard after 3 seconds
+        setTimeout(function() {
+            window.location.href = "dashboard.html"; // Change this to your actual dashboard page
+        }, 3000);
+    </script>
 </body>
 </html>
