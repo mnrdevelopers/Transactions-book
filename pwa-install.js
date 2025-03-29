@@ -12,7 +12,7 @@ function toggleInstallButton() {
   if (!isAppInstalled() && window.deferredPrompt) {
     installButton.style.display = 'block';
   } else {
-    installButton.style.display = 'none';
+    installButton.style.display = 'block';
   }
 }
 
