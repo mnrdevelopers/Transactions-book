@@ -77,6 +77,43 @@ header h1 {
     margin-right: 8px;
 }
 
+/* Daily Stats */
+.daily-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: white;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+}
+
+.stat-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+    color: var(--primary);
+}
+
+.stat-card:nth-child(2) .stat-value {
+    color: var(--success);
+}
+
 /* Form Styles */
 .bill-details {
     display: grid;
