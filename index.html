@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RK Fashions Bill Book</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .splash-container {
+            text-align: center;
+            padding: 30px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            width: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .splash-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0) 45%,
+                rgba(255, 255, 255, 0.5) 50%,
+                rgba(255, 255, 255, 0) 55%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            animation: shine 3s infinite;
+            transform: rotate(30deg);
+        }
+        
+        .logo-container {
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            background-color: #6c5ce7;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .loader {
+            width: 100%;
+            height: 8px;
+            background-color: #f1f1f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .loader-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+            border-radius: 10px;
+            animation: loading 2.5s ease-in-out infinite;
+        }
+        
+        .version {
+            font-size: 12px;
+            color: #999;
+            margin-top: 20px;
+        }
+        
+        @keyframes loading {
+            0% {
+                width: 0%;
+                transform: translateX(0);
+            }
+            50% {
+                width: 100%;
+                transform: translateX(0);
+            }
+            100% {
+                width: 0%;
+                transform: translateX(200%);
+            }
+        }
+        
+        @keyframes shine {
+            0% {
+                transform: translateX(-100%) rotate(30deg);
+            }
+            100% {
+                transform: translateX(100%) rotate(30deg);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .splash-container {
+                padding: 20px;
+                border-radius: 15px;
+            }
+            
+            .logo {
+                width: 100px;
+                height: 100px;
+                font-size: 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="splash-container">
+        <div class="logo-container">
+            <div class="logo">RK</div>
+        </div>
+        <h1>RK Fashions</h1>
+        <p>Bill Book Application</p>
+        <div class="loader">
+            <div class="loader-bar"></div>
+        </div>
+        <div class="version">Version 1.0</div>
+    </div>
+</body>
+</html>
