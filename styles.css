@@ -23,6 +23,31 @@ body {
     padding: 0;
 }
 
+.install-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  background-color: #6c5ce7;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+  display: none; /* Hidden by default */
+  z-index: 1000;
+  font-weight: bold;
+}
+
+.install-btn i {
+  margin-right: 8px;
+}
+
+.install-btn:hover {
+  background-color: #5c4bd8;
+  transform: translateY(-2px);
+}
+
 .container {
     max-width: 1000px;
     margin: 20px auto;
