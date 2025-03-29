@@ -1,68 +1,120 @@
 // Transaction page specific code
 if (document.getElementById("transaction-form")) {
+    // Constants
+    const DAILY_STATS_KEY = 'rkFashionsDailyStats';
+    
+    // Initialize date display
     const today = new Date();
     const day = String(today.getDate()).padStart(2, '0');
-    
-    // Set initial values
     document.getElementById("date").textContent = today.toLocaleDateString();
-    document.getElementById("date-part").textContent = day; // Show day part
+    document.getElementById("date-part").textContent = day;
     
-    // Add first item
+    // Initialize form
     addItem();
-
-    // Add item button
     document.getElementById("add-item").addEventListener("click", addItem);
-
-    // Handle input changes for calculations
     document.getElementById("items-container").addEventListener("input", function(e) {
         if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
             calculateTotals();
         }
     });
+    document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
 
-       // Form submission
-    document.getElementById("transaction-form").addEventListener("submit", function(e) {
-        e.preventDefault();
-        
-        // Validate form
-        if (!validateForm()) return;
-        
-        // Validate SI No
-        const siNoPart = document.getElementById("si-no-part").value;
-        if (!siNoPart || isNaN(siNoPart) || siNoPart < 1 || siNoPart > 99) {
-            alert("Please enter a valid SI No (1-99)");
-            return;
-        }
-        
-        // Generate and display bill
-        const billData = prepareBillData();
-        displayBillPreview(billData);
-        
-        // Submit to server
-        submitBill(billData);
-    });
-
-    // Fetch and display daily stats
-    fetchDailyStats();
-
-    function fetchDailyStats() {
-    const today = new Date().toISOString().split('T')[0];
+    // ======================
+    // DAILY STATS FUNCTIONS
+    // ======================
     
-    fetch(`https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?date=${today}`)
-    .then(response => response.json())
-    .then(data => {
-        if (data && data.length > 0) {
-            const salesCount = data.length;
-            const totalProfit = data.reduce((sum, transaction) => sum + parseFloat(transaction.totalProfit || 0), 0);
-            
-            document.getElementById("today-sales-count").textContent = salesCount;
-            document.getElementById("today-profit-total").textContent = `₹${totalProfit.toFixed(2)}`;
+    // Initialize stats
+    initDailyStats();
+    startAutoRefresh();
+    
+    function initDailyStats() {
+        const today = getTodayDateString();
+        const savedStats = localStorage.getItem(DAILY_STATS_KEY);
+        
+        if (savedStats) {
+            const stats = JSON.parse(savedStats);
+            if (stats.date === today) {
+                updateStatsUI(stats.salesCount, stats.totalProfit);
+                return;
+            }
         }
-    })
-    .catch(error => {
-        console.error("Error fetching daily stats:", error);
-    });
-}
+        resetDailyStats();
+    }
+    
+    function resetDailyStats() {
+        const newStats = {
+            date: getTodayDateString(),
+            salesCount: 0,
+            totalProfit: 0,
+            lastUpdated: new Date().getTime()
+        };
+        localStorage.setItem(DAILY_STATS_KEY, JSON.stringify(newStats));
+        updateStatsUI(0, 0);
+    }
+    
+    function updateStatsUI(count, profit) {
+        document.getElementById("today-sales-count").textContent = count;
+        document.getElementById("today-profit-total").textContent = `₹${profit.toFixed(2)}`;
+        document.getElementById("last-updated-time").textContent = new Date().toLocaleTimeString();
+        
+        // Visual feedback
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach(card => {
+            card.classList.toggle('has-data', count > 0);
+        });
+    }
+    
+    function updateLocalStats(additionalSales, additionalProfit) {
+        const today = getTodayDateString();
+        const savedStats = localStorage.getItem(DAILY_STATS_KEY);
+        
+        let currentStats = savedStats ? JSON.parse(savedStats) : {
+            date: today,
+            salesCount: 0,
+            totalProfit: 0
+        };
+        
+        // Reset if day changed
+        if (currentStats.date !== today) {
+            currentStats = {
+                date: today,
+                salesCount: 0,
+                totalProfit: 0
+            };
+        }
+        
+        const newStats = {
+            date: today,
+            salesCount: currentStats.salesCount + additionalSales,
+            totalProfit: parseFloat((currentStats.totalProfit + additionalProfit).toFixed(2)),
+            lastUpdated: new Date().getTime()
+        };
+        
+        localStorage.setItem(DAILY_STATS_KEY, JSON.stringify(newStats));
+        updateStatsUI(newStats.salesCount, newStats.totalProfit);
+    }
+    
+    function getTodayDateString() {
+        const today = new Date();
+        return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    }
+    
+    function updateCurrentTime() {
+        document.getElementById("current-time").textContent = 
+            new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        // Check if day changed
+        const today = getTodayDateString();
+        const savedStats = localStorage.getItem(DAILY_STATS_KEY);
+        if (savedStats && JSON.parse(savedStats).date !== today) {
+            resetDailyStats();
+        }
+    }
+    
+    function startAutoRefresh() {
+        updateCurrentTime();
+        setInterval(updateCurrentTime, 60000); // Update every minute
+    }
 
     function addItem() {
         const itemsContainer = document.getElementById("items-container");
@@ -216,7 +268,28 @@ if (document.getElementById("transaction-form")) {
         preview.innerHTML = html;
     }
 
+  function handleFormSubmit(e) {
+        e.preventDefault();
+        if (!validateForm()) return;
+        
+        const siNoPart = document.getElementById("si-no-part").value;
+        if (!siNoPart || isNaN(siNoPart) || siNoPart < 1 || siNoPart > 99) {
+            alert("Please enter a valid SI No (1-99)");
+            return;
+        }
+        
+        const billData = prepareBillData();
+        displayBillPreview(billData);
+        submitBill(billData);
+    }
+    
     function submitBill(data) {
+        // Update local stats first
+        const salesToAdd = data.items.length;
+        const profitToAdd = parseFloat(data.totalProfit) || 0;
+        updateLocalStats(salesToAdd, profitToAdd);
+        
+        // Submit to server
         fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
             method: "POST",
             mode: "no-cors",
@@ -231,10 +304,7 @@ if (document.getElementById("transaction-form")) {
             document.getElementById("transaction-form").reset();
             document.getElementById("customer-name").value = customerName;
             document.getElementById("items-container").innerHTML = "";
-            addItem(); // Add new empty item
-
-            // Refresh daily stats
-            fetchDailyStats();
+            addItem();
             
             alert("Bill saved successfully!");
         })
@@ -243,4 +313,3 @@ if (document.getElementById("transaction-form")) {
             alert("Error saving bill. Please try again.");
         });
     }
-}
