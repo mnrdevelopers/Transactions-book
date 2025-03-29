@@ -266,6 +266,15 @@ button[type="submit"]:hover {
     background: rgba(74, 107, 255, 0.05);
 }
 
+.actions button {
+    padding: 6px 12px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
 .pagination {
     display: flex;
     justify-content: center;
@@ -469,6 +478,38 @@ button[type="submit"]:hover {
     background: rgba(74, 107, 255, 0.05);
 }
 
+/* Mobile Responsive for Reports */
+@media (max-width: 768px) {
+    .report-period {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .date-picker {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .summary-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-container {
+        height: 250px;
+        padding: 10px;
+    }
+    
+    .report-filters {
+        flex-direction: column;
+    }
+    
+    #report-table th,
+    #report-table td {
+        padding: 8px 6px;
+        font-size: 14px;
+    }
+}
+
 /* Maintenance Page Specific Styles */
 .maintenance-container {
     display: grid;
@@ -530,7 +571,173 @@ button[type="submit"]:hover {
     background: #00a884;
 }
 
-/* Status badges */
+.report-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.period-selector {
+    display: flex;
+    gap: 10px;
+}
+
+.period-btn {
+    padding: 8px 15px;
+    background: #e0e0e0;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 500;
+}
+
+.period-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+.date-filter {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.date-filter input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+}
+
+.generate-btn {
+    padding: 8px 15px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+}
+
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.summary-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.summary-card h3 {
+    margin-top: 0;
+    color: #555;
+    font-size: 16px;
+}
+
+.summary-card .amount {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.summary-card .change {
+    font-size: 14px;
+    margin: 0;
+}
+
+.change.positive {
+    color: var(--success);
+}
+
+.change.negative {
+    color: var(--danger);
+}
+
+.change.neutral {
+    color: #777;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin-bottom: 20px;
+}
+
+.table-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    flex-grow: 1;
+}
+
+.filters select {
+    min-width: 150px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+}
+
+.search-box {
+    display: flex;
+    flex-grow: 1;
+    min-width: 250px;
+}
+
+.search-box input {
+    flex-grow: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+}
+
+.search-box button {
+    padding: 8px 15px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    cursor: pointer;
+}
+
+.table-container {
+    overflow-x: auto;
+    margin-bottom: 15px;
+}
+
+#transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#transactions-table th {
+    background: var(--primary);
+    color: white;
+    padding: 12px;
+    text-align: left;
+}
+
+#transactions-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+}
+
+#transactions-table tr:hover {
+    background: rgba(74, 107, 255, 0.05);
+}
+
 .status-badge {
     display: inline-block;
     padding: 4px 8px;
@@ -575,6 +782,90 @@ button[type="submit"]:hover {
 .delete-btn {
     background: var(--danger);
     color: white;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+.pagination button {
+    padding: 8px 15px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+}
+
+.pagination button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 25px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal h2 {
+    margin-top: 0;
+    color: var(--primary);
+}
+
+.close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.save-btn {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+}
+
+.cancel-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
 }
 
 /* Loading and Error States */
@@ -623,6 +914,50 @@ button[type="submit"]:hover {
 
 /* Responsive Styles */
 @media (max-width: 768px) {
+    .report-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .date-filter {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .summary-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .table-controls {
+        flex-direction: column;
+    }
+    
+    .filters {
+        flex-direction: column;
+    }
+    
+    .filters select {
+        width: 100%;
+    }
+    
+    .search-box {
+        width: 100%;
+    }
+    
+    #transactions-table th,
+    #transactions-table td {
+        padding: 8px;
+        font-size: 14px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        padding: 15px;
+    }
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
     .container,
     .maintenance-container {
         padding: 10px;
@@ -669,31 +1004,7 @@ button[type="submit"]:hover {
         width: 100%;
     }
 
-    /* Tables */
-    .report-period,
-    .report-filters,
-    .filters {
-        flex-direction: column;
-    }
-
-    .date-picker,
-    .date-filter {
-        margin-left: 0;
-        width: 100%;
-    }
-
-    .summary-cards {
-        grid-template-columns: 1fr;
-    }
-
-    .chart-container {
-        height: 250px;
-        padding: 10px;
-    }
-
-    /* Table containers */
-    .table-container,
-    .report-table-container,
+    /* Transactions table */
     .transaction-table-container {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -701,34 +1012,26 @@ button[type="submit"]:hover {
         width: calc(100% + 20px);
     }
 
-    #transactions-table,
-    #report-table {
+    #transactions-table {
         width: 90%;
-        min-width: 600px;
+        min-width: 600px; /* Allows horizontal scrolling */
         font-size: 14px;
     }
 
     #transactions-table th,
-    #transactions-table td,
-    #report-table th,
-    #report-table td {
+    #transactions-table td {
+        padding: 8px 6px;
+        white-space: nowrap;
+    }
+
+    #transactions-table th {
+        font-size: 13px;
         padding: 8px 6px;
     }
 
-    #transactions-table th,
-    #report-table th {
-        font-size: 13px;
-    }
-
-    /* Actions */
-    .actions {
-        flex-direction: column;
-        gap: 5px;
-    }
-
     .actions button {
-        width: 100%;
-        padding: 8px;
+        padding: 5px 8px;
+        font-size: 12px;
     }
 
     /* Pagination */
@@ -746,29 +1049,18 @@ button[type="submit"]:hover {
     .modal-content {
         width: 95%;
         padding: 15px;
-        max-height: 85vh;
+        max-height: 90vh;
     }
 
     /* Form elements */
     button[type="submit"],
-    #add-item,
-    .submit-btn,
-    .generate-btn,
-    .save-btn,
-    .cancel-btn {
+    #add-item {
         padding: 10px;
         font-size: 14px;
-        width: 100%;
     }
 
     select, input {
         font-size: 14px;
-    }
-
-    /* Form layout */
-    .form-row {
-        grid-template-columns: 1fr;
-        gap: 10px;
     }
 }
 
@@ -784,33 +1076,235 @@ button[type="submit"]:hover {
         font-size: 13px;
     }
 
-    /* Tables */
-    #transactions-table,
-    #report-table {
+    /* Even smaller table cells */
+    #transactions-table th,
+    #transactions-table td {
+        padding: 6px 4px;
+        font-size: 13px;
+    }
+
+    #transactions-table th {
+        font-size: 12px;
+    }
+
+    .actions button {
+        padding: 4px 6px;
+        font-size: 11px;
+    }
+
+    /* Bill preview */
+    .bill-preview {
+        padding: 15px;
+    }
+
+    .bill-preview th,
+    .bill-preview td {
+        padding: 6px;
+        font-size: 13px;
+    }
+
+    /* Form elements */
+    .item-row {
+        padding: 8px;
+    }
+
+    .item-row label {
+        font-size: 13px;
+    }
+
+    button[type="submit"],
+    #add-item {
+        padding: 8px;
+        font-size: 13px;
+    }
+}
+
+/* Very small devices (e.g., iPhone 5/SE) */
+@media (max-width: 320px) {
+    .nav-btn {
+        min-width: 100px;
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    #transactions-table {
+        font-size: 12px;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .pagination button {
+        margin: 3px;
+    }
+}
+
+/* Mobile Responsive Additions */
+@media (max-width: 800px) {
+    /* Main container adjustments */
+    .container {
+        padding: 10px;
+        margin: 10px auto;
+    }
+
+    /* Card layout adjustments */
+    .card {
+        padding: 15px;
+    }
+
+    /* Form improvements for mobile */
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 12px;
+        font-size: 16px; /* Larger touch targets */
+    }
+
+    /* Button sizing for mobile */
+    .submit-btn,
+    .generate-btn,
+    .save-btn,
+    .cancel-btn {
+        padding: 12px;
+        font-size: 16px;
+        width: 100%;
+    }
+
+    /* Report controls stacking */
+    .report-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .period-selector {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .period-btn {
+        flex: 1 1 100px;
+        text-align: center;
+        padding: 10px;
+    }
+
+    .date-filter {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    /* Summary cards stacking */
+    .summary-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-card {
+        padding: 12px;
+    }
+
+    /* Table controls adjustments */
+    .table-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filters {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filters select {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .search-box {
+        min-width: 100%;
+    }
+
+    /* Table optimizations */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #transactions-table {
+        min-width: 600px; /* Allows horizontal scrolling */
+    }
+
+    #transactions-table th,
+    #transactions-table td {
+        padding: 8px 6px;
+        font-size: 14px;
+    }
+
+    /* Modal adjustments */
+    .modal-content {
+        width: 95%;
+        padding: 15px;
+        max-height: 85vh;
+    }
+
+    /* Action buttons in table */
+    .actions {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .actions button {
+        width: 100%;
+        padding: 8px;
+    }
+
+    /* Pagination adjustments */
+    .pagination {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .pagination button {
+        flex: 1 1 100px;
+        padding: 10px;
+    }
+
+    /* Loading spinner */
+    .loading-spinner {
+        padding: 15px;
+    }
+
+    /* Status badges */
+    .status-badge {
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+}
+
+/* Very small devices (e.g., iPhone 5/SE) */
+@media (max-width: 320px) {
+    .period-btn {
+        flex: 1 1 80px;
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    #transactions-table {
         min-width: 300px;
         font-size: 13px;
     }
 
     #transactions-table th,
-    #transactions-table td,
-    #report-table th,
-    #report-table td {
+    #transactions-table td {
         padding: 6px 4px;
-    }
-
-    #transactions-table th,
-    #report-table th {
-        font-size: 12px;
     }
 
     .summary-card .amount {
         font-size: 20px;
-    }
-
-    .period-btn {
-        flex: 1 1 80px;
-        font-size: 14px;
-        padding: 8px;
     }
 }
 
@@ -824,8 +1318,7 @@ button[type="submit"]:hover {
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
 
-    #transactions-table,
-    #report-table {
+    #transactions-table {
         font-size: 14px;
     }
 }
@@ -836,10 +1329,41 @@ button[type="submit"]:hover {
         max-height: 70vh;
     }
 
-    .table-container,
-    .report-table-container {
+    .table-container {
         max-height: 40vh;
         overflow-y: auto;
+    }
+}
+
+/* High-density displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .submit-btn,
+    .generate-btn,
+    .save-btn,
+    .cancel-btn,
+    .actions button {
+        border-width: 0.5px;
+    }
+}
+
+/* Accessibility improvements for mobile */
+@media (max-width: 800px) {
+    /* Larger tap targets */
+    button, [role="button"], input[type="submit"], input[type="reset"], input[type="button"] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Form labels */
+    .form-group label {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    /* Focus states */
+    input:focus, select:focus, textarea:focus, button:focus {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
     }
 }
 
@@ -859,8 +1383,7 @@ button[type="submit"]:hover {
         page-break-inside: avoid;
     }
 
-    #transactions-table,
-    #report-table {
+    #transactions-table {
         width: 100%;
         min-width: auto;
     }
