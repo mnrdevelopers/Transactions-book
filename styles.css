@@ -46,7 +46,7 @@ header h1 {
 
 /* Navigation */
 .nav-buttons {
-    display: flex;
+    display: grid;
     justify-content: center;
     flex-wrap: wrap;
     gap: 15px;
