@@ -42,6 +42,28 @@ if (document.getElementById("transaction-form")) {
         submitBill(billData);
     });
 
+    // Fetch and display daily stats
+    fetchDailyStats();
+
+    function fetchDailyStats() {
+    const today = new Date().toISOString().split('T')[0];
+    
+    fetch(`https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?date=${today}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data && data.length > 0) {
+            const salesCount = data.length;
+            const totalProfit = data.reduce((sum, transaction) => sum + parseFloat(transaction.totalProfit || 0), 0);
+            
+            document.getElementById("today-sales-count").textContent = salesCount;
+            document.getElementById("today-profit-total").textContent = `₹${totalProfit.toFixed(2)}`;
+        }
+    })
+    .catch(error => {
+        console.error("Error fetching daily stats:", error);
+    });
+}
+
     function addItem() {
         const itemsContainer = document.getElementById("items-container");
         const newItem = document.createElement("div");
@@ -210,6 +232,9 @@ if (document.getElementById("transaction-form")) {
             document.getElementById("customer-name").value = customerName;
             document.getElementById("items-container").innerHTML = "";
             addItem(); // Add new empty item
+
+            // Refresh daily stats
+            fetchDailyStats();
             
             alert("Bill saved successfully!");
         })
