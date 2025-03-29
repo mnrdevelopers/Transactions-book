@@ -1142,7 +1142,7 @@ button[type="submit"]:hover {
 }
 
 /* Mobile Responsive Additions */
-@media (max-width: 800px) {
+@media (max-width: 768px) {
     /* Main container adjustments */
     .container {
         padding: 10px;
