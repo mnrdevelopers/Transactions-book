@@ -1,69 +1,47 @@
-// Check if the app is already installed
-function isAppInstalled() {
-  return window.matchMedia('(display-mode: standalone)').matches || 
-         window.navigator.standalone ||
-         document.referrer.includes('android-app://');
-}
-
-// Show/hide install button based on installation status
+// Modified toggleInstallButton function
 function toggleInstallButton() {
   const installButton = document.getElementById('installButton');
+  const dismissed = localStorage.getItem('installButtonDismissed');
   
-  if (!isAppInstalled() && window.deferredPrompt) {
+  if (!isAppInstalled() && window.deferredPrompt && !dismissed) {
     installButton.style.display = 'block';
   } else {
-    installButton.style.display = 'block';
+    installButton.style.display = 'none';
   }
 }
 
-// Initialize PWA install prompt
-let deferredPrompt;
+// Add a close button to the install prompt
+function addCloseButton() {
+  const installButton = document.getElementById('installButton');
+  if (!installButton) return;
+  
+  const closeButton = document.createElement('span');
+  closeButton.innerHTML = '&times;';
+  closeButton.style.position = 'absolute';
+  closeButton.style.top = '-8px';
+  closeButton.style.right = '-8px';
+  closeButton.style.background = 'white';
+  closeButton.style.borderRadius = '50%';
+  closeButton.style.width = '24px';
+  closeButton.style.height = '24px';
+  closeButton.style.display = 'flex';
+  closeButton.style.alignItems = 'center';
+  closeButton.style.justifyContent = 'center';
+  closeButton.style.cursor = 'pointer';
+  closeButton.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+  
+  closeButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    installButton.style.display = 'none';
+    localStorage.setItem('installButtonDismissed', 'true');
+  });
+  
+  installButton.style.position = 'relative';
+  installButton.appendChild(closeButton);
+}
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevent the mini-infobar from appearing on mobile
-  e.preventDefault();
-  // Stash the event so it can be triggered later
-  deferredPrompt = e;
-  // Update UI to notify the user they can install the PWA
-  toggleInstallButton();
-});
-
-window.addEventListener('appinstalled', () => {
-  // Hide the install button
-  toggleInstallButton();
-  // Clear the deferredPrompt so it can be garbage collected
-  deferredPrompt = null;
-  // Optionally show a success message
-  alert('Thank you for installing RK Fashions Bill Book!');
-});
-
-// Handle install button click
-document.getElementById('installButton')?.addEventListener('click', async () => {
-  if (deferredPrompt) {
-    // Show the install prompt
-    deferredPrompt.prompt();
-    // Wait for the user to respond to the prompt
-    const { outcome } = await deferredPrompt.userChoice;
-    // Optionally send analytics about the installation
-    console.log(`User response to the install prompt: ${outcome}`);
-    // We've used the prompt, and can't use it again
-    deferredPrompt = null;
-    // Hide the install button regardless of outcome
-    toggleInstallButton();
-  }
-});
-
-// Check installation status on page load
+// Call this in your load event
 window.addEventListener('load', () => {
   toggleInstallButton();
-  
-  // Also check periodically in case installation happens while the app is open
-  setInterval(toggleInstallButton, 3000);
-});
-
-// Check installation status when the page becomes visible again
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    toggleInstallButton();
-  }
+  addCloseButton();
 });
