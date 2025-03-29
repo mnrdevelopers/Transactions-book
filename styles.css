@@ -1165,7 +1165,7 @@ button[type="submit"]:hover {
     .form-group select,
     .form-group textarea {
         padding: 12px;
-        width: 95%;
+        width: -webkit-fill-available;;
         font-size: 16px; /* Larger touch targets */
     }
 
