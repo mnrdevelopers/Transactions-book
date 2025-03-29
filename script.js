@@ -313,3 +313,4 @@ if (document.getElementById("transaction-form")) {
             alert("Error saving bill. Please try again.");
         });
     }
+}
