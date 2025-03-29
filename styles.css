@@ -958,7 +958,8 @@ button[type="submit"]:hover {
 
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
-    .container {
+    .container,
+    .maintenance-container {
         padding: 10px;
         margin: 10px;
         width: 95%;
