@@ -30,7 +30,13 @@
 
         <!-- Bill Details -->
         <div class="bill-details">
-            <p><strong>SI No:</strong> <span id="si-no"></span></p>
+            <div>
+                <label for="si-no"><strong>SI No:</strong></label>
+                <div style="display: flex; align-items: center;">
+                    <span id="date-part" style="margin-right: 5px;"></span>
+                    <input type="number" id="si-no-part" min="1" max="99" style="width: 60px;">
+                </div>
+            </div>
             <p><strong>Date:</strong> <span id="date"></span></p>
             <div>
                 <label for="customer-name"><strong>Customer Name:</strong></label>
@@ -38,6 +44,7 @@
             </div>
         </div>
 
+        <!-- Rest of the file remains the same -->
         <!-- Transaction Form -->
         <form id="transaction-form">
             <div id="items-container">
