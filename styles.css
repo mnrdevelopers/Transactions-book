@@ -201,7 +201,6 @@ header h1 {
 }
 
 .remove-item {
-    position: sticky;
     right: 15px;
     bottom: 15px;
     background: var(--danger);
