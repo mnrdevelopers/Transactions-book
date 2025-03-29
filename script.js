@@ -1,14 +1,12 @@
 // Transaction page specific code
 if (document.getElementById("transaction-form")) {
-    // Initialize counter from localStorage or start at 1
-    let transactionCounter = parseInt(localStorage.getItem('transactionCounter')) || 1;
     const today = new Date();
     const day = String(today.getDate()).padStart(2, '0');
     
     // Set initial values
     document.getElementById("date").textContent = today.toLocaleDateString();
-    document.getElementById("si-no").textContent = `${day}${String(transactionCounter).padStart(2, '0')}`;
-
+    document.getElementById("date-part").textContent = day; // Show day part
+    
     // Add first item
     addItem();
 
@@ -22,12 +20,19 @@ if (document.getElementById("transaction-form")) {
         }
     });
 
-    // Form submission
+       // Form submission
     document.getElementById("transaction-form").addEventListener("submit", function(e) {
         e.preventDefault();
         
         // Validate form
         if (!validateForm()) return;
+        
+        // Validate SI No
+        const siNoPart = document.getElementById("si-no-part").value;
+        if (!siNoPart || isNaN(siNoPart) || siNoPart < 1 || siNoPart > 99) {
+            alert("Please enter a valid SI No (1-99)");
+            return;
+        }
         
         // Generate and display bill
         const billData = prepareBillData();
@@ -125,10 +130,13 @@ if (document.getElementById("transaction-form")) {
             });
         });
         
+        const dayPart = document.getElementById("date-part").textContent;
+        const siNoPart = document.getElementById("si-no-part").value.padStart(2, '0');
+        
         return {
             storeName: "RK Fashions",
             date: document.getElementById("date").textContent,
-            siNo: document.getElementById("si-no").textContent,
+            siNo: `${dayPart}${siNoPart}`, // Combine day and manual part
             customerName: document.getElementById("customer-name").value,
             items: items,
             paymentMode: document.getElementById("payment-mode").value,
@@ -196,11 +204,6 @@ if (document.getElementById("transaction-form")) {
             body: JSON.stringify(data)
         })
         .then(() => {
-            // Increment counter
-            transactionCounter++;
-            localStorage.setItem('transactionCounter', transactionCounter);
-            document.getElementById("si-no").textContent = `${day}${String(transactionCounter).padStart(2, '0')}`;
-            
             // Reset form but keep customer name
             const customerName = document.getElementById("customer-name").value;
             document.getElementById("transaction-form").reset();
