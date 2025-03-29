@@ -114,6 +114,46 @@ header h1 {
     color: var(--success);
 }
 
+/* Add these styles to your existing CSS */
+.stat-card {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.stat-card.has-data {
+    background-color: #f8fff8;
+    box-shadow: 0 4px 8px rgba(0, 100, 0, 0.1);
+}
+
+.stat-card.has-data h3 {
+    color: #2e7d32;
+}
+
+.stat-card .stat-value {
+    transition: all 0.3s ease;
+}
+
+.stat-card.has-data .stat-value {
+    color: #2e7d32;
+    font-size: 26px;
+}
+
+.stat-time {
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+/* Animation for new transactions */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.new-transaction {
+    animation: pulse 0.5s ease;
+}
+
 /* Form Styles */
 .bill-details {
     display: grid;
