@@ -1151,7 +1151,7 @@ button[type="submit"]:hover {
     /* Card layout adjustments */
     .card {
         padding: 15px;
-        width: 50%;
+        width: 400px;
     }
 
     /* Form improvements for mobile */
