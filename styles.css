@@ -1152,6 +1152,7 @@ button[type="submit"]:hover {
     /* Card layout adjustments */
     .card {
         padding: 15px;
+        width: 55%;
     }
 
     /* Form improvements for mobile */
@@ -1164,6 +1165,7 @@ button[type="submit"]:hover {
     .form-group select,
     .form-group textarea {
         padding: 12px;
+        width: 95%;
         font-size: 16px; /* Larger touch targets */
     }
 
