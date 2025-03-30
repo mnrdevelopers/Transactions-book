@@ -275,7 +275,6 @@ function displayBillPreview(data) {
             <p>Thank you for your purchase!</p>
         </div>
     `;
-        preview.innerHTML = html;
     }
     function setupPrintButton() {
     const printBtn = document.getElementById("print-bill");
@@ -303,14 +302,13 @@ function handleFormSubmit(e) {
     if (paymentMode === "UPI") {
         displayBillPreview(billData);
         generateUPIQRCode(billData.totalAmount);
+        document.getElementById("upi-qr-row").style.display = paymentMode === "UPI" ? "table-row" : "none";
     } else {
         // Hide QR code for other payment methods
         document.getElementById("upi-qr-code").innerHTML = '';
         displayBillPreview(billData);
     }
     
-    const billData = prepareBillData();
-    displayBillPreview(billData);
     submitBill(billData);
 
      // Show print button after bill generation
