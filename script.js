@@ -218,52 +218,67 @@ if (document.getElementById("transaction-form")) {
         totalProfit: document.getElementById("total-profit").value
     };
 }
-    function displayBillPreview(data) {
-        const preview = document.getElementById("bill-details");
-        let html = `
-            <div class="bill-header">
-                <h3>${data.storeName}</h3>
-                <p>Date: ${data.date} | Bill No: ${data.siNo}</p>
-                <p>Customer: ${data.customerName}</p>
+function displayBillPreview(data) {
+    // Hide the template
+    document.getElementById("bill-template").style.display = "none";
+    
+    // Show the dynamic bill container
+    const preview = document.getElementById("bill-details");
+    preview.style.display = "block";
+    
+    // Build the bill using similar structure as your template
+    preview.innerHTML = `
+        <div class="bill-header">
+            <h3>${data.storeName}</h3>
+            <p class="store-info">Gram Panchayath Complex, Dichpally Busstand - 503174</p>
+            <p class="store-contact">Mobile: +91 7893433457, +91 7842694544</p>
+            
+            <div class="bill-meta">
+                <p><strong>Date:</strong> ${data.date}</p>
+                <p><strong>Bill No:</strong> ${data.siNo}</p>
+                <p><strong>Customer:</strong> ${data.customerName}</p>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Qty</th>
-                        <th>Price</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
+        </div>
         
-        data.items.forEach(item => {
-            html += `
+        <table class="bill-items">
+            <thead>
                 <tr>
-                    <td>${item.itemName}</td>
-                    <td>${item.quantity}</td>
-                    <td>₹${item.salePrice}</td>
-                    <td>₹${item.total}</td>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
                 </tr>
-            `;
-        });
-        
-        html += `
-                </tbody>
-                <tfoot>
+            </thead>
+            <tbody>
+                ${data.items.map(item => `
                     <tr>
-                        <td colspan="3">Total Amount</td>
-                        <td>₹${data.totalAmount}</td>
+                        <td>${item.itemName}</td>
+                        <td>${item.quantity}</td>
+                        <td>₹${item.salePrice}</td>
+                        <td>₹${item.total}</td>
                     </tr>
-                    <tr>
-                        <td colspan="3">Payment Mode</td>
-                        <td>${data.paymentMode}</td>
-                    </tr>
-                </tfoot>
-            </table>
-        `;
+                `).join('')}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3"><strong>Total Amount</strong></td>
+                    <td><strong>₹${data.totalAmount}</strong></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>Payment Mode</strong></td>
+                    <td><strong>${data.paymentMode}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
         
+        <div class="bill-footer">
+            <p>Thank you for your purchase!</p>
+        </div>
+    `;
+    
+    // Show print button
+    document.getElementById("print-bill").style.display = "block";
+}  
         preview.innerHTML = html;
     }
     function setupPrintButton() {
