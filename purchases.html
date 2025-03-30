@@ -6,6 +6,109 @@
     <title>Purchase Management - RK Fashions</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Purchase specific styles */
+.purchase-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 15px;
+    border: 1px solid #eee;
+}
+
+.purchase-item .remove-item {
+    background: var(--danger);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.purchase-item .remove-item:hover {
+    background: #c0392b;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-badge.paid {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.overdue {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
+
+.items-table th, .items-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.items-table th {
+    background-color: #f2f2f2;
+}
+
+.transaction-header {
+    margin-bottom: 15px;
+}
+
+.transaction-header p {
+    margin: 5px 0;
+}
+
+.transaction-items {
+    margin: 15px 0;
+}
+
+.transaction-totals {
+    margin: 15px 0;
+    font-weight: 500;
+}
+
+.transaction-totals p {
+    margin: 5px 0;
+}
+
+.transaction-notes {
+    margin: 15px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+}
+
+/* Payment form in modal */
+#payment-form .form-row {
+    margin-bottom: 15px;
+}
+
+#payment-reference-container {
+    display: none;
+}
+
+#payment-mode-input:not([value="Cash"]) ~ #payment-reference-container {
+    display: block;
+}
+        </style>
 </head>
 <body>
     <div class="container">
