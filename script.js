@@ -232,6 +232,12 @@ if (document.getElementById("transaction-form")) {
     // Show the dynamic bill container
     const preview = document.getElementById("bill-details");
     preview.style.display = "block";
+
+        // Force-show UPI row if needed
+if (data.paymentMode === "UPI") {
+    const upiRow = preview.querySelector("#upi-qr-row");
+    if (upiRow) upiRow.style.display = "table-row";
+}
     
     // Build the bill with smaller font sizes for thermal printer
     preview.innerHTML = `
@@ -275,17 +281,17 @@ if (document.getElementById("transaction-form")) {
                     <td colspan="3"><strong>Payment Mode</strong></td>
                     <td><strong>${data.paymentMode}</strong></td>
                 </tr>
-                ${data.paymentMode === "UPI" ? `
-                <tr id="upi-qr-row">
-                    <td colspan="4" style="text-align:center; padding:8px 0;">
-                        <div class="upi-qr-section">
-                            <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
-                            <div id="upi-qr-code"></div>
-                            <p style="font-size:10px; margin-top:3px;">UPI ID: maniteja1098@oksbi</p>
-                        </div>
-                    </td>
-                </tr>
-                ` : ''}
+               ${data.paymentMode === "UPI" ? `
+<tr>
+    <td colspan="4" style="text-align:center; padding:8px 0;">
+        <div style="margin: 0 auto; width: fit-content;">
+            <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
+            <div id="upi-qr-code" style="width:120px; height:120px;"></div>
+            <p style="font-size:10px; margin-top:3px;">UPI ID: maniteja1098@oksbi</p>
+        </div>
+    </td>
+</tr>
+` : ''}
             </tfoot>
         </table>
         
