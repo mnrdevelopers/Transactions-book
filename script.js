@@ -267,20 +267,20 @@ if (document.getElementById("transaction-form")) {
         preview.innerHTML = html;
     }
 
-  function handleFormSubmit(e) {
-        e.preventDefault();
-        if (!validateForm()) return;
-        
-        const siNoPart = document.getElementById("si-no").value; // Changed to si-no
-if (!siNoPart || isNaN(siNoPart) {
-    alert("Please enter a valid SI No (numbers only)");
-    return;
-}
-        
-        const billData = prepareBillData();
-        displayBillPreview(billData);
-        submitBill(billData);
+function handleFormSubmit(e) {
+    e.preventDefault();
+    if (!validateForm()) return;
+    
+    const siNoPart = document.getElementById("si-no").value;
+    if (!siNoPart || isNaN(siNoPart)) { // Fixed: Added missing parenthesis
+        alert("Please enter a valid SI No (numbers only)");
+        return;
     }
+    
+    const billData = prepareBillData();
+    displayBillPreview(billData);
+    submitBill(billData);
+}
     
     function submitBill(data) {
         // Update local stats first
