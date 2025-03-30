@@ -5,7 +5,7 @@ if (document.getElementById("transaction-form")) {
     
     // Initialize date display
     const today = new Date();
-    const day = String(today.getmonth()).padStart(2, '0');
+    const month = String(today.getmonth()).padStart(2, '0');
     document.getElementById("date").textContent = today.toLocaleDateString();
     document.getElementById("month-part").textContent = month;
     
@@ -204,8 +204,8 @@ if (document.getElementById("transaction-form")) {
             });
         });
         
-        const dayPart = document.getElementById("month-part").textContent;
-        const siNoPart = document.getElementById("si-no-part").value.padStart(2, '0');
+        const monthPart = document.getElementById("month-part").textContent;
+        const siNoPart = document.getElementById("si-no").value.padStart(2, '0');
         
         return {
             storeName: "RK Fashions",
@@ -272,11 +272,11 @@ if (document.getElementById("transaction-form")) {
         e.preventDefault();
         if (!validateForm()) return;
         
-        const siNoPart = document.getElementById("si-no-part").value;
-        if (!siNoPart || isNaN(siNoPart) || siNoPart < 1 || siNoPart > 99) {
-            alert("Please enter a valid SI No (1-99)");
-            return;
-        }
+        const siNoPart = document.getElementById("si-no").value; // Changed to si-no
+if (!siNoPart || isNaN(siNoPart) {
+    alert("Please enter a valid SI No (numbers only)");
+    return;
+}
         
         const billData = prepareBillData();
         displayBillPreview(billData);
