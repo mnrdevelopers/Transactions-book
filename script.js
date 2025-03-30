@@ -337,48 +337,7 @@ if (data.paymentMode === "UPI") {
         // Show print button
         document.getElementById("print-bill").style.display = "block";
     }
-
-   function generateUPIQRCode(amount = '') {
-    const upiId = "maniteja1098@oksbi"; // Your UPI ID
-    const qrContainer = document.getElementById("upi-qr-code");
-    
-    // Validate container exists
-    if (!qrContainer) {
-        console.error("QR container not found!");
-        return;
-    }
-
-    // Clear previous QR code
-    qrContainer.innerHTML = '<canvas id="qr-canvas"></canvas>';
-    
-    // Generate UPI payment link
-    const paymentLink = `upi://pay?pa=${upiId}&pn=RK%20Fashions&am=${amount || '0'}&cu=INR`;
-    
-    // Generate QR code
-    QRCode.toCanvas(
-        document.getElementById('qr-canvas'),
-        paymentLink,
-        {
-            width: 120, // Perfect for 58mm printers
-            margin: 1,
-            color: {
-                dark: '#000000', // Black dots
-                light: '#ffffff' // White background
-            }
-        },
-        (error) => {
-            if (error) {
-                console.error("QR generation failed:", error);
-                qrContainer.innerHTML = `
-                    <p style="color:red; font-size:10px;">
-                        QR failed. Scan UPI ID: ${upiId}
-                    </p>
-                `;
-            }
-        }
-    );
-}
-    
+  
     function submitBill(data) {
         const submitBtn = document.querySelector("#transaction-form [type='submit']");
         const originalText = submitBtn.innerHTML;
