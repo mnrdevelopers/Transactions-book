@@ -18,6 +18,7 @@ if (document.getElementById("transaction-form")) {
         }
     });
     document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
+    setupPrintButton(); // Initialize print button once
 
     // ======================
     // DAILY STATS FUNCTIONS
@@ -193,151 +194,168 @@ if (document.getElementById("transaction-form")) {
     }
 
     function prepareBillData() {
-    const items = [];
-    document.querySelectorAll(".item-row").forEach(row => {
-        items.push({
-            itemName: row.querySelector(".item-name").value,
-            quantity: row.querySelector(".quantity").value,
-            purchasePrice: row.querySelector(".purchase-price").value,
-            salePrice: row.querySelector(".sale-price").value,
-            total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
+        const items = [];
+        document.querySelectorAll(".item-row").forEach(row => {
+            items.push({
+                itemName: row.querySelector(".item-name").value,
+                quantity: row.querySelector(".quantity").value,
+                purchasePrice: row.querySelector(".purchase-price").value,
+                salePrice: row.querySelector(".sale-price").value,
+                total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
+            });
         });
-    });
-    
-    const monthPart = document.getElementById("month-part").textContent;
-    const siNoPart = document.getElementById("si-no").value.padStart(2, '0');
-    
-    return {
-        storeName: "RK Fashions",
-        date: document.getElementById("date").textContent,
-        siNo: `${monthPart}${siNoPart}`, // Fixed: Changed siNo to siNoPart
-        customerName: document.getElementById("customer-name").value,
-        items: items,
-        paymentMode: document.getElementById("payment-mode").value,
-        totalAmount: document.getElementById("total-amount").value,
-        totalProfit: document.getElementById("total-profit").value
-    };
-}
-function displayBillPreview(data) {
-    // Hide the template
-    document.getElementById("bill-template").style.display = "none";
-    
-    // Show the dynamic bill container
-    const preview = document.getElementById("bill-details");
-    preview.style.display = "block";
-    
-    // Build the bill using similar structure as your template
-    preview.innerHTML = `
-        <div class="bill-header">
-            <h3>${data.storeName}</h3>
-            <p class="store-info">Gram Panchayath Complex, Dichpally Busstand - 503174</p>
-            <p class="store-contact">Mobile: +91 7893433457, +91 7842694544</p>
-            
-            <div class="bill-meta">
-                <p><strong>Date:</strong> ${data.date}</p>
-                <p><strong>Bill No:</strong> ${data.siNo}</p>
-                <p><strong>Customer:</strong> ${data.customerName}</p>
+        
+        const monthPart = document.getElementById("month-part").textContent;
+        const siNoPart = document.getElementById("si-no").value.padStart(2, '0');
+        
+        return {
+            storeName: "RK Fashions",
+            date: document.getElementById("date").textContent,
+            siNo: `${monthPart}${siNoPart}`,
+            customerName: document.getElementById("customer-name").value,
+            items: items,
+            paymentMode: document.getElementById("payment-mode").value,
+            totalAmount: document.getElementById("total-amount").value,
+            totalProfit: document.getElementById("total-profit").value
+        };
+    }
+
+    function displayBillPreview(data) {
+        // Hide the template
+        document.getElementById("bill-template").style.display = "none";
+        
+        // Show the dynamic bill container
+        const preview = document.getElementById("bill-details");
+        preview.style.display = "block";
+        
+        // Build the bill
+        preview.innerHTML = `
+            <div class="bill-header">
+                <h3>${data.storeName}</h3>
+                <p class="store-info">Gram Panchayath Complex, Dichpally Busstand - 503174</p>
+                <p class="store-contact">Mobile: +91 7893433457, +91 7842694544</p>
+                
+                <div class="bill-meta">
+                    <p><strong>Date:</strong> ${data.date}</p>
+                    <p><strong>Bill No:</strong> ${data.siNo}</p>
+                    <p><strong>Customer:</strong> ${data.customerName}</p>
+                </div>
             </div>
-        </div>
-        
-        <table class="bill-items">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${data.items.map(item => `
+            
+            <table class="bill-items">
+                <thead>
                     <tr>
-                        <td>${item.itemName}</td>
-                        <td>${item.quantity}</td>
-                        <td>₹${item.salePrice}</td>
-                        <td>₹${item.total}</td>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Total</th>
                     </tr>
-                `).join('')}
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="3"><strong>Total Amount</strong></td>
-                    <td><strong>₹${data.totalAmount}</strong></td>
-                </tr>
-                <tr>
-                    <td colspan="3"><strong>Payment Mode</strong></td>
-                    <td><strong>${data.paymentMode}</strong></td>
-                </tr>
-            </tfoot>
-        </table>
+                </thead>
+                <tbody>
+                    ${data.items.map(item => `
+                        <tr>
+                            <td>${item.itemName}</td>
+                            <td>${item.quantity}</td>
+                            <td>₹${item.salePrice}</td>
+                            <td>₹${item.total}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3"><strong>Total Amount</strong></td>
+                        <td><strong>₹${data.totalAmount}</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3"><strong>Payment Mode</strong></td>
+                        <td><strong>${data.paymentMode}</strong></td>
+                    </tr>
+                    ${data.paymentMode === "UPI" ? `
+                    <tr id="upi-qr-row">
+                        <td colspan="4" style="text-align:center; padding:15px 0;">
+                            <div class="upi-qr-section">
+                                <h4>Scan to Pay via UPI</h4>
+                                <div id="upi-qr-code"></div>
+                                <p style="font-size:14px; margin-top:5px;">UPI ID: rkfashions@upi</p>
+                            </div>
+                        </td>
+                    </tr>
+                    ` : ''}
+                </tfoot>
+            </table>
+            
+            <div class="bill-footer">
+                <p>Thank you for your purchase!</p>
+            </div>
+        `;
         
-        <div class="bill-footer">
-            <p>Thank you for your purchase!</p>
-        </div>
-    `;
+        // Generate QR code if payment is UPI
+        if (data.paymentMode === "UPI") {
+            generateUPIQRCode(data.totalAmount);
+        }
     }
+
     function setupPrintButton() {
-    const printBtn = document.getElementById("print-bill");
-    if (printBtn) {
-        printBtn.addEventListener("click", function() {
-            window.print();
-        });
-    }
-}
-
-function handleFormSubmit(e) {
-    e.preventDefault();
-    if (!validateForm()) return;
-    
-    const siNoPart = document.getElementById("si-no").value;
-    if (!siNoPart || isNaN(siNoPart)) { // Fixed: Added missing parenthesis
-        alert("Please enter a valid SI No (numbers only)");
-        return;
+        const printBtn = document.getElementById("print-bill");
+        if (printBtn) {
+            printBtn.addEventListener("click", function() {
+                window.print();
+            });
+        }
     }
 
-    const paymentMode = document.getElementById("payment-mode").value;
-    const billData = prepareBillData();
-    
-    // Only show QR code for UPI payments
-    if (paymentMode === "UPI") {
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        if (!validateForm()) return;
+        
+        const siNoPart = document.getElementById("si-no").value;
+        if (!siNoPart || isNaN(siNoPart)) {
+            alert("Please enter a valid SI No (numbers only)");
+            return;
+        }
+
+        const billData = prepareBillData();
         displayBillPreview(billData);
-        generateUPIQRCode(billData.totalAmount);
-        document.getElementById("upi-qr-row").style.display = paymentMode === "UPI" ? "table-row" : "none";
-    } else {
-        // Hide QR code for other payment methods
-        document.getElementById("upi-qr-code").innerHTML = '';
-        displayBillPreview(billData);
+        submitBill(billData);
+        
+        // Show print button
+        document.getElementById("print-bill").style.display = "block";
     }
-    
-    submitBill(billData);
-
-     // Show print button after bill generation
-    document.getElementById("print-bill").style.display = "block";
-    setupPrintButton(); // Ensure the print button is set up
-}
 
     function generateUPIQRCode(amount = '') {
-    const upiId = "rkfashions@upi"; // Replace with your actual UPI ID
-    const qrContainer = document.getElementById("upi-qr-code");
-    
-    // Format the UPI payment link
-    let paymentLink = `upi://pay?pa=${upiId}&pn=RK%20Fashions&am=${amount}&cu=INR`;
-    
-    // Clear previous QR code
-    qrContainer.innerHTML = '';
-    
-    // Generate QR code using an online service (no library needed)
-    const qrSize = 200; // Size in pixels
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(paymentLink)}`;
-    
-    // Create and append the QR code image
-    const qrImg = document.createElement("img");
-    qrImg.src = qrUrl;
-    qrImg.alt = "UPI Payment QR Code";
-    qrContainer.appendChild(qrImg);
-}
+        try {
+            const upiId = "rkfashions@upi"; // Replace with your actual UPI ID
+            const qrContainer = document.getElementById("upi-qr-code");
+            
+            // Format the UPI payment link
+            let paymentLink = `upi://pay?pa=${upiId}&pn=RK%20Fashions&am=${amount}&cu=INR`;
+            
+            // Clear previous QR code
+            qrContainer.innerHTML = '';
+            
+            // Generate QR code using an online service
+            const qrSize = 200; // Size in pixels
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(paymentLink)}`;
+            
+            // Create and append the QR code image
+            const qrImg = document.createElement("img");
+            qrImg.src = qrUrl;
+            qrImg.alt = "UPI Payment QR Code";
+            qrImg.onerror = () => {
+                qrContainer.innerHTML = '<p>QR code generation failed</p>';
+            };
+            qrContainer.appendChild(qrImg);
+        } catch (error) {
+            console.error("QR code error:", error);
+        }
+    }
     
     function submitBill(data) {
+        const submitBtn = document.querySelector("#transaction-form [type='submit']");
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        submitBtn.disabled = true;
+        
         // Update local stats first
         const salesToAdd = data.items.length;
         const profitToAdd = parseFloat(data.totalProfit) || 0;
@@ -365,6 +383,10 @@ function handleFormSubmit(e) {
         .catch(error => {
             console.error("Error:", error);
             alert("Error saving bill. Please try again.");
+        })
+        .finally(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
         });
     }
 }
