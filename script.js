@@ -237,8 +237,8 @@ if (document.getElementById("transaction-form")) {
     preview.innerHTML = `
         <div class="bill-header">
             <h3>${data.storeName}</h3>
-            <p class="store-info">Gram Panchayath Complex, Dichpally Busstand - 503174</p>
-            <p class="store-contact">Mobile: +91 7893433457, +91 7842694544</p>
+            <p class="store-info-bill">Gram Panchayath Complex, Dichpally Busstand - 503174</p>
+            <p class="store-contact-bill">Mobile: +91 7893433457, +91 7842694544</p>
             
             <div class="bill-meta">
                 <p><strong>Date:</strong> ${data.date}</p>
