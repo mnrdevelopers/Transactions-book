@@ -5,7 +5,7 @@ if (document.getElementById("transaction-form")) {
     
     // Initialize date display
     const today = new Date();
-    const month = String(today.getmonth()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
     document.getElementById("date").textContent = today.toLocaleDateString();
     document.getElementById("month-part").textContent = month;
     
