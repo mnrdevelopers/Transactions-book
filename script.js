@@ -235,8 +235,7 @@ if (document.getElementById("transaction-form")) {
 
         // Force-show UPI row if needed
 if (data.paymentMode === "UPI") {
-    const upiRow = preview.querySelector("#upi-qr-row");
-    if (upiRow) upiRow.style.display = "table-row";
+    document.getElementById("upi-qr-row").style.display = "table-row";
 }
     
     // Build the bill with smaller font sizes for thermal printer
