@@ -280,17 +280,17 @@ if (data.paymentMode === "UPI") {
                     <td colspan="3"><strong>Payment Mode</strong></td>
                     <td><strong>${data.paymentMode}</strong></td>
                 </tr>
-               ${data.paymentMode === "UPI" ? `
-<tr>
-    <td colspan="4" style="text-align:center; padding:8px 0;">
-        <div style="margin: 0 auto; width: fit-content;">
-            <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
-            <div id="upi-qr-code" style="width:120px; height:120px;"></div>
-            <p style="font-size:10px; margin-top:3px;">UPI ID: maniteja1098@oksbi</p>
-        </div>
-    </td>
-</tr>
-` : ''}
+${data.paymentMode === "UPI" ? `
+    <tr>
+        <td colspan="4" style="text-align:center; padding:8px 0;">
+            <div style="margin: 0 auto; width: fit-content;">
+                <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
+                <img src="upi-qr.png" alt="UPI QR Code" style="width:120px; height:120px;">
+                <p style="font-size:10px; margin-top:3px;">UPI ID: maniteja1098@oksbi</p>
+            </div>
+        </td>
+    </tr>
+    ` : ''}
             </tfoot>
         </table>
         
