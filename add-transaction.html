@@ -136,15 +136,69 @@
             </button>
         </form>
 
-        <!-- Bill Preview Section -->
-        <div id="bill-preview" class="bill-preview">
-            <h2><i class="fas fa-receipt"></i> Generated Bill</h2>
-            <div id="bill-details"></div>
-            <button id="print-bill" class="print-btn">
-            <i class="fas fa-print"></i> Print Bill
-            </button>
+       <!-- Bill Preview Section -->
+<div id="bill-preview" class="bill-preview">
+    <h2><i class="fas fa-receipt"></i> Generated Bill</h2>
+    
+    <!-- Static Bill Template (for styling) -->
+    <div id="bill-template" class="bill-template">
+        <div class="bill-header">
+            <h3>RK Fashions</h3>
+            <p class="store-info">Gram Panchayath Complex, Dichpally Busstand - 503174</p>
+            <p class="store-contact">Mobile: +91 7893433457, +91 7842694544</p>
+            
+            <div class="bill-meta">
+                <p><strong>Date:</strong> <span id="template-date"></span></p>
+                <p><strong>Bill No:</strong> <span id="template-sino"></span></p>
+                <p><strong>Customer:</strong> <span id="template-customer"></span></p>
+            </div>
+        </div>
+        
+        <table class="bill-items">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="template-items">
+                <!-- Items will be inserted here dynamically -->
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3"><strong>Total Amount</strong></td>
+                    <td><strong id="template-total-amount">₹0.00</strong></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>Payment Mode</strong></td>
+                    <td><strong id="template-payment-mode">Cash</strong></td>
+                </tr>
+                <tr id="upi-qr-row" style="display:none;">
+                    <td colspan="4" style="text-align:center; padding:15px 0;">
+                        <div class="upi-qr-section">
+                            <h4>Scan to Pay via UPI</h4>
+                            <div id="upi-qr-code"></div>
+                            <p style="font-size:14px; margin-top:5px;">UPI ID: rkfashions@upi</p>
+                        </div>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <div class="bill-footer">
+            <p>Thank you for your purchase!</p>
         </div>
     </div>
+    
+    <!-- This will be hidden initially and shown after generation -->
+    <div id="bill-details" class="bill-details" style="display:none;"></div>
+    
+    <button id="print-bill" class="print-btn" style="display:none;">
+        <i class="fas fa-print"></i> Print Bill
+    </button>
+</div>
 
     <script src="script.js"></script>
     <script src="utils.js"></script>
