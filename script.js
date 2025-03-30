@@ -275,10 +275,6 @@ function displayBillPreview(data) {
             <p>Thank you for your purchase!</p>
         </div>
     `;
-    
-    // Show print button
-    document.getElementById("print-bill").style.display = "block";
-}  
         preview.innerHTML = html;
     }
     function setupPrintButton() {
@@ -299,6 +295,19 @@ function handleFormSubmit(e) {
         alert("Please enter a valid SI No (numbers only)");
         return;
     }
+
+    const paymentMode = document.getElementById("payment-mode").value;
+    const billData = prepareBillData();
+    
+    // Only show QR code for UPI payments
+    if (paymentMode === "UPI") {
+        displayBillPreview(billData);
+        generateUPIQRCode(billData.totalAmount);
+    } else {
+        // Hide QR code for other payment methods
+        document.getElementById("upi-qr-code").innerHTML = '';
+        displayBillPreview(billData);
+    }
     
     const billData = prepareBillData();
     displayBillPreview(billData);
@@ -307,6 +316,27 @@ function handleFormSubmit(e) {
      // Show print button after bill generation
     document.getElementById("print-bill").style.display = "block";
     setupPrintButton(); // Ensure the print button is set up
+}
+
+    function generateUPIQRCode(amount = '') {
+    const upiId = "rkfashions@upi"; // Replace with your actual UPI ID
+    const qrContainer = document.getElementById("upi-qr-code");
+    
+    // Format the UPI payment link
+    let paymentLink = `upi://pay?pa=${upiId}&pn=RK%20Fashions&am=${amount}&cu=INR`;
+    
+    // Clear previous QR code
+    qrContainer.innerHTML = '';
+    
+    // Generate QR code using an online service (no library needed)
+    const qrSize = 200; // Size in pixels
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(paymentLink)}`;
+    
+    // Create and append the QR code image
+    const qrImg = document.createElement("img");
+    qrImg.src = qrUrl;
+    qrImg.alt = "UPI Payment QR Code";
+    qrContainer.appendChild(qrImg);
 }
     
     function submitBill(data) {
