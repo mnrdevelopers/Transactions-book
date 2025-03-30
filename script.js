@@ -266,6 +266,14 @@ if (document.getElementById("transaction-form")) {
         
         preview.innerHTML = html;
     }
+    function setupPrintButton() {
+    const printBtn = document.getElementById("print-bill");
+    if (printBtn) {
+        printBtn.addEventListener("click", function() {
+            window.print();
+        });
+    }
+}
 
 function handleFormSubmit(e) {
     e.preventDefault();
@@ -280,6 +288,10 @@ function handleFormSubmit(e) {
     const billData = prepareBillData();
     displayBillPreview(billData);
     submitBill(billData);
+
+     // Show print button after bill generation
+    document.getElementById("print-bill").style.display = "block";
+    setupPrintButton(); // Ensure the print button is set up
 }
     
     function submitBill(data) {
