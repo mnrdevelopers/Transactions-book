@@ -210,7 +210,7 @@ if (document.getElementById("transaction-form")) {
         return {
             storeName: "RK Fashions",
             date: document.getElementById("date").textContent,
-            siNo: `${dayPart}${siNoPart}`, // Combine day and manual part
+            siNo: `${monthPart}${siNoPart}`, // Combine month and manual part
             customerName: document.getElementById("customer-name").value,
             items: items,
             paymentMode: document.getElementById("payment-mode").value,
