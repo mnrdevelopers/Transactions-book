@@ -226,6 +226,8 @@ if (document.getElementById("transaction-form")) {
     
     // Show the preview container
     document.getElementById("bill-preview").style.display = "block";
+    document.getElementById("bill-details").innerHTML = "<h3>TEST BILL</h3>";
+    document.getElementById("bill-details").style.display = "block";
     
     // Show the dynamic bill container
     const preview = document.getElementById("bill-details");
