@@ -193,32 +193,31 @@ if (document.getElementById("transaction-form")) {
     }
 
     function prepareBillData() {
-        const items = [];
-        document.querySelectorAll(".item-row").forEach(row => {
-            items.push({
-                itemName: row.querySelector(".item-name").value,
-                quantity: row.querySelector(".quantity").value,
-                purchasePrice: row.querySelector(".purchase-price").value,
-                salePrice: row.querySelector(".sale-price").value,
-                total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
-            });
+    const items = [];
+    document.querySelectorAll(".item-row").forEach(row => {
+        items.push({
+            itemName: row.querySelector(".item-name").value,
+            quantity: row.querySelector(".quantity").value,
+            purchasePrice: row.querySelector(".purchase-price").value,
+            salePrice: row.querySelector(".sale-price").value,
+            total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
         });
-        
-        const monthPart = document.getElementById("month-part").textContent;
-        const siNoPart = document.getElementById("si-no").value.padStart(2, '0');
-        
-        return {
-            storeName: "RK Fashions",
-            date: document.getElementById("date").textContent,
-            siNo: `${monthPart}${siNo}`, // Combine month and manual part
-            customerName: document.getElementById("customer-name").value,
-            items: items,
-            paymentMode: document.getElementById("payment-mode").value,
-            totalAmount: document.getElementById("total-amount").value,
-            totalProfit: document.getElementById("total-profit").value
-        };
-    }
-
+    });
+    
+    const monthPart = document.getElementById("month-part").textContent;
+    const siNoPart = document.getElementById("si-no").value.padStart(2, '0');
+    
+    return {
+        storeName: "RK Fashions",
+        date: document.getElementById("date").textContent,
+        siNo: `${monthPart}${siNoPart}`, // Fixed: Changed siNo to siNoPart
+        customerName: document.getElementById("customer-name").value,
+        items: items,
+        paymentMode: document.getElementById("payment-mode").value,
+        totalAmount: document.getElementById("total-amount").value,
+        totalProfit: document.getElementById("total-profit").value
+    };
+}
     function displayBillPreview(data) {
         const preview = document.getElementById("bill-details");
         let html = `
