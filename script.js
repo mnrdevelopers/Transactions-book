@@ -221,79 +221,85 @@ if (document.getElementById("transaction-form")) {
     }
 
     function displayBillPreview(data) {
-        // Hide the template
-        document.getElementById("bill-template").style.display = "none";
-        
-        // Show the dynamic bill container
-        const preview = document.getElementById("bill-details");
-        preview.style.display = "block";
-        
-        // Build the bill
-        preview.innerHTML = `
-            <div class="bill-header">
-                <h3>${data.storeName}</h3>
-                <p class="store-info">Gram Panchayath Complex, Dichpally Busstand - 503174</p>
-                <p class="store-contact">Mobile: +91 7893433457, +91 7842694544</p>
-                
-                <div class="bill-meta">
-                    <p><strong>Date:</strong> ${data.date}</p>
-                    <p><strong>Bill No:</strong> ${data.siNo}</p>
-                    <p><strong>Customer:</strong> ${data.customerName}</p>
-                </div>
-            </div>
+    // Hide the template
+    document.getElementById("bill-template").style.display = "none";
+    
+    // Show the preview container
+    document.getElementById("bill-preview").style.display = "block";
+    
+    // Show the dynamic bill container
+    const preview = document.getElementById("bill-details");
+    preview.style.display = "block";
+    
+    // Build the bill with smaller font sizes for thermal printer
+    preview.innerHTML = `
+        <div class="bill-header">
+            <h3>${data.storeName}</h3>
+            <p class="store-info">Gram Panchayath Complex, Dichpally Busstand - 503174</p>
+            <p class="store-contact">Mobile: +91 7893433457, +91 7842694544</p>
             
-            <table class="bill-items">
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Qty</th>
-                        <th>Price</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${data.items.map(item => `
-                        <tr>
-                            <td>${item.itemName}</td>
-                            <td>${item.quantity}</td>
-                            <td>₹${item.salePrice}</td>
-                            <td>₹${item.total}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="3"><strong>Total Amount</strong></td>
-                        <td><strong>₹${data.totalAmount}</strong></td>
-                    </tr>
-                    <tr>
-                        <td colspan="3"><strong>Payment Mode</strong></td>
-                        <td><strong>${data.paymentMode}</strong></td>
-                    </tr>
-                    ${data.paymentMode === "UPI" ? `
-                    <tr id="upi-qr-row">
-                        <td colspan="4" style="text-align:center; padding:15px 0;">
-                            <div class="upi-qr-section">
-                                <h4>Scan to Pay via UPI</h4>
-                                <div id="upi-qr-code"></div>
-                                <p style="font-size:14px; margin-top:5px;">UPI ID: rkfashions@upi</p>
-                            </div>
-                        </td>
-                    </tr>
-                    ` : ''}
-                </tfoot>
-            </table>
-            
-            <div class="bill-footer">
-                <p>Thank you for your purchase!</p>
+            <div class="bill-meta">
+                <p><strong>Date:</strong> ${data.date}</p>
+                <p><strong>Bill No:</strong> ${data.siNo}</p>
+                <p><strong>Customer:</strong> ${data.customerName}</p>
             </div>
-        `;
+        </div>
         
-        // Generate QR code if payment is UPI
-        if (data.paymentMode === "UPI") {
-            generateUPIQRCode(data.totalAmount);
-        }
+        <table class="bill-items">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.items.map(item => `
+                    <tr>
+                        <td>${item.itemName}</td>
+                        <td>${item.quantity}</td>
+                        <td>₹${item.salePrice}</td>
+                        <td>₹${item.total}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3"><strong>Total Amount</strong></td>
+                    <td><strong>₹${data.totalAmount}</strong></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>Payment Mode</strong></td>
+                    <td><strong>${data.paymentMode}</strong></td>
+                </tr>
+                ${data.paymentMode === "UPI" ? `
+                <tr id="upi-qr-row">
+                    <td colspan="4" style="text-align:center; padding:8px 0;">
+                        <div class="upi-qr-section">
+                            <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
+                            <div id="upi-qr-code"></div>
+                            <p style="font-size:10px; margin-top:3px;">UPI ID: rkfashions@upi</p>
+                        </div>
+                    </td>
+                </tr>
+                ` : ''}
+            </tfoot>
+        </table>
+        
+        <div class="bill-footer">
+            <p>Thank you for your purchase!</p>
+        </div>
+    `;
+    
+    // Generate QR code if payment is UPI
+    if (data.paymentMode === "UPI") {
+        generateUPIQRCode(data.totalAmount);
     }
+    
+    // Scroll to the bill preview
+    document.getElementById("bill-preview").scrollIntoView({ behavior: 'smooth' });
+}
 
     function setupPrintButton() {
         const printBtn = document.getElementById("print-bill");
