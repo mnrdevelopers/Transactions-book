@@ -5,9 +5,9 @@ if (document.getElementById("transaction-form")) {
     
     // Initialize date display
     const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
+    const day = String(today.getmonth()).padStart(2, '0');
     document.getElementById("date").textContent = today.toLocaleDateString();
-    document.getElementById("date-part").textContent = day;
+    document.getElementById("month-part").textContent = month;
     
     // Initialize form
     addItem();
@@ -204,7 +204,7 @@ if (document.getElementById("transaction-form")) {
             });
         });
         
-        const dayPart = document.getElementById("date-part").textContent;
+        const dayPart = document.getElementById("month-part").textContent;
         const siNoPart = document.getElementById("si-no-part").value.padStart(2, '0');
         
         return {
