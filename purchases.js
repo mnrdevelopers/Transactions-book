@@ -197,7 +197,7 @@ async function loadPurchases() {
         showLoading();
         
         // This would be replaced with your actual API call to Google Sheets
-        const scriptUrl = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=getPurchases";
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec?action=getPurchases";
         const response = await fetch(scriptUrl);
         
         if (!response.ok) {
@@ -300,7 +300,7 @@ function loadSuppliers() {
     }
     
     // This would be replaced with your actual API call to Google Sheets
-    const scriptUrl = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=getSuppliers";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec?action=getSuppliers";
     fetch(scriptUrl)
         .then(response => {
             if (!response.ok) throw new Error("Network response was not ok");
@@ -798,7 +798,7 @@ function uploadBillImage(file) {
             const formData = new FormData();
             formData.append('file', file);
             
-            fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=uploadImage", {
+            fetch("https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec?action=uploadImage", {
                 method: "POST",
                 body: formData
             })
@@ -827,7 +827,7 @@ function savePurchase(purchaseData) {
         "Paid";
     
     // This would be replaced with your actual API call to Google Sheets
-    const scriptUrl = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=savePurchase";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec?action=savePurchase";
     fetch(scriptUrl, {
         method: "POST",
         headers: {
@@ -880,7 +880,7 @@ function handlePaymentSubmit(e) {
     };
     
     // This would be replaced with your actual API call to Google Sheets
-    const scriptUrl = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=savePayment";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec?action=savePayment";
     fetch(scriptUrl, {
         method: "POST",
         headers: {
