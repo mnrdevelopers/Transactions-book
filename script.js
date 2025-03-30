@@ -298,13 +298,6 @@ ${data.paymentMode === "UPI" ? `
             <p>Thank you for your purchase!</p>
         </div>
     `;
-    
-    // Generate QR code if payment is UPI
-    setTimeout(() => {
-    if (data.paymentMode === "UPI") {
-        generateUPIQRCode(data.totalAmount);
-    }
-}, 100); // Small delay to ensure DOM is ready
 
     // Scroll to the bill preview
     document.getElementById("bill-preview").scrollIntoView({ behavior: 'smooth' });
