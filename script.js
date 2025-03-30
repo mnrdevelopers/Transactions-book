@@ -295,10 +295,12 @@ if (document.getElementById("transaction-form")) {
     `;
     
     // Generate QR code if payment is UPI
+    setTimeout(() => {
     if (data.paymentMode === "UPI") {
         generateUPIQRCode(data.totalAmount);
     }
-    
+}, 100); // Small delay to ensure DOM is ready
+
     // Scroll to the bill preview
     document.getElementById("bill-preview").scrollIntoView({ behavior: 'smooth' });
 }
@@ -332,7 +334,7 @@ if (document.getElementById("transaction-form")) {
 
     function generateUPIQRCode(amount = '') {
     try {
-        const upiId = "rkfashions@upi";
+        const upiId = "maniteja1098@oksbi";
         const qrContainer = document.getElementById("upi-qr-code");
         
         // Verify the container exists
