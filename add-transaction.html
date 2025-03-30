@@ -97,6 +97,12 @@
     font-size: 14px;
 }
 
+        #upi-qr-code {
+    width: 120px !important;
+    height: 120px !important;
+    margin: 0 auto;
+}
+
 @media print {
     body * {
         visibility: hidden;
@@ -253,15 +259,15 @@
                     <td colspan="3"><strong>Payment Mode</strong></td>
                     <td><strong id="template-payment-mode">Cash</strong></td>
                 </tr>
-                <tr id="upi-qr-row" style="display:none;">
-                    <td colspan="4" style="text-align:center; padding:15px 0;">
-                        <div class="upi-qr-section">
-                            <h4>Scan to Pay via UPI</h4>
-                            <div id="upi-qr-code"></div>
-                            <p style="font-size:14px; margin-top:5px;">UPI ID: maniteja1098@oksbi</p>
-                        </div>
-                    </td>
-                </tr>
+               <tr id="upi-qr-row" style="display:none;">
+    <td colspan="4" style="text-align:center;">
+        <div style="margin: 0 auto; width: fit-content;">
+            <h4 style="font-size:12px;">Scan to Pay</h4>
+            <div id="upi-qr-code" style="width:120px; height:120px;"></div>
+            <p style="font-size:10px;">UPI ID: maniteja1098@oksbi</p>
+        </div>
+    </td>
+</tr>
             </tfoot>
         </table>
         
