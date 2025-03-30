@@ -281,7 +281,7 @@ if (document.getElementById("transaction-form")) {
                         <div class="upi-qr-section">
                             <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
                             <div id="upi-qr-code"></div>
-                            <p style="font-size:10px; margin-top:3px;">UPI ID: rkfashions@upi</p>
+                            <p style="font-size:10px; margin-top:3px;">UPI ID: maniteja1098@oksbi</p>
                         </div>
                     </td>
                 </tr>
@@ -331,32 +331,45 @@ if (document.getElementById("transaction-form")) {
     }
 
     function generateUPIQRCode(amount = '') {
-        try {
-            const upiId = "rkfashions@upi"; // Replace with your actual UPI ID
-            const qrContainer = document.getElementById("upi-qr-code");
-            
-            // Format the UPI payment link
-            let paymentLink = `upi://pay?pa=${upiId}&pn=RK%20Fashions&am=${amount}&cu=INR`;
-            
-            // Clear previous QR code
-            qrContainer.innerHTML = '';
-            
-            // Generate QR code using an online service
-            const qrSize = 200; // Size in pixels
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(paymentLink)}`;
-            
-            // Create and append the QR code image
-            const qrImg = document.createElement("img");
-            qrImg.src = qrUrl;
-            qrImg.alt = "UPI Payment QR Code";
-            qrImg.onerror = () => {
-                qrContainer.innerHTML = '<p>QR code generation failed</p>';
-            };
-            qrContainer.appendChild(qrImg);
-        } catch (error) {
-            console.error("QR code error:", error);
+    try {
+        const upiId = "rkfashions@upi";
+        const qrContainer = document.getElementById("upi-qr-code");
+        
+        // Verify the container exists
+        if (!qrContainer) {
+            console.error("QR Code container not found!");
+            return;
         }
+
+        // Clear previous content
+        qrContainer.innerHTML = '';
+
+        // Create UPI payment link
+        const paymentLink = `upi://pay?pa=${upiId}&pn=RK%20Fashions&am=${amount}&cu=INR`;
+        
+        // Generate QR code (smaller size for thermal printer)
+        const qrSize = 120;
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(paymentLink)}`;
+        
+        // Create and append the image
+        const qrImg = new Image();
+        qrImg.src = qrUrl;
+        qrImg.alt = "UPI Payment QR Code";
+        qrImg.style.width = "100%"; // Make it responsive
+        qrImg.style.maxWidth = "120px"; // Limit size for thermal printer
+        
+        qrImg.onload = () => {
+            qrContainer.appendChild(qrImg);
+        };
+        
+        qrImg.onerror = () => {
+            qrContainer.innerHTML = '<p style="color:red; font-size:10px;">QR code failed to load</p>';
+            console.error("Failed to load QR code image");
+        };
+    } catch (error) {
+        console.error("QR generation error:", error);
     }
+}
     
     function submitBill(data) {
         const submitBtn = document.querySelector("#transaction-form [type='submit']");
