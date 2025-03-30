@@ -6,11 +6,6 @@
     <title>Bill Book Dashboard</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#6c5ce7">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="/icons/icon-152x152.png">
 </head>
 <body>
 <button id="installButton" class="install-btn">
@@ -41,20 +36,5 @@
     </div>
 
     <script src="script.js"></script>
-    <script src="pwa-install.js"></script>
-     <script>
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then(registration => {
-                    console.log('ServiceWorker registration successful');
-                })
-                .catch(err => {
-                    console.log('ServiceWorker registration failed: ', err);
-                });
-        });
-    }
-</script>
 </body>
 </html>
