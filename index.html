@@ -12,29 +12,106 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2d3436 0%, #6c5ce7 100%);
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             overflow: hidden;
+            position: relative;
         }
         
         .splash-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
-            padding: 30px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 20px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-            max-width: 90%;
-            width: 400px;
-            position: relative;
-            overflow: hidden;
-            animation: fadeIn 0.5s ease-out;
+            padding: 20px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.8s ease-out;
         }
         
-        .splash-container::before {
+        .logo-container {
+            margin-bottom: 20px;
+            animation: bounce 1.5s infinite alternate;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 36px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transform: rotate(0deg);
+            transition: all 0.5s ease;
+        }
+        
+        .logo:hover {
+            transform: rotate(15deg);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        h1 {
+            color: white;
+            margin-bottom: 10px;
+            font-weight: 700;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.8s ease-out;
+        }
+        
+        .welcome-message {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+            max-width: 500px;
+            line-height: 1.6;
+            animation: fadeIn 1.2s ease-out;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .enter-btn {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            animation: pulse 2s infinite;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .enter-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            animation: none;
+        }
+        
+        .enter-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .enter-btn::after {
             content: '';
             position: absolute;
             top: -50%;
@@ -45,132 +122,136 @@
                 to bottom right,
                 rgba(255, 255, 255, 0) 0%,
                 rgba(255, 255, 255, 0) 45%,
-                rgba(255, 255, 255, 0.5) 50%,
+                rgba(255, 255, 255, 0.3) 50%,
                 rgba(255, 255, 255, 0) 55%,
                 rgba(255, 255, 255, 0) 100%
             );
-            animation: shine 3s infinite;
+            animation: shine 4s infinite;
             transform: rotate(30deg);
-        }
-        
-        .logo-container {
-            margin-bottom: 30px;
-        }
-        
-        .logo {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto;
-            background-color: #6c5ce7;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-weight: bold;
-            font-size: 24px;
-            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
-        }
-        
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-        
-        p {
-            color: #666;
-            margin-bottom: 30px;
-        }
-        
-        .loader {
-            width: 100%;
-            height: 8px;
-            background-color: #f1f1f1;
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 20px 0;
-        }
-        
-        .loader-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #6c5ce7, #a29bfe);
-            border-radius: 10px;
-            animation: loading 2.5s ease-in-out infinite;
         }
         
         .version {
             font-size: 12px;
-            color: #999;
-            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 40px;
+            animation: fadeIn 1.5s ease-out;
         }
         
-        @keyframes loading {
-            0% {
-                width: 0%;
-                transform: translateX(0);
-            }
-            50% {
-                width: 100%;
-                transform: translateX(0);
-            }
-            100% {
-                width: 0%;
-                transform: translateX(200%);
-            }
-        }
-        
-        @keyframes shine {
-            0% {
-                transform: translateX(-100%) rotate(30deg);
-            }
-            100% {
-                transform: translateX(100%) rotate(30deg);
-            }
+        .fabric-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(255,255,255,0.05) 1px, transparent 1px),
+                radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.5;
         }
         
         @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
-        @media (max-width: 480px) {
-            .splash-container {
-                padding: 20px;
-                border-radius: 15px;
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-15px); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); }
+            50% { transform: scale(1.05); box-shadow: 0 7px 25px rgba(0, 0, 0, 0.3); }
+            100% { transform: scale(1); box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); }
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .welcome-message {
+                font-size: 1rem;
+                padding: 0 20px;
             }
             
             .logo {
                 width: 100px;
                 height: 100px;
-                font-size: 20px;
+                font-size: 30px;
             }
             
+            .enter-btn {
+                padding: 12px 30px;
+                font-size: 1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
             h1 {
+                font-size: 1.8rem;
+            }
+            
+            .logo {
+                width: 80px;
+                height: 80px;
                 font-size: 24px;
+                border-radius: 15px;
+            }
+            
+            .enter-btn {
+                padding: 10px 25px;
+                font-size: 0.9rem;
             }
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div class="fabric-pattern"></div>
     <div class="splash-container">
         <div class="logo-container">
             <div class="logo">RK</div>
         </div>
-        <h1>RK Fashions</h1>
-        <p>Bill Book Application</p>
-        <div class="loader">
-            <div class="loader-bar"></div>
-        </div>
+        <h1>Welcome to RK Fashions</h1>
+        <p class="welcome-message">Experience seamless billing with our premium cloth store management system. Manage your inventory, customers, and sales with ease.</p>
+        <button class="enter-btn" id="enterBtn">Enter Dashboard</button>
         <div class="version">Version 1.0</div>
     </div>
 
     <script>
-        // Redirect to dashboard after 3 seconds
+        document.getElementById('enterBtn').addEventListener('click', function() {
+            // Add a fade out animation before redirecting
+            document.querySelector('.splash-container').style.animation = 'fadeIn 0.5s ease-out reverse';
+            setTimeout(function() {
+                window.location.href = "dashboard.html";
+            }, 500);
+        });
+        
+        // Optional: Auto-redirect after 10 seconds if user doesn't click
         setTimeout(function() {
-            window.location.href = "dashboard.html"; // Change this to your actual dashboard page
-        }, 3000);
+            document.querySelector('.splash-container').style.animation = 'fadeIn 0.5s ease-out reverse';
+            setTimeout(function() {
+                window.location.href = "dashboard.html";
+            }, 500);
+        }, 10000);
     </script>
 </body>
 </html>
