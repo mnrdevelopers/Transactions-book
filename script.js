@@ -332,45 +332,45 @@ if (document.getElementById("transaction-form")) {
         document.getElementById("print-bill").style.display = "block";
     }
 
-    function generateUPIQRCode(amount = '') {
-    const upiId = "maniteja1098@oksbi";
+   function generateUPIQRCode(amount = '') {
+    const upiId = "maniteja1098@oksbi"; // Your UPI ID
     const qrContainer = document.getElementById("upi-qr-code");
     
+    // Validate container exists
     if (!qrContainer) {
         console.error("QR container not found!");
         return;
     }
 
-    qrContainer.innerHTML = ''; // Clear previous
+    // Clear previous QR code
+    qrContainer.innerHTML = '<canvas id="qr-canvas"></canvas>';
     
-    // Test with hardcoded amount first
-    const testAmount = amount || "100";
-    const paymentLink = `upi://pay?pa=${upiId}&pn=RK%20Fashions&am=${testAmount}&cu=INR`;
+    // Generate UPI payment link
+    const paymentLink = `upi://pay?pa=${upiId}&pn=RK%20Fashions&am=${amount || '0'}&cu=INR`;
     
-    // Method 1: API-based QR
-    const qrImg = new Image();
-    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(paymentLink)}`;
-    qrImg.alt = "UPI QR Code";
-    qrImg.style.width = "120px";
-    qrImg.style.height = "120px";
-    
-    qrImg.onload = () => qrContainer.appendChild(qrImg);
-    qrImg.onerror = () => {
-        // Fallback to Canvas if API fails
-        qrContainer.innerHTML = `
-            <canvas id="qr-canvas" width="120" height="120"></canvas>
-            <script>
-                QRCode.toCanvas(
-                    document.getElementById('qr-canvas'),
-                    '${paymentLink}',
-                    { width: 120 },
-                    (error) => error && console.error(error)
-                );
-            </script>
-        `;
-    };
-    
-    qrContainer.appendChild(qrImg);
+    // Generate QR code
+    QRCode.toCanvas(
+        document.getElementById('qr-canvas'),
+        paymentLink,
+        {
+            width: 120, // Perfect for 58mm printers
+            margin: 1,
+            color: {
+                dark: '#000000', // Black dots
+                light: '#ffffff' // White background
+            }
+        },
+        (error) => {
+            if (error) {
+                console.error("QR generation failed:", error);
+                qrContainer.innerHTML = `
+                    <p style="color:red; font-size:10px;">
+                        QR failed. Scan UPI ID: ${upiId}
+                    </p>
+                `;
+            }
+        }
+    );
 }
     
     function submitBill(data) {
