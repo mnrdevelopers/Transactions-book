@@ -7,6 +7,9 @@ let filteredPurchases = [];
 let purchaseChart = null;
 let currentPurchaseId = null;
 
+// Replace with your actual Google Apps Script Web App URL
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec";
+
 // DOM Elements
 const elements = {
     // Summary Cards
@@ -60,7 +63,10 @@ const elements = {
     cancelPaymentBtn: document.getElementById("cancel-payment-btn"),
     
     // Chart
-    purchaseChart: document.getElementById("purchase-chart")
+    purchaseChart: document.getElementById("purchase-chart"),
+    
+    // Supplier List
+    supplierList: document.getElementById("supplier-list")
 };
 
 // Initialize the page
@@ -73,7 +79,6 @@ document.addEventListener("DOMContentLoaded", function() {
     // Load initial data
     loadPurchases();
     loadSuppliers();
-    updateSummaryCards();
     
     // Setup event listeners
     setupEventListeners();
@@ -196,9 +201,7 @@ async function loadPurchases() {
     try {
         showLoading();
         
-        // This would be replaced with your actual API call to Google Sheets
-        const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec?action=getPurchases";
-        const response = await fetch(scriptUrl);
+        const response = await fetch(`${SCRIPT_URL}?action=getPurchases`);
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -225,45 +228,58 @@ async function loadPurchases() {
 }
 
 function processPurchaseData(data) {
-    // Process data from Google Sheets
-    // This assumes your sheet has columns in this order:
-    // ID, Date, Supplier, Contact, BillNo, Items, BillAmount, PaidAmount, Balance, 
-    // PaymentMode, DueDate, Status, Notes, ImageURL, CreatedAt
-    
     return data.map(row => {
-        return {
-            id: row[0],
-            date: formatDate(row[1]),
-            dateString: formatDateForDisplay(row[1]),
-            supplier: row[2],
-            contact: row[3],
-            billNumber: row[4],
-            items: JSON.parse(row[5] || '[]'),
-            billAmount: parseFloat(row[6]) || 0,
-            paidAmount: parseFloat(row[7]) || 0,
-            balance: parseFloat(row[8]) || 0,
-            paymentMode: row[9],
-            dueDate: row[10] ? formatDateForDisplay(row[10]) : null,
-            status: row[11] || (parseFloat(row[8]) > 0 ? "Pending" : "Paid"),
-            notes: row[12],
-            imageUrl: row[13],
-            createdAt: row[14]
-        };
-    });
+        try {
+            // Safely parse items JSON
+            let items = [];
+            try {
+                items = typeof row[5] === 'string' ? JSON.parse(row[5]) : (row[5] || []);
+            } catch (e) {
+                console.warn("Failed to parse items JSON:", row[5]);
+                items = [];
+            }
+            
+            return {
+                id: row[0],
+                date: formatDate(row[1]),
+                dateString: formatDateForDisplay(row[1]),
+                supplier: row[2] || '',
+                contact: row[3] || '',
+                billNumber: row[4] || '',
+                items: items,
+                billAmount: parseFloat(row[6]) || 0,
+                paidAmount: parseFloat(row[7]) || 0,
+                balance: parseFloat(row[8]) || 0,
+                paymentMode: row[9] || 'Cash',
+                dueDate: row[10] ? formatDateForDisplay(row[10]) : null,
+                status: row[11] || (parseFloat(row[8]) > 0 ? "Pending" : "Paid"),
+                notes: row[12] || '',
+                imageUrl: row[13] || '',
+                createdAt: row[14]
+            };
+        } catch (e) {
+            console.error("Error processing purchase row:", row, e);
+            return null;
+        }
+    }).filter(p => p !== null); // Filter out any null entries from failed processing
 }
 
 function formatDate(dateString) {
-    // Format date from Google Sheets to JavaScript Date object
     if (!dateString) return new Date();
     
-    // Try different date formats
+    // Try parsing as ISO string
     const date = new Date(dateString);
     if (!isNaN(date)) return date;
     
-    // Try common spreadsheet formats
+    // Try common spreadsheet formats (dd/mm/yyyy or mm/dd/yyyy)
     const parts = dateString.split(/[-/]/);
     if (parts.length === 3) {
-        return new Date(parts[2], parts[1] - 1, parts[0]);
+        // Try both day-first and month-first formats
+        const dayFirst = new Date(parts[2], parts[1] - 1, parts[0]);
+        const monthFirst = new Date(parts[2], parts[0] - 1, parts[1]);
+        
+        // Return the first valid date
+        return !isNaN(dayFirst) ? dayFirst : (!isNaN(monthFirst) ? monthFirst : new Date());
     }
     
     // Fallback to current date
@@ -284,10 +300,12 @@ function updateSupplierFilter() {
     
     elements.purchaseSupplierFilter.innerHTML = '<option value="">All Suppliers</option>';
     uniqueSuppliers.forEach(supplier => {
-        const option = document.createElement("option");
-        option.value = supplier;
-        option.textContent = supplier;
-        elements.purchaseSupplierFilter.appendChild(option);
+        if (supplier) {
+            const option = document.createElement("option");
+            option.value = supplier;
+            option.textContent = supplier;
+            elements.purchaseSupplierFilter.appendChild(option);
+        }
     });
 }
 
@@ -299,15 +317,13 @@ function loadSuppliers() {
         updateSupplierDatalist(suppliers);
     }
     
-    // This would be replaced with your actual API call to Google Sheets
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec?action=getSuppliers";
-    fetch(scriptUrl)
+    fetch(`${SCRIPT_URL}?action=getSuppliers`)
         .then(response => {
             if (!response.ok) throw new Error("Network response was not ok");
             return response.json();
         })
         .then(data => {
-            const suppliers = data.map(row => row[0]); // Assuming first column is supplier name
+            const suppliers = data.map(row => row[0]).filter(Boolean); // Filter out empty names
             updateSupplierDatalist(suppliers);
             localStorage.setItem('rkFashionsSuppliers', JSON.stringify(suppliers));
         })
@@ -319,9 +335,11 @@ function loadSuppliers() {
 function updateSupplierDatalist(suppliers) {
     elements.supplierList.innerHTML = '';
     suppliers.forEach(supplier => {
-        const option = document.createElement("option");
-        option.value = supplier;
-        elements.supplierList.appendChild(option);
+        if (supplier) {
+            const option = document.createElement("option");
+            option.value = supplier;
+            elements.supplierList.appendChild(option);
+        }
     });
 }
 
@@ -343,9 +361,9 @@ function filterPurchases() {
         
         // Search term
         const matchesSearch = searchTerm === "" || 
-            purchase.supplier.toLowerCase().includes(searchTerm) ||
-            purchase.billNumber.toLowerCase().includes(searchTerm) ||
-            purchase.notes.toLowerCase().includes(searchTerm);
+            (purchase.supplier && purchase.supplier.toLowerCase().includes(searchTerm)) ||
+            (purchase.billNumber && purchase.billNumber.toLowerCase().includes(searchTerm)) ||
+            (purchase.notes && purchase.notes.toLowerCase().includes(searchTerm));
         
         return matchesSupplier && matchesPayment && matchesStatus && matchesSearch;
     });
@@ -482,7 +500,7 @@ function viewPurchaseDetails(e) {
     elements.makePaymentBtn.style.display = purchase.balance > 0 ? "block" : "none";
     
     // Show modal
-    elements.modalTitle.textContent = `Purchase #${purchase.billNumber}`;
+    elements.modalTitle.textContent = `Purchase #${purchase.billNumber || purchase.id.substring(0, 8)}`;
     elements.purchaseModal.style.display = "flex";
 }
 
@@ -493,7 +511,7 @@ function editPurchase(e) {
     if (!purchase) return;
     
     // Fill form with purchase data
-    elements.purchaseDate.value = purchase.date.split('T')[0];
+    elements.purchaseDate.value = purchase.date.toISOString().split('T')[0];
     elements.supplierName.value = purchase.supplier;
     elements.supplierContact.value = purchase.contact || '';
     elements.billNumber.value = purchase.billNumber;
@@ -582,7 +600,7 @@ function updateSummaryCards() {
     })}`;
     
     // Count unique suppliers
-    const suppliersCount = new Set(allPurchases.map(p => p.supplier)).size;
+    const suppliersCount = new Set(allPurchases.map(p => p.supplier).filter(Boolean)).size;
     elements.suppliersCount.textContent = suppliersCount;
 }
 
@@ -695,22 +713,22 @@ function handlePurchaseSubmit(e) {
     // Prepare purchase data
     const purchaseData = {
         date: elements.purchaseDate.value,
-        supplier: elements.supplierName.value,
-        contact: elements.supplierContact.value,
-        billNumber: elements.billNumber.value,
+        supplier: elements.supplierName.value.trim(),
+        contact: elements.supplierContact.value.trim(),
+        billNumber: elements.billNumber.value.trim(),
         paymentMode: elements.paymentMode.value,
         billAmount: parseFloat(elements.billAmount.value),
         paidAmount: parseFloat(elements.paidAmount.value),
         balance: parseFloat(elements.balanceAmount.value),
         dueDate: elements.paymentMode.value === "Credit" ? elements.dueDate.value : null,
-        notes: elements.purchaseNotes.value,
+        notes: elements.purchaseNotes.value.trim(),
         items: []
     };
     
     // Collect items
     document.querySelectorAll(".purchase-item").forEach(itemDiv => {
         purchaseData.items.push({
-            name: itemDiv.querySelector(".item-name").value,
+            name: itemDiv.querySelector(".item-name").value.trim(),
             quantity: parseFloat(itemDiv.querySelector(".item-qty").value),
             price: parseFloat(itemDiv.querySelector(".item-price").value)
         });
@@ -756,6 +774,13 @@ function validatePurchaseForm() {
         return false;
     }
     
+    // Check balance calculation
+    const balance = parseFloat(elements.billAmount.value) - parseFloat(elements.paidAmount.value);
+    if (balance < 0) {
+        alert("Paid amount cannot be greater than bill amount");
+        return false;
+    }
+    
     // Check at least one item exists
     if (document.querySelectorAll(".purchase-item").length === 0) {
         alert("Please add at least one item");
@@ -765,11 +790,11 @@ function validatePurchaseForm() {
     // Validate all items
     let valid = true;
     document.querySelectorAll(".purchase-item").forEach(itemDiv => {
-        const name = itemDiv.querySelector(".item-name").value;
+        const name = itemDiv.querySelector(".item-name").value.trim();
         const qty = itemDiv.querySelector(".item-qty").value;
         const price = itemDiv.querySelector(".item-price").value;
         
-        if (!name || !qty || !price || isNaN(qty) || isNaN(price)) {
+        if (!name || !qty || !price || isNaN(qty) || isNaN(price) || parseFloat(qty) <= 0 || parseFloat(price) < 0) {
             itemDiv.style.border = "1px solid red";
             valid = false;
         } else {
@@ -778,7 +803,7 @@ function validatePurchaseForm() {
     });
     
     if (!valid) {
-        alert("Please check all item fields");
+        alert("Please check all item fields. All items must have a name, positive quantity, and non-negative price.");
         return false;
     }
     
@@ -787,26 +812,27 @@ function validatePurchaseForm() {
 
 function uploadBillImage(file) {
     return new Promise((resolve, reject) => {
-        // In a real implementation, this would upload to Google Drive via Apps Script
-        // For demo purposes, we'll just create a mock URL
-        setTimeout(() => {
-            const mockUrl = URL.createObjectURL(file);
-            resolve(mockUrl);
-            
-            // Actual implementation would look like:
-            /*
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            fetch("https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec?action=uploadImage", {
-                method: "POST",
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => resolve(data.url))
-            .catch(error => reject(error));
-            */
-        }, 1000);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('filename', file.name);
+        formData.append('mimeType', file.type);
+        
+        fetch(`${SCRIPT_URL}?action=uploadImage`, {
+            method: "POST",
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Network response was not ok");
+            return response.json();
+        })
+        .then(data => {
+            if (data.url) {
+                resolve(data.url);
+            } else {
+                throw new Error("No URL returned from server");
+            }
+        })
+        .catch(error => reject(error));
     });
 }
 
@@ -823,12 +849,10 @@ function savePurchase(purchaseData) {
     
     // Determine status
     purchaseData.status = purchaseData.balance > 0 ? 
-        (new Date(purchaseData.dueDate) < new Date() ? "Overdue" : "Pending") : 
+        (purchaseData.dueDate && new Date(purchaseData.dueDate) < new Date() ? "Overdue" : "Pending") : 
         "Paid";
     
-    // This would be replaced with your actual API call to Google Sheets
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec?action=savePurchase";
-    fetch(scriptUrl, {
+    fetch(`${SCRIPT_URL}?action=savePurchase`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -879,9 +903,7 @@ function handlePaymentSubmit(e) {
         notes: elements.paymentNotes.value
     };
     
-    // This would be replaced with your actual API call to Google Sheets
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec?action=savePayment";
-    fetch(scriptUrl, {
+    fetch(`${SCRIPT_URL}?action=savePayment`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
