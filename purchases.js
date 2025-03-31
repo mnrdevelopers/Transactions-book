@@ -170,18 +170,17 @@ async function loadPurchases() {
         }
         
         const data = await response.json();
+        // Check if we got an error response
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
         allPurchases = processPurchaseData(data);
         
-        // Update filters
+        // Update filters and UI
         updateFilters();
-        
-        // Update summary cards
         updateSummaryCards();
-        
-        // Render chart
         renderChart();
-        
-        // Initial filter and render
         filterPurchases();
     } catch (error) {
         console.error("Error loading purchases:", error);
@@ -192,28 +191,24 @@ async function loadPurchases() {
 function processPurchaseData(sheetData) {
     const purchases = [];
     
-    // Skip header row if it exists
-    const startRow = sheetData[0][0] === "Date" ? 1 : 0;
-    
-    for (let i = startRow; i < sheetData.length; i++) {
+    for (let i = 0; i < sheetData.length; i++) {
         const row = sheetData[i];
-        const items = row[4] ? JSON.parse(row[4]) : []; // Parse items JSON
         
         purchases.push({
-            id: row[0] || `purchase-${i}`,
-            date: row[1] || new Date().toISOString().split('T')[0],
-            billNo: row[2] || '',
-            supplier: row[3] || '',
-            items: items,
-            totalAmount: parseFloat(row[5]) || 0,
-            paymentType: row[6] || 'credit',
-            amountPaid: parseFloat(row[7]) || 0,
-            dueDate: row[8] || '',
-            billImage: row[9] || '',
-            notes: row[10] || '',
-            status: calculateStatus(row[6], parseFloat(row[5]), parseFloat(row[7])),
-            balance: (parseFloat(row[5]) || 0) - (parseFloat(row[7]) || 0),
-            createdAt: row[11] || new Date().toISOString()
+            id: row.id || `purchase-${i}`,
+            date: row.date || new Date().toISOString().split('T')[0],
+            billNo: row.billno || '',
+            supplier: row.supplier || '',
+            items: row.items || [],
+            totalAmount: parseFloat(row.totalamount) || 0,
+            paymentType: row.paymenttype || 'credit',
+            amountPaid: parseFloat(row.amountpaid) || 0,
+            dueDate: row.duedate || '',
+            billImage: row.billimage || '',
+            notes: row.notes || '',
+            status: calculateStatus(row.paymenttype, parseFloat(row.totalamount), parseFloat(row.amountpaid)),
+            balance: (parseFloat(row.totalamount) || 0) - (parseFloat(row.amountpaid) || 0),
+            createdAt: row.createdat || new Date().toISOString()
         });
     }
     
@@ -392,17 +387,18 @@ function renderChart() {
 function groupPurchasesByPeriod() {
     const groups = [];
     const now = new Date();
+    const currentYear = now.getFullYear();
     
     if (currentPeriod === 'monthly') {
-        // Last 12 months
-        for (let i = 11; i >= 0; i--) {
-            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        // Last 12 months including current month
+        for (let i = 0; i < 12; i++) {
+            const date = new Date(currentYear, now.getMonth() - i, 1);
             const month = date.toLocaleString('default', { month: 'short' });
             const year = date.getFullYear();
             const periodLabel = `${month} ${year}`;
             
-            const startDate = new Date(date.getFullYear(), date.getMonth(), 1);
-            const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            const startDate = new Date(year, date.getMonth(), 1);
+            const endDate = new Date(year, date.getMonth() + 1, 0);
             
             const periodPurchases = allPurchases.filter(p => {
                 const purchaseDate = new Date(p.date);
@@ -412,7 +408,7 @@ function groupPurchasesByPeriod() {
             const totalPurchases = periodPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
             const totalPayments = periodPurchases.reduce((sum, p) => sum + p.amountPaid, 0);
             
-            groups.push({
+            groups.unshift({  // Add to beginning to maintain chronological order
                 periodLabel,
                 totalPurchases,
                 totalPayments
