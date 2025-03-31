@@ -589,43 +589,64 @@ function setupRowEventListeners() {
 async function deletePurchase(e) {
     const purchaseId = e.target.getAttribute('data-id');
     if (!confirm('Are you sure you want to delete this purchase?')) return;
-    
+
+    // Show loading state
+    const deleteBtn = e.target;
+    const originalText = deleteBtn.innerHTML;
+    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    deleteBtn.disabled = true;
+
     try {
         const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec";
         
-        // Change to POST and add action parameter
-        const response = await fetch(`${scriptUrl}?action=delete`, {
-            method: 'POST', // Must use POST for Google Apps Script
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: purchaseId })
+        // Using URL parameters instead of request body
+        const formData = new FormData();
+        formData.append('action', 'delete');
+        formData.append('id', purchaseId);
+
+        const response = await fetch(scriptUrl, {
+            method: 'POST',
+            body: formData,
+            redirect: 'follow' // Important for Google Apps Script
         });
-        
-        if (!response.ok) {
-            throw new Error('Failed to delete purchase');
-        }
-        
+
+        // Handle the redirect response
         const result = await response.json();
+
         if (result.error) {
             throw new Error(result.error);
         }
-        
-        // Remove from local data
+
+        // Update UI
         allPurchases = allPurchases.filter(p => p.id !== purchaseId);
         filteredPurchases = filteredPurchases.filter(p => p.id !== purchaseId);
-        
-        // Update UI
         updateFilters();
         updateSummaryCards();
         renderChart();
         filterPurchases();
-        
-        alert('Purchase deleted successfully');
+
+        showNotification('Purchase deleted successfully', 'success');
     } catch (error) {
-        console.error('Error deleting purchase:', error);
-        alert('Failed to delete purchase. Please try again.');
+        console.error('Delete error:', error);
+        showNotification('Delete failed: ' + error.message, 'error');
+    } finally {
+        // Restore button state
+        deleteBtn.innerHTML = originalText;
+        deleteBtn.disabled = false;
     }
+}
+
+// Add this helper function for notifications
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => notification.remove(), 500);
+    }, 3000);
 }
 
 function viewPurchaseDetails(e) {
