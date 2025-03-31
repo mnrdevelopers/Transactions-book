@@ -831,13 +831,6 @@ button[type="submit"]:hover {
     background: rgba(74, 107, 255, 0.05);
 }
 
-#purchases-table th {
-    background: var(--primary);
-    color: white;
-    padding: 12px;
-    text-align: left;
-}
-
 .status-badge {
     display: inline-block;
     padding: 4px 8px;
