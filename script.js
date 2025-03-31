@@ -194,7 +194,7 @@ document.getElementById("date-part").textContent = `${day}${month}`; // This wil
         return valid;
     }
 
-   function prepareBillData() {
+  function prepareBillData() {
     const items = [];
     document.querySelectorAll(".item-row").forEach(row => {
         items.push({
@@ -207,13 +207,13 @@ document.getElementById("date-part").textContent = `${day}${month}`; // This wil
     });
     
     const datePart = document.getElementById("date-part").textContent; // DDMM
-const seqPart = document.getElementById("sequence-no").value.padStart(3, '0'); // 001
-const billNumber = `${datePart}-${seqPart}`;
+    const seqPart = document.getElementById("sequence-no").value.padStart(3, '0'); // 001
+    const billNumber = `${datePart}-${seqPart}`;
     
     return {
         storeName: "RK Fashions",
         date: document.getElementById("date").textContent,
-        siNo: `${yearMonthPart}-${sequenceNo}`,
+        siNo: billNumber,  // Changed from `${yearMonthPart}-${sequenceNo}`
         customerName: document.getElementById("customer-name").value,
         items: items,
         paymentMode: document.getElementById("payment-mode").value,
