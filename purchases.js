@@ -604,7 +604,6 @@ async function deletePurchase(e) {
     try {
         const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec";
         
-        // Send as JSON instead of FormData
         const response = await fetch(scriptUrl, {
             method: 'POST',
             headers: {
@@ -613,13 +612,13 @@ async function deletePurchase(e) {
             body: JSON.stringify({
                 action: 'delete',
                 id: purchaseId
-            }),
+            })
         });
 
         const result = await response.json();
 
-        if (result.error) {
-            throw new Error(result.error);
+        if (!result.success) {
+            throw new Error(result.error || result.message || "Delete failed");
         }
 
         // Update UI
@@ -639,19 +638,6 @@ async function deletePurchase(e) {
         deleteBtn.innerHTML = originalText;
         deleteBtn.disabled = false;
     }
-}
-
-// Helper function for notifications
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.classList.add('fade-out');
-        setTimeout(() => notification.remove(), 500);
-    }, 3000);
 }
 
 function viewPurchaseDetails(e) {
