@@ -854,6 +854,16 @@ button[type="submit"]:hover {
     color: #721c24;
 }
 
+.status-badge.paid {
+    background-color: #e6f7ee;
+    color: #10b759;
+}
+
+.status-badge.partial {
+    background-color: #fff8e6;
+    color: #ff9800;
+}
+
 .actions {
     display: flex;
     gap: 5px;
