@@ -2,33 +2,50 @@
 if (document.getElementById("transaction-form")) {
     // Constants
     const DAILY_STATS_KEY = 'rkFashionsDailyStats';
+    const SEQUENCE_KEY = 'rkFashionsBillSequence';
     
     // Initialize date display
     const today = new Date();
     const day = String(today.getDate()).padStart(2, '0');
     const month = String(today.getMonth() + 1).padStart(2, '0');
+    const currentDateKey = `${day}${month}`;
     document.getElementById("date").textContent = today.toLocaleDateString();
-    document.getElementById("day-month-part").textContent = `${day}${month}`;
+    document.getElementById("day-month-part").textContent = currentDateKey;
 
-    // Sequence number functions
-    function getNextSequenceNumber() {
-        const lastSequence = localStorage.getItem('rkFashionsLastSequence') || 0;
-        const todayKey = `rkFashionsSequenceDate-${day}${month}`;
-        const lastDate = localStorage.getItem(todayKey);
+    // Improved sequence number management
+    function getCurrentSequence() {
+        const sequenceData = JSON.parse(localStorage.getItem(SEQUENCE_KEY)) || {};
         
-        // If it's a new day, reset the sequence
-        if (lastDate !== today.toDateString()) {
-            localStorage.setItem(todayKey, today.toDateString());
-            localStorage.setItem('rkFashionsLastSequence', 1); // Initialize with 1 for new day
-            return 1;
+        // If no data exists or it's a new day, initialize with 1
+        if (!sequenceData.date || sequenceData.date !== currentDateKey) {
+            return {
+                date: currentDateKey,
+                lastSequence: 1
+            };
         }
         
-        // Otherwise increment the sequence
-        const nextSequence = parseInt(lastSequence) + 1;
-        localStorage.setItem('rkFashionsLastSequence', nextSequence);
-        return nextSequence;
+        return sequenceData;
     }
 
+    function saveCurrentSequence(sequence) {
+        localStorage.setItem(SEQUENCE_KEY, JSON.stringify({
+            date: currentDateKey,
+            lastSequence: sequence
+        }));
+    }
+
+    function getNextSequenceNumber() {
+        const current = getCurrentSequence();
+        return current.lastSequence;
+    }
+
+    function incrementSequenceNumber() {
+        const current = getCurrentSequence();
+        const nextSequence = current.lastSequence + 1;
+        saveCurrentSequence(nextSequence);
+        return nextSequence;
+    }
+    
     // Initialize form
     addItem();
     document.getElementById("add-item").addEventListener("click", addItem);
@@ -337,27 +354,27 @@ ${data.paymentMode === "UPI" ? `
     }
 
     function handleFormSubmit(e) {
-    e.preventDefault();
-    if (!validateForm()) return;
-    
-    const sequenceNo = document.getElementById("sequence-no").value;
-    if (!sequenceNo || isNaN(sequenceNo)) {
-        alert("Please enter a valid sequence number (numbers only)");
-        return;
+        e.preventDefault();
+        if (!validateForm()) return;
+        
+        const sequenceNo = document.getElementById("sequence-no").value;
+        if (!sequenceNo || isNaN(sequenceNo)) {
+            alert("Please enter a valid sequence number");
+            return;
+        }
+
+        const billData = prepareBillData();
+        displayBillPreview(billData);
+        submitBill(billData);
+        
+        // Update sequence number for next bill
+        const nextSequence = incrementSequenceNumber();
+        document.getElementById("sequence-no").value = nextSequence;
+        
+        // Show print button
+        document.getElementById("print-bill").style.display = "block";
     }
 
-    const billData = prepareBillData();
-    displayBillPreview(billData);
-    submitBill(billData);
-    
-    // Auto-increment the sequence number for next bill
-    const nextSequence = parseInt(sequenceNo) + 1;
-    document.getElementById("sequence-no").value = nextSequence;
-    localStorage.setItem('rkFashionsLastSequence', nextSequence);
-    
-    // Show print button
-    document.getElementById("print-bill").style.display = "block";
-}
   
     function submitBill(data) {
         const submitBtn = document.querySelector("#transaction-form [type='submit']");
