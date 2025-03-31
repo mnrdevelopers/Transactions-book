@@ -5,10 +5,10 @@ if (document.getElementById("transaction-form")) {
     
     // Initialize date display
     const today = new Date();
-const year = today.getFullYear();
+const day = String(today.getDate()).padStart(2, '0');
 const month = String(today.getMonth() + 1).padStart(2, '0');
 document.getElementById("date").textContent = today.toLocaleDateString();
-document.getElementById("year-month-part").textContent = `${year}${month}`;
+document.getElementById("date-part").textContent = `${day}${month}`; // This will show like "1508"
     
     // Initialize form
     addItem();
@@ -206,8 +206,9 @@ document.getElementById("year-month-part").textContent = `${year}${month}`;
         });
     });
     
-    const yearMonthPart = document.getElementById("year-month-part").textContent;
-    const sequenceNo = document.getElementById("sequence-no").value.padStart(4, '0');
+    const datePart = document.getElementById("date-part").textContent; // DDMM
+const seqPart = document.getElementById("sequence-no").value.padStart(3, '0'); // 001
+const billNumber = `${datePart}-${seqPart}`;
     
     return {
         storeName: "RK Fashions",
@@ -313,36 +314,43 @@ ${data.paymentMode === "UPI" ? `
         }
     }
 
-    function handleFormSubmit(e) {
-        e.preventDefault();
-        if (!validateForm()) return;
-        
-        const sequenceNo = document.getElementById("sequence-no").value;
-    if (!sequenceNo || isNaN(sequenceNo)) {
-        alert("Please enter a valid sequence number (numbers only)");
+  function handleFormSubmit(e) {
+    e.preventDefault();
+    if (!validateForm()) return;
+    
+    const seqNo = document.getElementById("sequence-no").value;
+    if (!seqNo || isNaN(seqNo)) {
+        alert("Please enter a valid sequence number");
         return;
     }
 
-        const billData = prepareBillData();
-        displayBillPreview(billData);
-        submitBill(billData);
-        
-        // Show print button
-        document.getElementById("print-bill").style.display = "block";
-    }
-  
-    function submitBill(data) {
+    const billData = prepareBillData();
+    displayBillPreview(billData);
+    
+    // Show print button
+    document.getElementById("print-bill").style.display = "block";
+    
+    // Submit the bill and increment sequence after success
+    submitBill(billData).then(() => {
+        // Auto-increment the sequence number after successful submission
+        const seqInput = document.getElementById("sequence-no");
+        seqInput.value = String(parseInt(seqInput.value) + 1;
+    });
+}
+
+// Modify submitBill to return a Promise
+function submitBill(data) {
+    return new Promise((resolve, reject) => {
         const submitBtn = document.querySelector("#transaction-form [type='submit']");
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
         submitBtn.disabled = true;
         
-        // Update local stats first
+        // Update local stats
         const salesToAdd = data.items.length;
         const profitToAdd = parseFloat(data.totalProfit) || 0;
         updateLocalStats(salesToAdd, profitToAdd);
         
-        // Submit to server
         fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
             method: "POST",
             mode: "no-cors",
@@ -360,14 +368,16 @@ ${data.paymentMode === "UPI" ? `
             addItem();
             
             alert("Bill saved successfully!");
+            resolve(); // Resolve the promise on success
         })
         .catch(error => {
             console.error("Error:", error);
             alert("Error saving bill. Please try again.");
+            reject(error); // Reject the promise on error
         })
         .finally(() => {
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
         });
-    }
+    });
 }
