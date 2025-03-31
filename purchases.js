@@ -591,10 +591,11 @@ async function deletePurchase(e) {
     if (!confirm('Are you sure you want to delete this purchase?')) return;
     
     try {
-        // This would be replaced with your actual API call
         const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec";
-        const response = await fetch(scriptUrl, {
-            method: 'DELETE',
+        
+        // Change to POST and add action parameter
+        const response = await fetch(`${scriptUrl}?action=delete`, {
+            method: 'POST', // Must use POST for Google Apps Script
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -603,6 +604,11 @@ async function deletePurchase(e) {
         
         if (!response.ok) {
             throw new Error('Failed to delete purchase');
+        }
+        
+        const result = await response.json();
+        if (result.error) {
+            throw new Error(result.error);
         }
         
         // Remove from local data
