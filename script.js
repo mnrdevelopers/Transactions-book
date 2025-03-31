@@ -4,11 +4,28 @@ if (document.getElementById("transaction-form")) {
     const DAILY_STATS_KEY = 'rkFashionsDailyStats';
     
     // Initialize date display
-    const today = new Date();
-const year = today.getFullYear();
+const today = new Date();
+const day = String(today.getDate()).padStart(2, '0');
 const month = String(today.getMonth() + 1).padStart(2, '0');
 document.getElementById("date").textContent = today.toLocaleDateString();
-document.getElementById("year-month-part").textContent = `${year}${month}`;
+document.getElementById("day-month-part").textContent = `${day}${month}`;
+
+    function getNextSequenceNumber() {
+    const lastSequence = localStorage.getItem('rkFashionsLastSequence') || 0;
+    const todayKey = `rkFashionsSequenceDate-${day}${month}`;
+    const lastDate = localStorage.getItem(todayKey);
+    
+    // If it's a new day, reset the sequence
+    if (lastDate !== today.toDateString()) {
+        localStorage.setItem(todayKey, today.toDateString());
+        return 1;
+    }
+    
+    // Otherwise increment the sequence
+    const nextSequence = parseInt(lastSequence) + 1;
+    localStorage.setItem('rkFashionsLastSequence', nextSequence);
+    return nextSequence;
+}
     
     // Initialize form
     addItem();
@@ -194,7 +211,7 @@ document.getElementById("year-month-part").textContent = `${year}${month}`;
         return valid;
     }
 
-   function prepareBillData() {
+  function prepareBillData() {
     const items = [];
     document.querySelectorAll(".item-row").forEach(row => {
         items.push({
@@ -206,13 +223,13 @@ document.getElementById("year-month-part").textContent = `${year}${month}`;
         });
     });
     
-    const yearMonthPart = document.getElementById("year-month-part").textContent;
-    const sequenceNo = document.getElementById("sequence-no").value.padStart(4, '0');
+    const dayMonthPart = document.getElementById("day-month-part").textContent;
+    const sequenceNo = document.getElementById("sequence-no").value.padStart(3, '0');
     
     return {
         storeName: "RK Fashions",
         date: document.getElementById("date").textContent,
-        siNo: `${yearMonthPart}-${sequenceNo}`,
+        siNo: `${dayMonthPart}-${sequenceNo}`,
         customerName: document.getElementById("customer-name").value,
         items: items,
         paymentMode: document.getElementById("payment-mode").value,
@@ -220,7 +237,7 @@ document.getElementById("year-month-part").textContent = `${year}${month}`;
         totalProfit: document.getElementById("total-profit").value
     };
 }
-
+    
     function displayBillPreview(data) {
     // Hide the template
     document.getElementById("bill-template").style.display = "none";
@@ -314,22 +331,27 @@ ${data.paymentMode === "UPI" ? `
     }
 
     function handleFormSubmit(e) {
-        e.preventDefault();
-        if (!validateForm()) return;
-        
-        const sequenceNo = document.getElementById("sequence-no").value;
+    e.preventDefault();
+    if (!validateForm()) return;
+    
+    const sequenceNo = document.getElementById("sequence-no").value;
     if (!sequenceNo || isNaN(sequenceNo)) {
         alert("Please enter a valid sequence number (numbers only)");
         return;
     }
 
-        const billData = prepareBillData();
-        displayBillPreview(billData);
-        submitBill(billData);
-        
-        // Show print button
-        document.getElementById("print-bill").style.display = "block";
-    }
+    const billData = prepareBillData();
+    displayBillPreview(billData);
+    submitBill(billData);
+    
+    // Auto-increment the sequence number for next bill
+    const nextSequence = parseInt(sequenceNo) + 1;
+    document.getElementById("sequence-no").value = nextSequence;
+    localStorage.setItem('rkFashionsLastSequence', nextSequence);
+    
+    // Show print button
+    document.getElementById("print-bill").style.display = "block";
+}
   
     function submitBill(data) {
         const submitBtn = document.querySelector("#transaction-form [type='submit']");
