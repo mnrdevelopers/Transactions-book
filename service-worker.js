@@ -1,20 +1,21 @@
 // service-worker.js
-const CACHE_NAME = 'lens-prescription-v2';
+const CACHE_NAME = 'Bill-Book-v2';
 const ASSETS = [
   '/',
   '/index.html',
-  '/login.html',
-  '/register.html',
   '/dashboard.html',
-  '/app.html',
-  '/prescriptions.html',
+  '/add-transaction.html',
+  '/transactions.html',
   '/reports.html',
-  '/forgot-password.html',
-  '/navbar.html',
+  '/maintenance.html',
+  '/purchases.html',
   '/style.css',
   '/script.js',
-  '/loadNavbar.js',
-  '/footer.js',
+  '/transactions.js',
+  '/reports.js',
+  '/maintenance.js',
+  '/purchases.js',
+  '/utils.js',
   '/manifest.json'
 ];
 
