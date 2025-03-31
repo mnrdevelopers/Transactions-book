@@ -113,7 +113,11 @@ function processSheetData(sheetData) {
         });
     }
     
-    return Array.from(transactionsMap.values());
+    // Convert to array and sort by date (newest first)
+    const transactions = Array.from(transactionsMap.values());
+    transactions.sort((a, b) => b.date - a.date);
+    
+    return transactions;
 }
 
 function parseDate(dateValue) {
@@ -181,6 +185,9 @@ function filterTransactions() {
         return matchesSearch && matchesDate && matchesPayment;
     });
     
+    // Maintain sorting by date (newest first)
+    filteredTransactions.sort((a, b) => b.date - a.date);
+    
     totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
     currentPage = 1;
     renderTransactions();
@@ -204,12 +211,9 @@ function renderTransactions() {
         return;
     }
 
-    // Group transactions by date
-    const groupedTransactions = groupByDate(pageTransactions);
-    
-    // Render grouped transactions
+    // Render transactions (already sorted by date)
     let currentDateHeader = null;
-    groupedTransactions.forEach(transaction => {
+    pageTransactions.forEach(transaction => {
         // Add date header if this is a new date
         if (transaction.dateString !== currentDateHeader) {
             currentDateHeader = transaction.dateString;
