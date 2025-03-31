@@ -211,6 +211,8 @@ function processPurchaseData(sheetData) {
             createdAt: row.createdat || new Date().toISOString()
         });
     }
+    // Sort purchases by date in descending order (newest first)
+    purchases.sort((a, b) => new Date(b.date) - new Date(a.date));
     
     return purchases;
 }
@@ -500,6 +502,9 @@ function filterPurchases() {
         
         return matchesSupplier && matchesPayment && matchesItem && matchesSearch;
     });
+
+    // Maintain sorting by date (newest first)
+    filteredPurchases.sort((a, b) => new Date(b.date) - new Date(a.date));
     
     totalPages = Math.max(1, Math.ceil(filteredPurchases.length / PAGE_SIZE));
     currentPage = 1;
