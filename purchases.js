@@ -604,11 +604,16 @@ async function deletePurchase(e) {
         formData.append('action', 'delete');
         formData.append('id', purchaseId);
 
-        const response = await fetch(scriptUrl, {
-            method: 'POST',
-            body: formData,
-            redirect: 'follow' // Important for Google Apps Script
-        });
+       const response = await fetch(scriptUrl, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json' // Ensure correct format
+    },
+    body: JSON.stringify({
+        action: 'delete',
+        id: purchaseId
+    }),
+});
 
         // Handle the redirect response
         const result = await response.json();
