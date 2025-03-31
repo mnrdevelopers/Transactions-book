@@ -4,29 +4,31 @@ if (document.getElementById("transaction-form")) {
     const DAILY_STATS_KEY = 'rkFashionsDailyStats';
     
     // Initialize date display
-const today = new Date();
-const day = String(today.getDate()).padStart(2, '0');
-const month = String(today.getMonth() + 1).padStart(2, '0');
-document.getElementById("date").textContent = today.toLocaleDateString();
-document.getElementById("day-month-part").textContent = `${day}${month}`;
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    document.getElementById("date").textContent = today.toLocaleDateString();
+    document.getElementById("day-month-part").textContent = `${day}${month}`;
 
+    // Sequence number functions
     function getNextSequenceNumber() {
-    const lastSequence = localStorage.getItem('rkFashionsLastSequence') || 0;
-    const todayKey = `rkFashionsSequenceDate-${day}${month}`;
-    const lastDate = localStorage.getItem(todayKey);
-    
-    // If it's a new day, reset the sequence
-    if (lastDate !== today.toDateString()) {
-        localStorage.setItem(todayKey, today.toDateString());
-        return 1;
+        const lastSequence = localStorage.getItem('rkFashionsLastSequence') || 0;
+        const todayKey = `rkFashionsSequenceDate-${day}${month}`;
+        const lastDate = localStorage.getItem(todayKey);
+        
+        // If it's a new day, reset the sequence
+        if (lastDate !== today.toDateString()) {
+            localStorage.setItem(todayKey, today.toDateString());
+            localStorage.setItem('rkFashionsLastSequence', 1); // Initialize with 1 for new day
+            return 1;
+        }
+        
+        // Otherwise increment the sequence
+        const nextSequence = parseInt(lastSequence) + 1;
+        localStorage.setItem('rkFashionsLastSequence', nextSequence);
+        return nextSequence;
     }
-    
-    // Otherwise increment the sequence
-    const nextSequence = parseInt(lastSequence) + 1;
-    localStorage.setItem('rkFashionsLastSequence', nextSequence);
-    return nextSequence;
-}
-    
+
     // Initialize form
     addItem();
     document.getElementById("add-item").addEventListener("click", addItem);
@@ -36,9 +38,9 @@ document.getElementById("day-month-part").textContent = `${day}${month}`;
         }
     });
     document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
-    setupPrintButton(); // Initialize print button once
+    setupPrintButton();
 
-    // Set initial sequence number - ADD THIS RIGHT HERE
+    // Set initial sequence number
     const initialSequence = getNextSequenceNumber();
     document.getElementById("sequence-no").value = initialSequence;
 
