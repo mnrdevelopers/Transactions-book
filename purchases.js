@@ -908,22 +908,33 @@ function validatePurchaseForm() {
 }
 
 async function uploadImageToImgBB(imageFile) {
-    const formData = new FormData();
-    formData.append('image', imageFile);
-    
-    // Replace with your imgBB API key
-    const apiKey = 'YOUR_IMGBB_API_KEY';
-    const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
-        method: 'POST',
-        body: formData
-    });
-    
-    const data = await response.json();
-    if (!data.success) {
-        throw new Error("Image upload failed");
+    try {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        
+        // Use your actual imgBB API key
+        const apiKey = '0040c80066f01e3ed221aa25f355f762';
+        
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+            method: 'POST',
+            body: formData,
+            // Don't set Content-Type header - let the browser set it with the boundary
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok || !data.success) {
+            const errorMsg = data.error?.message || 
+                            data.error?.context || 
+                            'Image upload failed without specific error message';
+            throw new Error(`ImgBB Error: ${errorMsg} (Status: ${response.status})`);
+        }
+        
+        return data.data.url;
+    } catch (error) {
+        console.error("Full upload error:", error);
+        throw new Error(`Failed to upload image: ${error.message}`);
     }
-    
-    return data.data.url;
 }
 
 function savePurchase(purchaseData) {
