@@ -1,33 +1,3 @@
-// PWA Installation
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
-        .then(() => console.log("Service Worker Registered"))
-        .catch((error) => console.log("Service Worker Registration Failed", error));
-}
-
-// Handle PWA Install Prompt
-let deferredPrompt;
-window.addEventListener("beforeinstallprompt", (event) => {
-    event.preventDefault();
-    deferredPrompt = event;
-    document.getElementById("install-btn").style.display = "block"; // Show the install button
-});
-
-document.getElementById("install-btn").addEventListener("click", () => {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === "accepted") {
-                console.log("User accepted the install prompt.");
-            } else {
-                console.log("User dismissed the install prompt.");
-            }
-            deferredPrompt = null;
-        });
-    }
-});
-
-
 // Transaction page specific code
 if (document.getElementById("transaction-form")) {
     // Constants
