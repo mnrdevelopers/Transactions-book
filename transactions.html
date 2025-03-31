@@ -29,6 +29,30 @@
             <h1>Transaction History</h1>
         </header>
 
+        <!-- Add this after the <header> section -->
+<div class="summary-cards">
+    <div class="summary-card">
+        <h3><i class="fas fa-rupee-sign"></i> Today's Sales</h3>
+        <p class="amount" id="today-sales">₹0.00</p>
+        <p class="change">Total sales for today</p>
+    </div>
+    <div class="summary-card">
+        <h3><i class="fas fa-chart-line"></i> Today's Profit</h3>
+        <p class="amount" id="today-profit">₹0.00</p>
+        <p class="change">Total profit for today</p>
+    </div>
+    <div class="summary-card">
+        <h3><i class="fas fa-receipt"></i> Transactions</h3>
+        <p class="amount" id="today-transactions">0</p>
+        <p class="change">Transactions today</p>
+    </div>
+    <div class="summary-card">
+        <h3><i class="fas fa-calendar-day"></i> Daily Average</h3>
+        <p class="amount" id="daily-average">₹0.00</p>
+        <p class="change">7-day average sales</p>
+    </div>
+</div>
+
         <div class="controls">
             <div class="search-box">
                 <input type="text" id="search-input" placeholder="Search transactions...">
