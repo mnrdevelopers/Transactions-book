@@ -5,9 +5,10 @@ if (document.getElementById("transaction-form")) {
     
     // Initialize date display
     const today = new Date();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    document.getElementById("date").textContent = today.toLocaleDateString();
-    document.getElementById("month-part").textContent = month;
+const year = today.getFullYear();
+const month = String(today.getMonth() + 1).padStart(2, '0');
+document.getElementById("date").textContent = today.toLocaleDateString();
+document.getElementById("year-month-part").textContent = `${year}${month}`;
     
     // Initialize form
     addItem();
@@ -193,32 +194,32 @@ if (document.getElementById("transaction-form")) {
         return valid;
     }
 
-    function prepareBillData() {
-        const items = [];
-        document.querySelectorAll(".item-row").forEach(row => {
-            items.push({
-                itemName: row.querySelector(".item-name").value,
-                quantity: row.querySelector(".quantity").value,
-                purchasePrice: row.querySelector(".purchase-price").value,
-                salePrice: row.querySelector(".sale-price").value,
-                total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
-            });
+   function prepareBillData() {
+    const items = [];
+    document.querySelectorAll(".item-row").forEach(row => {
+        items.push({
+            itemName: row.querySelector(".item-name").value,
+            quantity: row.querySelector(".quantity").value,
+            purchasePrice: row.querySelector(".purchase-price").value,
+            salePrice: row.querySelector(".sale-price").value,
+            total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
         });
-        
-        const monthPart = document.getElementById("month-part").textContent;
-        const siNoPart = document.getElementById("si-no").value.padStart(2, '0');
-        
-        return {
-            storeName: "RK Fashions",
-            date: document.getElementById("date").textContent,
-            siNo: `${monthPart}${siNoPart}`,
-            customerName: document.getElementById("customer-name").value,
-            items: items,
-            paymentMode: document.getElementById("payment-mode").value,
-            totalAmount: document.getElementById("total-amount").value,
-            totalProfit: document.getElementById("total-profit").value
-        };
-    }
+    });
+    
+    const yearMonthPart = document.getElementById("year-month-part").textContent;
+    const sequenceNo = document.getElementById("sequence-no").value.padStart(4, '0');
+    
+    return {
+        storeName: "RK Fashions",
+        date: document.getElementById("date").textContent,
+        siNo: `${yearMonthPart}-${sequenceNo}`,
+        customerName: document.getElementById("customer-name").value,
+        items: items,
+        paymentMode: document.getElementById("payment-mode").value,
+        totalAmount: document.getElementById("total-amount").value,
+        totalProfit: document.getElementById("total-profit").value
+    };
+}
 
     function displayBillPreview(data) {
     // Hide the template
@@ -316,11 +317,11 @@ ${data.paymentMode === "UPI" ? `
         e.preventDefault();
         if (!validateForm()) return;
         
-        const siNoPart = document.getElementById("si-no").value;
-        if (!siNoPart || isNaN(siNoPart)) {
-            alert("Please enter a valid SI No (numbers only)");
-            return;
-        }
+        const sequenceNo = document.getElementById("sequence-no").value;
+    if (!sequenceNo || isNaN(sequenceNo)) {
+        alert("Please enter a valid sequence number (numbers only)");
+        return;
+    }
 
         const billData = prepareBillData();
         displayBillPreview(billData);
