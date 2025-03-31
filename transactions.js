@@ -53,42 +53,49 @@ function setupEventListeners() {
 }
 
 function updateSummaryCards() {
-    if (allTransactions.length === 0) return;
-    
+    if (allTransactions.length === 0) {
+        // Reset to zero if no transactions
+        elements.todaySales.textContent = '₹0.00';
+        elements.todayProfit.textContent = '₹0.00';
+        elements.todayTransactions.textContent = '0';
+        elements.dailyAverage.textContent = '₹0.00';
+        return;
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
+    // Get today's date string in the same format as transaction.dateString
+    const todayString = formatDateForDisplay(today);
+
+    // Filter today's transactions
+    const todayData = allTransactions.filter(t => t.dateString === todayString);
+
     // Calculate today's totals
-    const todayData = allTransactions.filter(t => {
-        const transDate = new Date(t.date);
-        transDate.setHours(0, 0, 0, 0);
-        return transDate.getTime() === today.getTime();
-    });
-    
-    // Today's sales
     const todaySales = todayData.reduce((sum, t) => sum + t.totalAmount, 0);
-    elements.todaySales.textContent = `₹${todaySales.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-    
-    // Today's profit
     const todayProfit = todayData.reduce((sum, t) => sum + t.totalProfit, 0);
+    const todayTransactionCount = todayData.length;
+
+    // Update today's cards
+    elements.todaySales.textContent = `₹${todaySales.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
     elements.todayProfit.textContent = `₹${todayProfit.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-    
-    // Today's transaction count
-    elements.todayTransactions.textContent = todayData.length;
-    
-    // Calculate 7-day average
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const last7DaysData = allTransactions.filter(t => {
-        const transDate = new Date(t.date);
-        transDate.setHours(0, 0, 0, 0);
-        return transDate >= sevenDaysAgo && transDate <= today;
-    });
-    
-    const sevenDayTotal = last7DaysData.reduce((sum, t) => sum + t.totalAmount, 0);
-    const dailyAvg = sevenDayTotal / 7;
-    elements.dailyAverage.textContent = `₹${dailyAvg.toLocaleString('en-IN', {minimumFractionDigits: 2})`;
+    elements.todayTransactions.textContent = todayTransactionCount;
+
+    // Calculate 7-day average (only if we have data)
+    if (allTransactions.length > 0) {
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // Include today + 6 previous days
+        
+        const last7DaysData = allTransactions.filter(t => {
+            const transDate = new Date(t.date);
+            transDate.setHours(0, 0, 0, 0);
+            return transDate >= sevenDaysAgo && transDate <= today;
+        });
+        
+        const sevenDayTotal = last7DaysData.reduce((sum, t) => sum + t.totalAmount, 0);
+        const dailyAvg = sevenDayTotal / 7;
+        elements.dailyAverage.textContent = `₹${dailyAvg.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    }
 }
 
 async function loadTransactions() {
