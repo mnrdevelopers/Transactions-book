@@ -46,8 +46,7 @@ function setupEventListeners() {
     // Download and print buttons
     elements.downloadBtn.addEventListener('click', downloadReport);
     elements.printBtn.addEventListener('click', printReport);
-}
-    
+
     // Generate report button
     elements.generateBtn.addEventListener('click', loadReport);
     
