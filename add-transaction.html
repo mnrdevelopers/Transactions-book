@@ -168,12 +168,13 @@
 
         <div class="bill-details">
     <div>
-        <label for="si-no"><strong>SI No:</strong></label>
-        <div style="display: flex; align-items: center; gap: 5px;">
-            <span id="month-part" style="font-weight: bold; padding: 5px; background: #f0f0f0; border-radius: 4px;"></span>
-            <input type="number" id="si-no" min="1" max="99" style="width: 60px; padding: 5px;" placeholder="01">
-        </div>
+    <label for="si-no"><strong>Bill No:</strong></label>
+    <div style="display: flex; align-items: center; gap: 5px;">
+        <span id="year-month-part" style="font-weight: bold; padding: 5px; background: #f0f0f0; border-radius: 4px;"></span>
+        <span>-</span>
+        <input type="number" id="sequence-no" min="1" style="width: 80px; padding: 5px;" placeholder="0001">
     </div>
+</div>
     <p><strong>Date:</strong> <span id="date"></span></p>
     <div>
         <label for="customer-name"><strong>Customer Name:</strong></label>
