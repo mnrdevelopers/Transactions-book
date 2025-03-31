@@ -548,7 +548,6 @@ function renderPurchases() {
             <td class="actions">
                 <button class="view-btn" data-id="${purchase.id}">View</button>
                 <button class="edit-btn" data-id="${purchase.id}">Edit</button>
-                <button class="delete-btn" data-id="${purchase.id}">Delete</button>
             </td>
         `;
         elements.purchasesBody.appendChild(row);
