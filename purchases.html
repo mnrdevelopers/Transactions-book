@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Add to your styles.css */
 .view-image-btn {
     color: #2196F3;
     text-decoration: none;
@@ -40,6 +39,52 @@
 
 .actions button.delete-btn:hover {
     background-color: #d32f2f;
+}
+
+        /* Table container */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin: 20px 0;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Table styling */
+#purchases-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    min-width: 800px; /* Minimum width to prevent squeezing */
+}
+
+#purchases-table th, 
+#purchases-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #dddddd;
+}
+
+#purchases-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+
+#purchases-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    #purchases-table {
+        font-size: 0.8em;
+    }
+    
+    #purchases-table th, 
+    #purchases-table td {
+        padding: 8px 10px;
+    }
 }
         </style>
 </head>
