@@ -2,7 +2,7 @@
 if (document.getElementById("transaction-form")) {
     // Constants
     const DAILY_STATS_KEY = 'rkFashionsDailyStats';
-    const SEQUENCE_KEY = 'rkFashionsBillSequence';
+    const SEQUENCE_STORAGE_KEY = 'rkFashionsBillSequenceData';
     
     // Initialize date display
     const today = new Date();
@@ -12,41 +12,51 @@ if (document.getElementById("transaction-form")) {
     document.getElementById("date").textContent = today.toLocaleDateString();
     document.getElementById("day-month-part").textContent = currentDateKey;
 
-    // Improved sequence number management
-    function getCurrentSequence() {
-        const sequenceData = JSON.parse(localStorage.getItem(SEQUENCE_KEY)) || {};
-        
-        // If no data exists or it's a new day, initialize with 1
-        if (!sequenceData.date || sequenceData.date !== currentDateKey) {
+    // Sequence number management
+    function loadSequenceData() {
+        const savedData = localStorage.getItem(SEQUENCE_STORAGE_KEY);
+        if (!savedData) {
             return {
                 date: currentDateKey,
-                lastSequence: 1
+                lastUsedSequence: 1,
+                nextSequence: 1
             };
         }
         
+        const data = JSON.parse(savedData);
+        
+        // Reset if it's a new day
+        if (data.date !== currentDateKey) {
+            return {
+                date: currentDateKey,
+                lastUsedSequence: 0,
+                nextSequence: 1
+            };
+        }
+        
+        return data;
+    }
+
+    function saveSequenceData(data) {
+        localStorage.setItem(SEQUENCE_STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function initializeSequenceNumber() {
+        const sequenceData = loadSequenceData();
+        document.getElementById("sequence-no").value = sequenceData.nextSequence;
         return sequenceData;
     }
 
-    function saveCurrentSequence(sequence) {
-        localStorage.setItem(SEQUENCE_KEY, JSON.stringify({
-            date: currentDateKey,
-            lastSequence: sequence
-        }));
-    }
-
-    function getNextSequenceNumber() {
-        const current = getCurrentSequence();
-        return current.lastSequence;
-    }
-
     function incrementSequenceNumber() {
-        const current = getCurrentSequence();
-        const nextSequence = current.lastSequence + 1;
-        saveCurrentSequence(nextSequence);
-        return nextSequence;
+        const sequenceData = loadSequenceData();
+        sequenceData.lastUsedSequence = sequenceData.nextSequence;
+        sequenceData.nextSequence = sequenceData.nextSequence + 1;
+        saveSequenceData(sequenceData);
+        return sequenceData;
     }
     
-    // Initialize form
+    // Initialize form and sequence number
+    let currentSequenceData = initializeSequenceNumber();
     addItem();
     document.getElementById("add-item").addEventListener("click", addItem);
     document.getElementById("items-container").addEventListener("input", function(e) {
@@ -56,10 +66,6 @@ if (document.getElementById("transaction-form")) {
     });
     document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
     setupPrintButton();
-
-    // Set initial sequence number
-    const initialSequence = getNextSequenceNumber();
-    document.getElementById("sequence-no").value = initialSequence;
 
     // ======================
     // DAILY STATS FUNCTIONS
@@ -365,16 +371,21 @@ ${data.paymentMode === "UPI" ? `
 
         const billData = prepareBillData();
         displayBillPreview(billData);
-        submitBill(billData);
         
-        // Update sequence number for next bill
-        const nextSequence = incrementSequenceNumber();
-        document.getElementById("sequence-no").value = nextSequence;
+        // Only increment after successful submission
+        submitBill(billData)
+            .then(() => {
+                currentSequenceData = incrementSequenceNumber();
+                document.getElementById("sequence-no").value = currentSequenceData.nextSequence;
+            })
+            .catch(error => {
+                console.error("Submission failed:", error);
+                // Don't increment sequence if submission failed
+            });
         
         // Show print button
         document.getElementById("print-bill").style.display = "block";
     }
-
   
     function submitBill(data) {
         const submitBtn = document.querySelector("#transaction-form [type='submit']");
@@ -382,37 +393,37 @@ ${data.paymentMode === "UPI" ? `
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
         submitBtn.disabled = true;
         
-        // Update local stats first
+        // Update local stats
         const salesToAdd = data.items.length;
         const profitToAdd = parseFloat(data.totalProfit) || 0;
         updateLocalStats(salesToAdd, profitToAdd);
         
-        // Submit to server
-        fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
-            method: "POST",
-            mode: "no-cors",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        })
-        .then(() => {
-            // Reset form but keep customer name
-            const customerName = document.getElementById("customer-name").value;
-            document.getElementById("transaction-form").reset();
-            document.getElementById("customer-name").value = customerName;
-            document.getElementById("items-container").innerHTML = "";
-            addItem();
-            
-            alert("Bill saved successfully!");
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("Error saving bill. Please try again.");
-        })
-        .finally(() => {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
+        return new Promise((resolve, reject) => {
+            fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
+                method: "POST",
+                mode: "no-cors",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                // Reset form but keep customer name
+                const customerName = document.getElementById("customer-name").value;
+                document.getElementById("transaction-form").reset();
+                document.getElementById("customer-name").value = customerName;
+                document.getElementById("items-container").innerHTML = "";
+                addItem();
+                resolve();
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                reject(error);
+            })
+            .finally(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
         });
     }
 }
