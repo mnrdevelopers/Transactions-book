@@ -8,8 +8,6 @@ const elements = {
     periodBtns: document.querySelectorAll('.period-btn'),
     reportDate: document.getElementById('report-date'),
     generateBtn: document.getElementById('generate-report'),
-    downloadBtn: document.getElementById('download-report'),
-    printBtn: document.getElementById('print-report'),
     totalSales: document.getElementById('total-sales'),
     totalProfit: document.getElementById('total-profit'),
     totalTransactions: document.getElementById('total-transactions'),
@@ -42,11 +40,7 @@ function setupEventListeners() {
             loadReport();
         });
     });
-
-    // Download and print buttons
-    elements.downloadBtn.addEventListener('click', downloadReport);
-    elements.printBtn.addEventListener('click', printReport);
-
+    
     // Generate report button
     elements.generateBtn.addEventListener('click', loadReport);
     
@@ -318,11 +312,6 @@ function renderChart(chartData) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            animation: {
-                onComplete: function() {
-                    // This ensures the chart is ready for export
-                }
-            },
             scales: {
                 x: {
                     title: {
@@ -344,9 +333,6 @@ function renderChart(chartData) {
                 }
             },
             plugins: {
-                legend: {
-                    position: 'top',
-                },
                 tooltip: {
                     callbacks: {
                         title: function(context) {
@@ -463,235 +449,4 @@ function getWeekNumber(date) {
     const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
     const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
     return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
-}
-
-// New functions for report export
-function downloadReport() {
-    const { summary, chartData } = processReportData(reportData.flatMap(g => g.transactions), currentPeriod);
-    
-    // Create a HTML string for the report
-    const reportHTML = generateReportHTML(summary, chartData);
-    
-    // Create a blob with the HTML content
-    const blob = new Blob([reportHTML], { type: 'text/html' });
-    
-    // Create a download link
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `RK_Fashions_${currentPeriod}_Report_${formatDateForFilename(new Date())}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-function printReport() {
-    const { summary, chartData } = processReportData(reportData.flatMap(g => g.transactions), currentPeriod);
-    const reportHTML = generateReportHTML(summary, chartData);
-    
-    // Open a new window with the report HTML
-    const printWindow = window.open('', '_blank');
-    printWindow.document.open();
-    printWindow.document.write(reportHTML);
-    printWindow.document.close();
-    
-    // Wait for content to load before printing
-    printWindow.onload = function() {
-        printWindow.print();
-    };
-}
-
-function generateReportHTML(summary, chartData) {
-    const periodLabel = getPeriodLabel(currentPeriod).toUpperCase();
-    const dateRange = getCurrentDateRange();
-    
-    return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>RK Fashions ${periodLabel} Report</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            color: #333;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #6c5ce7;
-            padding-bottom: 10px;
-        }
-        .header h1 {
-            color: #6c5ce7;
-            margin: 0;
-        }
-        .header p {
-            margin: 5px 0 0;
-            color: #666;
-        }
-        .summary-cards {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .summary-card {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 15px;
-            width: 30%;
-            text-align: center;
-        }
-        .summary-card h3 {
-            margin-top: 0;
-            color: #555;
-        }
-        .amount {
-            font-size: 24px;
-            font-weight: bold;
-            margin: 10px 0;
-            color: #6c5ce7;
-        }
-        .chart-container {
-            width: 100%;
-            height: 400px;
-            margin: 20px 0;
-            page-break-inside: avoid;
-        }
-        .detailed-report {
-            margin-top: 30px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .footer {
-            margin-top: 30px;
-            text-align: right;
-            font-size: 12px;
-            color: #999;
-        }
-        @media print {
-            .summary-cards {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 20px;
-            }
-            .summary-card {
-                border: 1px solid #ddd;
-                padding: 10px;
-                width: 30%;
-            }
-            .chart-container {
-                page-break-inside: avoid;
-            }
-            .detailed-report {
-                page-break-inside: avoid;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>RK Fashions ${periodLabel} Sales Report</h1>
-        <p>${dateRange}</p>
-        <p>Generated on ${new Date().toLocaleDateString('en-IN', { 
-            day: '2-digit', 
-            month: 'long', 
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        })}</p>
-    </div>
-    
-    <div class="summary-cards">
-        <div class="summary-card">
-            <h3>Total Sales</h3>
-            <p class="amount">${elements.totalSales.textContent}</p>
-        </div>
-        <div class="summary-card">
-            <h3>Total Profit</h3>
-            <p class="amount">${elements.totalProfit.textContent}</p>
-        </div>
-        <div class="summary-card">
-            <h3>Transactions</h3>
-            <p class="amount">${elements.totalTransactions.textContent}</p>
-        </div>
-    </div>
-    
-    <div class="chart-container">
-        <img src="${chartToImage()}" alt="Sales Chart" style="width: 100%; height: auto;">
-    </div>
-    
-    <div class="detailed-report">
-        <h2>Detailed Transactions</h2>
-        ${elements.reportTableContainer.innerHTML}
-    </div>
-    
-    <div class="footer">
-        RK Fashions - Sales Report System
-    </div>
-</body>
-</html>
-`;
-}
-
-function chartToImage() {
-    // Convert chart to base64 image
-    return salesChart.toBase64Image();
-}
-
-function getCurrentDateRange() {
-    if (reportData.length === 0) return '';
-    
-    const firstDate = reportData[0].periodStart;
-    const lastDate = reportData[reportData.length - 1].periodEnd;
-    
-    switch(currentPeriod) {
-        case 'daily':
-            return firstDate.toLocaleDateString('en-IN', { 
-                weekday: 'long', 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
-            });
-        case 'weekly':
-            return `Week ${getWeekNumber(firstDate)} (${firstDate.toLocaleDateString('en-IN', { 
-                day: 'numeric', 
-                month: 'short' 
-            })} - ${lastDate.toLocaleDateString('en-IN', { 
-                day: 'numeric', 
-                month: 'short' 
-            })})`;
-        case 'monthly':
-            return firstDate.toLocaleDateString('en-IN', { 
-                month: 'long', 
-                year: 'numeric' 
-            });
-        case 'yearly':
-            return firstDate.getFullYear().toString();
-        default:
-            return '';
-    }
-}
-
-function formatDateForFilename(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    
-    return `${year}${month}${day}_${hours}${minutes}`;
 }
