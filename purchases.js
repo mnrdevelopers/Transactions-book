@@ -592,7 +592,7 @@ async function deletePurchase(e) {
     
     try {
         // This would be replaced with your actual API call
-        const scriptUrl = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec";
         const response = await fetch(scriptUrl, {
             method: 'DELETE',
             headers: {
