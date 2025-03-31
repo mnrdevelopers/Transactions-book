@@ -1,207 +1,169 @@
-// Configuration
+// Purchase Management System
 const PAGE_SIZE = 10;
 let currentPage = 1;
 let totalPages = 1;
 let allPurchases = [];
 let filteredPurchases = [];
 let purchaseChart = null;
+let currentPeriod = 'monthly';
 let currentPurchaseId = null;
-
-// Replace with your actual Google Apps Script Web App URL
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec";
 
 // DOM Elements
 const elements = {
-    // Summary Cards
-    totalPurchases: document.getElementById("total-purchases"),
-    creditDue: document.getElementById("credit-due"),
-    stockValue: document.getElementById("stock-value"),
-    suppliersCount: document.getElementById("suppliers-count"),
-    
-    // Purchase Form
-    purchaseForm: document.getElementById("purchase-form"),
-    purchaseDate: document.getElementById("purchase-date"),
-    supplierName: document.getElementById("supplier-name"),
-    supplierContact: document.getElementById("supplier-contact"),
-    billNumber: document.getElementById("bill-number"),
-    paymentMode: document.getElementById("payment-mode"),
-    dueDate: document.getElementById("due-date"),
-    dueDateContainer: document.getElementById("due-date-container"),
-    billAmount: document.getElementById("bill-amount"),
-    paidAmount: document.getElementById("paid-amount"),
-    balanceAmount: document.getElementById("balance-amount"),
-    billImage: document.getElementById("bill-image"),
-    purchaseNotes: document.getElementById("purchase-notes"),
-    purchaseItemsContainer: document.getElementById("purchase-items-container"),
-    addPurchaseItemBtn: document.getElementById("add-purchase-item"),
-    
-    // Purchase Table
-    purchaseSupplierFilter: document.getElementById("purchase-supplier-filter"),
-    purchasePaymentFilter: document.getElementById("purchase-payment-filter"),
-    purchaseStatusFilter: document.getElementById("purchase-status-filter"),
-    purchaseSearch: document.getElementById("purchase-search"),
-    purchaseSearchBtn: document.getElementById("purchase-search-btn"),
-    purchasesBody: document.getElementById("purchases-body"),
-    purchasePrevBtn: document.getElementById("purchase-prev-btn"),
-    purchaseNextBtn: document.getElementById("purchase-next-btn"),
-    purchasePageInfo: document.getElementById("purchase-page-info"),
-    
-    // Modals
-    purchaseModal: document.getElementById("purchase-modal"),
-    paymentModal: document.getElementById("payment-modal"),
-    modalTitle: document.getElementById("modal-title"),
-    purchaseDetails: document.getElementById("purchase-details"),
-    billImageContainer: document.getElementById("bill-image-container"),
-    makePaymentBtn: document.getElementById("make-payment-btn"),
-    closeModalBtn: document.getElementById("close-modal-btn"),
-    paymentForm: document.getElementById("payment-form"),
-    paymentDate: document.getElementById("payment-date"),
-    paymentAmount: document.getElementById("payment-amount"),
-    paymentModeInput: document.getElementById("payment-mode-input"),
-    paymentReference: document.getElementById("payment-reference"),
-    paymentNotes: document.getElementById("payment-notes"),
-    cancelPaymentBtn: document.getElementById("cancel-payment-btn"),
+    // Summary cards
+    totalPurchases: document.getElementById('total-purchases'),
+    pendingPayments: document.getElementById('pending-payments'),
+    stockValue: document.getElementById('stock-value'),
+    supplierCount: document.getElementById('supplier-count'),
+    purchaseChange: document.getElementById('purchase-change'),
+    pendingChange: document.getElementById('pending-change'),
+    stockChange: document.getElementById('stock-change'),
+    lastSupplier: document.getElementById('last-supplier'),
     
     // Chart
-    purchaseChart: document.getElementById("purchase-chart"),
+    purchaseChart: document.getElementById('purchaseChart'),
     
-    // Supplier List
-    supplierList: document.getElementById("supplier-list")
+    // Controls
+    periodBtns: document.querySelectorAll('.period-btn'),
+    reportDate: document.getElementById('report-date'),
+    generateBtn: document.getElementById('generate-report'),
+    supplierFilter: document.getElementById('supplier-filter'),
+    paymentFilter: document.getElementById('payment-filter'),
+    itemFilter: document.getElementById('item-filter'),
+    searchInput: document.getElementById('search-purchases'),
+    searchBtn: document.getElementById('search-btn'),
+    
+    // Table
+    purchasesBody: document.getElementById('purchases-body'),
+    prevBtn: document.getElementById('prev-btn'),
+    nextBtn: document.getElementById('next-btn'),
+    pageInfo: document.getElementById('page-info'),
+    
+    // Modals
+    addPurchaseBtn: document.getElementById('add-purchase-btn'),
+    purchaseModal: document.getElementById('purchase-modal'),
+    viewModal: document.getElementById('view-modal'),
+    modalTitle: document.getElementById('modal-title'),
+    purchaseForm: document.getElementById('purchase-form'),
+    purchaseDetails: document.getElementById('purchase-details'),
+    
+    // Form elements
+    purchaseDate: document.getElementById('purchase-date'),
+    billNo: document.getElementById('bill-no'),
+    supplierName: document.getElementById('supplier-name'),
+    supplierList: document.getElementById('supplier-list'),
+    paymentType: document.getElementById('payment-type'),
+    amountPaid: document.getElementById('amount-paid'),
+    dueDate: document.getElementById('due-date'),
+    billImage: document.getElementById('bill-image'),
+    imagePreview: document.getElementById('image-preview'),
+    purchaseItemsContainer: document.getElementById('purchase-items-container'),
+    addItemBtn: document.getElementById('add-item-btn'),
+    totalAmount: document.getElementById('total-amount'),
+    notes: document.getElementById('notes'),
+    cancelPurchase: document.getElementById('cancel-purchase'),
+    savePurchase: document.getElementById('save-purchase')
 };
 
 // Initialize the page
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener('DOMContentLoaded', function() {
     // Set default date to today
     const today = new Date().toISOString().split('T')[0];
+    elements.reportDate.value = today;
     elements.purchaseDate.value = today;
-    elements.paymentDate.value = today;
     
     // Load initial data
     loadPurchases();
-    loadSuppliers();
     
     // Setup event listeners
     setupEventListeners();
 });
 
 function setupEventListeners() {
-    // Payment mode change
-    elements.paymentMode.addEventListener("change", function() {
-        if (this.value === "Credit") {
-            elements.dueDateContainer.style.display = "block";
-            const dueDate = new Date();
-            dueDate.setDate(dueDate.getDate() + 30); // Default 30 days credit
-            elements.dueDate.value = dueDate.toISOString().split('T')[0];
-        } else {
-            elements.dueDateContainer.style.display = "none";
-        }
-        calculateBalance();
+    // Period buttons
+    elements.periodBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            elements.periodBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentPeriod = this.dataset.period;
+            loadPurchases();
+        });
     });
     
-    // Amount calculations
-    elements.billAmount.addEventListener("input", calculateBalance);
-    elements.paidAmount.addEventListener("input", calculateBalance);
+    // Generate report button
+    elements.generateBtn.addEventListener('click', loadPurchases);
     
-    // Add purchase item
-    elements.addPurchaseItemBtn.addEventListener("click", addPurchaseItem);
-    
-    // Form submission
-    elements.purchaseForm.addEventListener("submit", handlePurchaseSubmit);
-    
-    // Table filters
-    elements.purchaseSupplierFilter.addEventListener("change", filterPurchases);
-    elements.purchasePaymentFilter.addEventListener("change", filterPurchases);
-    elements.purchaseStatusFilter.addEventListener("change", filterPurchases);
-    elements.purchaseSearch.addEventListener("keyup", function(e) {
-        if (e.key === "Enter") filterPurchases();
+    // Filters
+    elements.supplierFilter.addEventListener('change', filterPurchases);
+    elements.paymentFilter.addEventListener('change', filterPurchases);
+    elements.itemFilter.addEventListener('change', filterPurchases);
+    elements.searchInput.addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') filterPurchases();
     });
-    elements.purchaseSearchBtn.addEventListener("click", filterPurchases);
+    elements.searchBtn.addEventListener('click', filterPurchases);
     
     // Pagination
-    elements.purchasePrevBtn.addEventListener("click", goToPrevPage);
-    elements.purchaseNextBtn.addEventListener("click", goToNextPage);
+    elements.prevBtn.addEventListener('click', goToPrevPage);
+    elements.nextBtn.addEventListener('click', goToNextPage);
     
-    // Modal controls
-    document.querySelectorAll(".close").forEach(btn => {
-        btn.addEventListener("click", closeModal);
-    });
-    elements.closeModalBtn.addEventListener("click", closeModal);
-    elements.cancelPaymentBtn.addEventListener("click", function() {
-        closeModal();
-        elements.purchaseModal.style.display = "flex";
+    // Add purchase button
+    elements.addPurchaseBtn.addEventListener('click', showAddPurchaseModal);
+    
+    // Modal close buttons
+    document.querySelectorAll('.close').forEach(btn => {
+        btn.addEventListener('click', closeModal);
     });
     
-    // Payment actions
-    elements.makePaymentBtn.addEventListener("click", function() {
-        elements.purchaseModal.style.display = "none";
-        elements.paymentModal.style.display = "flex";
+    // Cancel purchase button
+    elements.cancelPurchase.addEventListener('click', closeModal);
+    
+    // Payment type change
+    elements.paymentType.addEventListener('change', function() {
+        if (this.value === 'spot') {
+            elements.amountPaid.value = '';
+            elements.amountPaid.readOnly = true;
+            elements.dueDate.disabled = true;
+        } else if (this.value === 'credit') {
+            elements.amountPaid.value = '0';
+            elements.amountPaid.readOnly = false;
+            elements.dueDate.disabled = false;
+        } else { // partial
+            elements.amountPaid.value = '';
+            elements.amountPaid.readOnly = false;
+            elements.dueDate.disabled = false;
+        }
     });
     
-    elements.paymentForm.addEventListener("submit", handlePaymentSubmit);
-}
-
-function calculateBalance() {
-    const billAmount = parseFloat(elements.billAmount.value) || 0;
-    const paidAmount = parseFloat(elements.paidAmount.value) || 0;
-    const balance = billAmount - paidAmount;
-    elements.balanceAmount.value = balance.toFixed(2);
-}
-
-function addPurchaseItem() {
-    const itemDiv = document.createElement("div");
-    itemDiv.className = "purchase-item";
-    itemDiv.innerHTML = `
-        <div class="form-row">
-            <div class="form-group">
-                <label>Item Name</label>
-                <input type="text" class="item-name" required>
-            </div>
-            <div class="form-group">
-                <label>Quantity</label>
-                <input type="number" class="item-qty" min="1" value="1" required>
-            </div>
-            <div class="form-group">
-                <label>Unit Price (₹)</label>
-                <input type="number" class="item-price" min="0" step="0.01" required>
-            </div>
-            <div class="form-group">
-                <label>Total (₹)</label>
-                <input type="number" class="item-total" readonly>
-            </div>
-            <div class="form-group">
-                <label>&nbsp;</label>
-                <button type="button" class="remove-item"><i class="fas fa-trash"></i></button>
-            </div>
-        </div>
-    `;
-    
-    elements.purchaseItemsContainer.appendChild(itemDiv);
-    
-    // Add event listeners for calculations
-    const qtyInput = itemDiv.querySelector(".item-qty");
-    const priceInput = itemDiv.querySelector(".item-price");
-    const totalInput = itemDiv.querySelector(".item-total");
-    
-    qtyInput.addEventListener("input", calculateItemTotal);
-    priceInput.addEventListener("input", calculateItemTotal);
-    
-    function calculateItemTotal() {
-        const qty = parseFloat(qtyInput.value) || 0;
-        const price = parseFloat(priceInput.value) || 0;
-        totalInput.value = (qty * price).toFixed(2);
-    }
-    
-    // Add remove event
-    itemDiv.querySelector(".remove-item").addEventListener("click", function() {
-        itemDiv.remove();
+    // Bill image upload
+    elements.billImage.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                elements.imagePreview.innerHTML = `
+                    <img src="${e.target.result}" style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;">
+                `;
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
     });
+    
+    // Add item button
+    elements.addItemBtn.addEventListener('click', addPurchaseItem);
+    
+    // Form submission
+    elements.purchaseForm.addEventListener('submit', handlePurchaseSubmit);
+    
+    // Initialize with one item
+    addPurchaseItem();
 }
 
 async function loadPurchases() {
     try {
         showLoading();
         
-        const response = await fetch(`${SCRIPT_URL}?action=getPurchases`);
+        // This would be replaced with your actual API call
+        const scriptUrl = "YOUR_APPS_SCRIPT_URL_FOR_PURCHASES";
+        const response = await fetch(scriptUrl);
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -211,161 +173,336 @@ async function loadPurchases() {
         allPurchases = processPurchaseData(data);
         
         // Update filters
-        updateSupplierFilter();
-        
-        // Initial filter and render
-        filterPurchases();
-        
-        // Update chart
-        updatePurchaseChart();
+        updateFilters();
         
         // Update summary cards
         updateSummaryCards();
+        
+        // Render chart
+        renderChart();
+        
+        // Initial filter and render
+        filterPurchases();
     } catch (error) {
         console.error("Error loading purchases:", error);
         showError("Failed to load purchases. Please try again.");
     }
 }
 
-function processPurchaseData(data) {
-    return data.map(row => {
-        try {
-            // Safely parse items JSON
-            let items = [];
-            try {
-                items = typeof row[5] === 'string' ? JSON.parse(row[5]) : (row[5] || []);
-            } catch (e) {
-                console.warn("Failed to parse items JSON:", row[5]);
-                items = [];
-            }
-            
-            return {
-                id: row[0],
-                date: formatDate(row[1]),
-                dateString: formatDateForDisplay(row[1]),
-                supplier: row[2] || '',
-                contact: row[3] || '',
-                billNumber: row[4] || '',
-                items: items,
-                billAmount: parseFloat(row[6]) || 0,
-                paidAmount: parseFloat(row[7]) || 0,
-                balance: parseFloat(row[8]) || 0,
-                paymentMode: row[9] || 'Cash',
-                dueDate: row[10] ? formatDateForDisplay(row[10]) : null,
-                status: row[11] || (parseFloat(row[8]) > 0 ? "Pending" : "Paid"),
-                notes: row[12] || '',
-                imageUrl: row[13] || '',
-                createdAt: row[14]
-            };
-        } catch (e) {
-            console.error("Error processing purchase row:", row, e);
-            return null;
-        }
-    }).filter(p => p !== null); // Filter out any null entries from failed processing
-}
-
-function formatDate(dateString) {
-    if (!dateString) return new Date();
+function processPurchaseData(sheetData) {
+    const purchases = [];
     
-    // Try parsing as ISO string
-    const date = new Date(dateString);
-    if (!isNaN(date)) return date;
+    // Skip header row if it exists
+    const startRow = sheetData[0][0] === "Date" ? 1 : 0;
     
-    // Try common spreadsheet formats (dd/mm/yyyy or mm/dd/yyyy)
-    const parts = dateString.split(/[-/]/);
-    if (parts.length === 3) {
-        // Try both day-first and month-first formats
-        const dayFirst = new Date(parts[2], parts[1] - 1, parts[0]);
-        const monthFirst = new Date(parts[2], parts[0] - 1, parts[1]);
+    for (let i = startRow; i < sheetData.length; i++) {
+        const row = sheetData[i];
+        const items = row[4] ? JSON.parse(row[4]) : []; // Parse items JSON
         
-        // Return the first valid date
-        return !isNaN(dayFirst) ? dayFirst : (!isNaN(monthFirst) ? monthFirst : new Date());
-    }
-    
-    // Fallback to current date
-    return new Date();
-}
-
-function formatDateForDisplay(dateString) {
-    const date = formatDate(dateString);
-    return date.toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-    });
-}
-
-function updateSupplierFilter() {
-    const uniqueSuppliers = [...new Set(allPurchases.map(p => p.supplier))].sort();
-    
-    elements.purchaseSupplierFilter.innerHTML = '<option value="">All Suppliers</option>';
-    uniqueSuppliers.forEach(supplier => {
-        if (supplier) {
-            const option = document.createElement("option");
-            option.value = supplier;
-            option.textContent = supplier;
-            elements.purchaseSupplierFilter.appendChild(option);
-        }
-    });
-}
-
-function loadSuppliers() {
-    // Load suppliers from localStorage or Google Sheets
-    const savedSuppliers = localStorage.getItem('rkFashionsSuppliers');
-    if (savedSuppliers) {
-        const suppliers = JSON.parse(savedSuppliers);
-        updateSupplierDatalist(suppliers);
-    }
-    
-    fetch(`${SCRIPT_URL}?action=getSuppliers`)
-        .then(response => {
-            if (!response.ok) throw new Error("Network response was not ok");
-            return response.json();
-        })
-        .then(data => {
-            const suppliers = data.map(row => row[0]).filter(Boolean); // Filter out empty names
-            updateSupplierDatalist(suppliers);
-            localStorage.setItem('rkFashionsSuppliers', JSON.stringify(suppliers));
-        })
-        .catch(error => {
-            console.error("Error loading suppliers:", error);
+        purchases.push({
+            id: row[0] || `purchase-${i}`,
+            date: row[1] || new Date().toISOString().split('T')[0],
+            billNo: row[2] || '',
+            supplier: row[3] || '',
+            items: items,
+            totalAmount: parseFloat(row[5]) || 0,
+            paymentType: row[6] || 'credit',
+            amountPaid: parseFloat(row[7]) || 0,
+            dueDate: row[8] || '',
+            billImage: row[9] || '',
+            notes: row[10] || '',
+            status: calculateStatus(row[6], parseFloat(row[5]), parseFloat(row[7])),
+            balance: (parseFloat(row[5]) || 0) - (parseFloat(row[7]) || 0),
+            createdAt: row[11] || new Date().toISOString()
         });
+    }
+    
+    return purchases;
 }
 
-function updateSupplierDatalist(suppliers) {
+function calculateStatus(paymentType, totalAmount, amountPaid) {
+    if (paymentType === 'spot') return 'paid';
+    if (amountPaid >= totalAmount) return 'paid';
+    if (amountPaid > 0) return 'partial';
+    return 'pending';
+}
+
+function updateFilters() {
+    // Update supplier filter
+    const suppliers = [...new Set(allPurchases.map(p => p.supplier))].filter(s => s);
+    elements.supplierFilter.innerHTML = '<option value="">All Suppliers</option>';
     elements.supplierList.innerHTML = '';
+    
     suppliers.forEach(supplier => {
-        if (supplier) {
-            const option = document.createElement("option");
-            option.value = supplier;
-            elements.supplierList.appendChild(option);
+        const option = document.createElement('option');
+        option.value = supplier;
+        option.textContent = supplier;
+        elements.supplierFilter.appendChild(option.cloneNode(true));
+        elements.supplierList.appendChild(option);
+    });
+    
+    // Update item filter
+    const allItems = [];
+    allPurchases.forEach(p => {
+        p.items.forEach(item => {
+            if (item.name && !allItems.includes(item.name)) {
+                allItems.push(item.name);
+            }
+        });
+    });
+    
+    elements.itemFilter.innerHTML = '<option value="">All Items</option>';
+    allItems.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item;
+        option.textContent = item;
+        elements.itemFilter.appendChild(option);
+    });
+}
+
+function updateSummaryCards() {
+    if (allPurchases.length === 0) return;
+    
+    // Total purchases
+    const total = allPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+    elements.totalPurchases.textContent = `₹${total.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    
+    // Pending payments
+    const pending = allPurchases.filter(p => p.status === 'pending' || p.status === 'partial')
+                               .reduce((sum, p) => sum + p.balance, 0);
+    elements.pendingPayments.textContent = `₹${pending.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    
+    // Supplier count
+    const suppliers = [...new Set(allPurchases.map(p => p.supplier))].filter(s => s);
+    elements.supplierCount.textContent = suppliers.length;
+    
+    // Last supplier
+    const lastPurchase = [...allPurchases].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+    elements.lastSupplier.textContent = lastPurchase?.supplier || 'None';
+    
+    // Stock value and count
+    const stockItems = {};
+    allPurchases.forEach(p => {
+        p.items.forEach(item => {
+            if (!stockItems[item.name]) {
+                stockItems[item.name] = {
+                    quantity: 0,
+                    purchasePrice: item.price || 0
+                };
+            }
+            stockItems[item.name].quantity += parseFloat(item.quantity) || 0;
+        });
+    });
+    
+    const stockValue = Object.values(stockItems).reduce((sum, item) => {
+        return sum + (item.quantity * item.purchasePrice);
+    }, 0);
+    
+    const stockCount = Object.keys(stockItems).length;
+    elements.stockValue.textContent = `₹${stockValue.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    elements.stockChange.textContent = stockCount;
+    
+    // Calculate changes (simplified - would compare with previous period)
+    elements.purchaseChange.textContent = '0%';
+    elements.pendingChange.textContent = allPurchases.filter(p => p.status === 'pending').length;
+}
+
+function renderChart() {
+    // Group purchases by period
+    const grouped = groupPurchasesByPeriod();
+    
+    // Prepare chart data
+    const labels = [];
+    const purchaseData = [];
+    const paymentData = [];
+    
+    grouped.forEach(group => {
+        labels.push(group.periodLabel);
+        purchaseData.push(group.totalPurchases);
+        paymentData.push(group.totalPayments);
+    });
+    
+    const chartData = {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Purchases',
+                data: purchaseData,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            },
+            {
+                label: 'Payments',
+                data: paymentData,
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }
+        ]
+    };
+    
+    if (purchaseChart) {
+        purchaseChart.destroy();
+    }
+    
+    const ctx = elements.purchaseChart.getContext('2d');
+    purchaseChart = new Chart(ctx, {
+        type: 'bar',
+        data: chartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Period'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Amount (₹)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString('en-IN');
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ₹${context.raw.toLocaleString('en-IN', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            })}`;
+                        }
+                    }
+                }
+            }
         }
     });
+}
+
+function groupPurchasesByPeriod() {
+    const groups = [];
+    const now = new Date();
+    
+    if (currentPeriod === 'monthly') {
+        // Last 12 months
+        for (let i = 11; i >= 0; i--) {
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const month = date.toLocaleString('default', { month: 'short' });
+            const year = date.getFullYear();
+            const periodLabel = `${month} ${year}`;
+            
+            const startDate = new Date(date.getFullYear(), date.getMonth(), 1);
+            const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            
+            const periodPurchases = allPurchases.filter(p => {
+                const purchaseDate = new Date(p.date);
+                return purchaseDate >= startDate && purchaseDate <= endDate;
+            });
+            
+            const totalPurchases = periodPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+            const totalPayments = periodPurchases.reduce((sum, p) => sum + p.amountPaid, 0);
+            
+            groups.push({
+                periodLabel,
+                totalPurchases,
+                totalPayments
+            });
+        }
+    } else if (currentPeriod === 'quarterly') {
+        // Last 4 quarters
+        const currentQuarter = Math.floor(now.getMonth() / 3) + 1;
+        
+        for (let i = 3; i >= 0; i--) {
+            const quarter = (currentQuarter - i - 1 + 4) % 4 + 1;
+            let year = now.getFullYear();
+            if (quarter > currentQuarter) year--;
+            
+            const periodLabel = `Q${quarter} ${year}`;
+            
+            const startMonth = (quarter - 1) * 3;
+            const endMonth = startMonth + 2;
+            
+            const startDate = new Date(year, startMonth, 1);
+            const endDate = new Date(year, endMonth + 1, 0);
+            
+            const periodPurchases = allPurchases.filter(p => {
+                const purchaseDate = new Date(p.date);
+                return purchaseDate >= startDate && purchaseDate <= endDate;
+            });
+            
+            const totalPurchases = periodPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+            const totalPayments = periodPurchases.reduce((sum, p) => sum + p.amountPaid, 0);
+            
+            groups.push({
+                periodLabel,
+                totalPurchases,
+                totalPayments
+            });
+        }
+    } else { // yearly
+        // Last 5 years
+        for (let i = 4; i >= 0; i--) {
+            const year = now.getFullYear() - i;
+            const periodLabel = year.toString();
+            
+            const startDate = new Date(year, 0, 1);
+            const endDate = new Date(year, 11, 31);
+            
+            const periodPurchases = allPurchases.filter(p => {
+                const purchaseDate = new Date(p.date);
+                return purchaseDate >= startDate && purchaseDate <= endDate;
+            });
+            
+            const totalPurchases = periodPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+            const totalPayments = periodPurchases.reduce((sum, p) => sum + p.amountPaid, 0);
+            
+            groups.push({
+                periodLabel,
+                totalPurchases,
+                totalPayments
+            });
+        }
+    }
+    
+    return groups;
 }
 
 function filterPurchases() {
-    const supplierFilter = elements.purchaseSupplierFilter.value;
-    const paymentFilter = elements.purchasePaymentFilter.value;
-    const statusFilter = elements.purchaseStatusFilter.value;
-    const searchTerm = elements.purchaseSearch.value.toLowerCase();
+    const supplierFilter = elements.supplierFilter.value.toLowerCase();
+    const paymentFilter = elements.paymentFilter.value.toLowerCase();
+    const itemFilter = elements.itemFilter.value.toLowerCase();
+    const searchTerm = elements.searchInput.value.toLowerCase();
     
     filteredPurchases = allPurchases.filter(purchase => {
         // Supplier filter
-        const matchesSupplier = supplierFilter === "" || purchase.supplier === supplierFilter;
+        const matchesSupplier = !supplierFilter || 
+            purchase.supplier.toLowerCase().includes(supplierFilter);
         
-        // Payment mode filter
-        const matchesPayment = paymentFilter === "" || purchase.paymentMode === paymentFilter;
+        // Payment filter
+        const matchesPayment = !paymentFilter || 
+            purchase.status.toLowerCase() === paymentFilter;
         
-        // Status filter
-        const matchesStatus = statusFilter === "" || purchase.status === statusFilter;
+        // Item filter
+        const matchesItem = !itemFilter || 
+            purchase.items.some(item => item.name.toLowerCase().includes(itemFilter));
         
         // Search term
-        const matchesSearch = searchTerm === "" || 
-            (purchase.supplier && purchase.supplier.toLowerCase().includes(searchTerm)) ||
-            (purchase.billNumber && purchase.billNumber.toLowerCase().includes(searchTerm)) ||
-            (purchase.notes && purchase.notes.toLowerCase().includes(searchTerm));
+        const matchesSearch = !searchTerm || 
+            purchase.billNo.toLowerCase().includes(searchTerm) ||
+            purchase.supplier.toLowerCase().includes(searchTerm) ||
+            purchase.items.some(item => item.name.toLowerCase().includes(searchTerm));
         
-        return matchesSupplier && matchesPayment && matchesStatus && matchesSearch;
+        return matchesSupplier && matchesPayment && matchesItem && matchesSearch;
     });
     
     totalPages = Math.max(1, Math.ceil(filteredPurchases.length / PAGE_SIZE));
@@ -392,19 +529,23 @@ function renderPurchases() {
     }
 
     pagePurchases.forEach(purchase => {
-        const row = document.createElement("tr");
+        const itemsSummary = purchase.items.length === 1 
+            ? purchase.items[0].name 
+            : `${purchase.items.length} items`;
+        
+        const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${purchase.dateString}</td>
+            <td>${formatDate(purchase.date)}</td>
+            <td>${purchase.billNo}</td>
             <td>${purchase.supplier}</td>
-            <td>${purchase.billNumber}</td>
-            <td>₹${purchase.billAmount.toFixed(2)}</td>
-            <td>₹${purchase.paidAmount.toFixed(2)}</td>
+            <td>${itemsSummary}</td>
+            <td>₹${purchase.totalAmount.toFixed(2)}</td>
+            <td>₹${purchase.amountPaid.toFixed(2)}</td>
             <td>₹${purchase.balance.toFixed(2)}</td>
-            <td>${purchase.paymentMode}</td>
-            <td><span class="status-badge ${purchase.status.toLowerCase()}">${purchase.status}</span></td>
+            <td><span class="status-badge ${purchase.status}">${purchase.status}</span></td>
             <td class="actions">
-                <button class="view-btn" data-id="${purchase.id}"><i class="fas fa-eye"></i></button>
-                <button class="edit-btn" data-id="${purchase.id}"><i class="fas fa-edit"></i></button>
+                <button class="view-btn" data-id="${purchase.id}">View</button>
+                <button class="edit-btn" data-id="${purchase.id}">Edit</button>
             </td>
         `;
         elements.purchasesBody.appendChild(row);
@@ -413,145 +554,422 @@ function renderPurchases() {
     // Update pagination
     updatePagination();
     
-    // Add event listeners to action buttons
+    // Add event listeners to buttons
     setupRowEventListeners();
 }
 
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function updatePagination() {
+    elements.pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    elements.prevBtn.disabled = currentPage === 1;
+    elements.nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+}
+
 function setupRowEventListeners() {
-    document.querySelectorAll(".view-btn").forEach(btn => {
-        btn.addEventListener("click", viewPurchaseDetails);
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', viewPurchaseDetails);
     });
     
-    document.querySelectorAll(".edit-btn").forEach(btn => {
-        btn.addEventListener("click", editPurchase);
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', editPurchase);
     });
 }
 
 function viewPurchaseDetails(e) {
-    const purchaseId = e.currentTarget.getAttribute("data-id");
+    const purchaseId = e.target.getAttribute('data-id');
     const purchase = allPurchases.find(p => p.id === purchaseId);
     
     if (!purchase) return;
     
     // Format items as a table
-    const itemsHtml = purchase.items.length > 0 ? `
+    const itemsHtml = `
         <table class="items-table">
             <thead>
                 <tr>
                     <th>Item</th>
                     <th>Qty</th>
-                    <th>Unit Price</th>
+                    <th>Price</th>
                     <th>Total</th>
                 </tr>
             </thead>
             <tbody>
                 ${purchase.items.map(item => `
                     <tr>
-                        <td>${item.name || ''}</td>
-                        <td>${item.quantity || 0}</td>
-                        <td>₹${(item.price || 0).toFixed(2)}</td>
-                        <td>₹${((item.quantity || 0) * (item.price || 0)).toFixed(2)}</td>
+                        <td>${item.name}</td>
+                        <td>${item.quantity}</td>
+                        <td>₹${item.price.toFixed(2)}</td>
+                        <td>₹${(item.quantity * item.price).toFixed(2)}</td>
                     </tr>
-                `).join("")}
+                `).join('')}
             </tbody>
         </table>
-    ` : '<p>No items recorded</p>';
+    `;
     
     // Create purchase details HTML
     elements.purchaseDetails.innerHTML = `
-        <div class="transaction-header">
-            <p><strong>Date:</strong> ${purchase.dateString}</p>
+        <div class="purchase-header">
+            <p><strong>Date:</strong> ${formatDate(purchase.date)}</p>
+            <p><strong>Bill No:</strong> ${purchase.billNo}</p>
             <p><strong>Supplier:</strong> ${purchase.supplier}</p>
-            <p><strong>Contact:</strong> ${purchase.contact || 'N/A'}</p>
-            <p><strong>Bill No:</strong> ${purchase.billNumber}</p>
-            <p><strong>Payment Mode:</strong> ${purchase.paymentMode}</p>
-            ${purchase.dueDate ? `<p><strong>Due Date:</strong> ${purchase.dueDate}</p>` : ''}
-            <p><strong>Status:</strong> <span class="status-badge ${purchase.status.toLowerCase()}">${purchase.status}</span></p>
+            <p><strong>Payment Type:</strong> ${purchase.paymentType}</p>
+            ${purchase.dueDate ? `<p><strong>Due Date:</strong> ${formatDate(purchase.dueDate)}</p>` : ''}
+            <p><strong>Status:</strong> <span class="status-badge ${purchase.status}">${purchase.status}</span></p>
         </div>
         
-        <div class="transaction-items">
+        <div class="purchase-items">
+            <h3>Items</h3>
             ${itemsHtml}
         </div>
         
-        <div class="transaction-totals">
-            <p><strong>Bill Amount:</strong> ₹${purchase.billAmount.toFixed(2)}</p>
-            <p><strong>Paid Amount:</strong> ₹${purchase.paidAmount.toFixed(2)}</p>
+        <div class="purchase-totals">
+            <p><strong>Total Amount:</strong> ₹${purchase.totalAmount.toFixed(2)}</p>
+            <p><strong>Amount Paid:</strong> ₹${purchase.amountPaid.toFixed(2)}</p>
             <p><strong>Balance Due:</strong> ₹${purchase.balance.toFixed(2)}</p>
         </div>
         
-        ${purchase.notes ? `<div class="transaction-notes"><p><strong>Notes:</strong> ${purchase.notes}</p></div>` : ''}
+        ${purchase.billImage ? `
+        <div class="bill-image">
+            <h3>Bill Image</h3>
+            <img src="${purchase.billImage}" style="max-width: 100%; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        ` : ''}
+        
+        ${purchase.notes ? `
+        <div class="purchase-notes">
+            <h3>Notes</h3>
+            <p>${purchase.notes}</p>
+        </div>
+        ` : ''}
     `;
     
-    // Show bill image if available
-    elements.billImageContainer.innerHTML = '';
-    if (purchase.imageUrl) {
-        const img = document.createElement("img");
-        img.src = purchase.imageUrl;
-        img.alt = "Bill Image";
-        img.style.maxWidth = "100%";
-        img.style.maxHeight = "300px";
-        elements.billImageContainer.appendChild(img);
-    }
-    
-    // Set current purchase ID
-    currentPurchaseId = purchase.id;
-    
-    // Show/hide payment button based on status
-    elements.makePaymentBtn.style.display = purchase.balance > 0 ? "block" : "none";
-    
     // Show modal
-    elements.modalTitle.textContent = `Purchase #${purchase.billNumber || purchase.id.substring(0, 8)}`;
-    elements.purchaseModal.style.display = "flex";
+    elements.viewModal.style.display = 'flex';
 }
 
 function editPurchase(e) {
-    const purchaseId = e.currentTarget.getAttribute("data-id");
+    const purchaseId = e.target.getAttribute('data-id');
     const purchase = allPurchases.find(p => p.id === purchaseId);
     
     if (!purchase) return;
     
-    // Fill form with purchase data
-    elements.purchaseDate.value = purchase.date.toISOString().split('T')[0];
-    elements.supplierName.value = purchase.supplier;
-    elements.supplierContact.value = purchase.contact || '';
-    elements.billNumber.value = purchase.billNumber;
-    elements.paymentMode.value = purchase.paymentMode;
+    currentPurchaseId = purchaseId;
+    elements.modalTitle.textContent = 'Edit Purchase';
     
-    if (purchase.paymentMode === "Credit" && purchase.dueDate) {
-        const dueDate = new Date(purchase.dueDate);
-        elements.dueDate.value = dueDate.toISOString().split('T')[0];
-        elements.dueDateContainer.style.display = "block";
+    // Fill form with purchase data
+    elements.purchaseDate.value = purchase.date;
+    elements.billNo.value = purchase.billNo;
+    elements.supplierName.value = purchase.supplier;
+    elements.paymentType.value = purchase.paymentType;
+    elements.amountPaid.value = purchase.amountPaid;
+    elements.dueDate.value = purchase.dueDate || '';
+    elements.totalAmount.value = purchase.totalAmount;
+    elements.notes.value = purchase.notes || '';
+    
+    // Set payment type specific fields
+    if (purchase.paymentType === 'spot') {
+        elements.amountPaid.readOnly = true;
+        elements.dueDate.disabled = true;
     } else {
-        elements.dueDateContainer.style.display = "none";
+        elements.amountPaid.readOnly = false;
+        elements.dueDate.disabled = false;
     }
     
-    elements.billAmount.value = purchase.billAmount.toFixed(2);
-    elements.paidAmount.value = purchase.paidAmount.toFixed(2);
-    elements.balanceAmount.value = purchase.balance.toFixed(2);
-    elements.purchaseNotes.value = purchase.notes || '';
-    
-    // Clear existing items and add new ones
+    // Clear and add items
     elements.purchaseItemsContainer.innerHTML = '';
     purchase.items.forEach(item => {
-        addPurchaseItem();
-        const lastItem = elements.purchaseItemsContainer.lastElementChild;
-        lastItem.querySelector(".item-name").value = item.name || '';
-        lastItem.querySelector(".item-qty").value = item.quantity || 0;
-        lastItem.querySelector(".item-price").value = item.price || 0;
-        lastItem.querySelector(".item-total").value = ((item.quantity || 0) * (item.price || 0)).toFixed(2);
+        addPurchaseItem(item);
     });
     
-    // Set current purchase ID for update
-    currentPurchaseId = purchase.id;
+    // Show bill image if exists
+    if (purchase.billImage) {
+        elements.imagePreview.innerHTML = `
+            <img src="${purchase.billImage}" style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;">
+        `;
+    } else {
+        elements.imagePreview.innerHTML = '';
+    }
     
-    // Scroll to form
-    elements.purchaseForm.scrollIntoView({ behavior: 'smooth' });
+    // Show modal
+    elements.purchaseModal.style.display = 'flex';
 }
 
-function updatePagination() {
-    elements.purchasePageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-    elements.purchasePrevBtn.disabled = currentPage === 1;
-    elements.purchaseNextBtn.disabled = currentPage === totalPages || totalPages === 0;
+function showAddPurchaseModal() {
+    currentPurchaseId = null;
+    elements.modalTitle.textContent = 'Add New Purchase';
+    
+    // Reset form
+    elements.purchaseForm.reset();
+    elements.purchaseDate.value = new Date().toISOString().split('T')[0];
+    elements.paymentType.value = 'credit';
+    elements.amountPaid.value = '0';
+    elements.amountPaid.readOnly = false;
+    elements.dueDate.disabled = false;
+    elements.totalAmount.value = '0';
+    elements.imagePreview.innerHTML = '';
+    
+    // Clear and add one empty item
+    elements.purchaseItemsContainer.innerHTML = '';
+    addPurchaseItem();
+    
+    // Show modal
+    elements.purchaseModal.style.display = 'flex';
+}
+
+function addPurchaseItem(itemData = {}) {
+    const itemId = `item-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const itemRow = document.createElement('div');
+    itemRow.className = 'item-row';
+    itemRow.id = itemId;
+    itemRow.innerHTML = `
+        <div class="form-group">
+            <label for="${itemId}-name">Item Name</label>
+            <input type="text" id="${itemId}-name" class="item-name" value="${itemData.name || ''}" required>
+        </div>
+        <div class="form-group">
+            <label for="${itemId}-quantity">Quantity</label>
+            <input type="number" id="${itemId}-quantity" class="item-quantity" min="1" value="${itemData.quantity || 1}" required>
+        </div>
+        <div class="form-group">
+            <label for="${itemId}-price">Price (₹)</label>
+            <input type="number" id="${itemId}-price" class="item-price" min="0" step="0.01" value="${itemData.price || ''}" required>
+        </div>
+        <div class="form-group">
+            <label for="${itemId}-total">Total (₹)</label>
+            <input type="number" id="${itemId}-total" class="item-total" min="0" step="0.01" value="${(itemData.quantity || 0) * (itemData.price || 0)}" readonly>
+        </div>
+        <button type="button" class="remove-item" data-item="${itemId}">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    
+    elements.purchaseItemsContainer.appendChild(itemRow);
+    
+    // Add event listeners for calculations
+    const quantityInput = itemRow.querySelector('.item-quantity');
+    const priceInput = itemRow.querySelector('.item-price');
+    const totalInput = itemRow.querySelector('.item-total');
+    
+    quantityInput.addEventListener('input', calculateItemTotal);
+    priceInput.addEventListener('input', calculateItemTotal);
+    
+    // Add remove event
+    itemRow.querySelector('.remove-item').addEventListener('click', function() {
+        itemRow.remove();
+        calculatePurchaseTotal();
+    });
+    
+    // Calculate initial total if data was provided
+    if (itemData.quantity && itemData.price) {
+        calculateItemTotal({ target: quantityInput });
+    }
+}
+
+function calculateItemTotal(e) {
+    const itemRow = e.target.closest('.item-row');
+    const quantity = parseFloat(itemRow.querySelector('.item-quantity').value) || 0;
+    const price = parseFloat(itemRow.querySelector('.item-price').value) || 0;
+    const total = quantity * price;
+    
+    itemRow.querySelector('.item-total').value = total.toFixed(2);
+    calculatePurchaseTotal();
+}
+
+function calculatePurchaseTotal() {
+    let total = 0;
+    
+    document.querySelectorAll('.item-row').forEach(row => {
+        const itemTotal = parseFloat(row.querySelector('.item-total').value) || 0;
+        total += itemTotal;
+    });
+    
+    elements.totalAmount.value = total.toFixed(2);
+    
+    // If payment type is spot, set amount paid equal to total
+    if (elements.paymentType.value === 'spot') {
+        elements.amountPaid.value = total.toFixed(2);
+    }
+}
+
+async function handlePurchaseSubmit(e) {
+    e.preventDefault();
+    
+    // Validate form
+    if (!validatePurchaseForm()) return;
+    
+    // Prepare items data
+    const items = [];
+    document.querySelectorAll('.item-row').forEach(row => {
+        items.push({
+            name: row.querySelector('.item-name').value,
+            quantity: parseFloat(row.querySelector('.item-quantity').value),
+            price: parseFloat(row.querySelector('.item-price').value)
+        });
+    });
+    
+    // Prepare purchase data
+    const purchaseData = {
+        id: currentPurchaseId || `purchase-${Date.now()}`,
+        date: elements.purchaseDate.value,
+        billNo: elements.billNo.value,
+        supplier: elements.supplierName.value,
+        items: items,
+        totalAmount: parseFloat(elements.totalAmount.value),
+        paymentType: elements.paymentType.value,
+        amountPaid: parseFloat(elements.amountPaid.value) || 0,
+        dueDate: elements.dueDate.value || '',
+        notes: elements.notes.value || '',
+        status: calculateStatus(elements.paymentType.value, parseFloat(elements.totalAmount.value), parseFloat(elements.amountPaid.value) || 0),
+        balance: parseFloat(elements.totalAmount.value) - (parseFloat(elements.amountPaid.value) || 0)
+    };
+    
+    // Upload bill image if selected
+    if (elements.billImage.files && elements.billImage.files[0]) {
+        try {
+            const imageUrl = await uploadImageToImgBB(elements.billImage.files[0]);
+            purchaseData.billImage = imageUrl;
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            alert("Failed to upload bill image. The purchase will be saved without the image.");
+        }
+    } else if (currentPurchaseId) {
+        // Keep existing image if editing
+        const existingPurchase = allPurchases.find(p => p.id === currentPurchaseId);
+        if (existingPurchase && existingPurchase.billImage) {
+            purchaseData.billImage = existingPurchase.billImage;
+        }
+    }
+    
+    // Save purchase
+    savePurchase(purchaseData);
+}
+
+function validatePurchaseForm() {
+    // Validate required fields
+    if (!elements.billNo.value.trim()) {
+        alert("Please enter bill number");
+        return false;
+    }
+    
+    if (!elements.supplierName.value.trim()) {
+        alert("Please enter supplier name");
+        return false;
+    }
+    
+    // Validate at least one item exists
+    if (document.querySelectorAll('.item-row').length === 0) {
+        alert("Please add at least one item");
+        return false;
+    }
+    
+    // Validate all items
+    let valid = true;
+    document.querySelectorAll('.item-row').forEach(row => {
+        const name = row.querySelector('.item-name').value.trim();
+        const quantity = row.querySelector('.item-quantity').value;
+        const price = row.querySelector('.item-price').value;
+        
+        if (!name || !quantity || !price || isNaN(quantity) || isNaN(price)) {
+            row.style.border = "1px solid red";
+            valid = false;
+        } else {
+            row.style.border = "";
+        }
+    });
+    
+    if (!valid) {
+        alert("Please check all item fields");
+        return false;
+    }
+    
+    // Validate payment details
+    if (elements.paymentType.value !== 'spot') {
+        const amountPaid = parseFloat(elements.amountPaid.value) || 0;
+        const totalAmount = parseFloat(elements.totalAmount.value) || 0;
+        
+        if (amountPaid > totalAmount) {
+            alert("Amount paid cannot be greater than total amount");
+            return false;
+        }
+        
+        if (elements.paymentType.value === 'credit' && !elements.dueDate.value) {
+            alert("Please select due date for credit purchases");
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+async function uploadImageToImgBB(imageFile) {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    
+    // Replace with your imgBB API key
+    const apiKey = 'YOUR_IMGBB_API_KEY';
+    const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+        method: 'POST',
+        body: formData
+    });
+    
+    const data = await response.json();
+    if (!data.success) {
+        throw new Error("Image upload failed");
+    }
+    
+    return data.data.url;
+}
+
+function savePurchase(purchaseData) {
+    const isNew = !currentPurchaseId;
+    const submitBtn = elements.savePurchase;
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    submitBtn.disabled = true;
+    
+    // This would be replaced with your actual API call
+    const scriptUrl = "YOUR_APPS_SCRIPT_URL_FOR_SAVING_PURCHASES";
+    
+    fetch(scriptUrl, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(purchaseData)
+    })
+    .then(() => {
+        // Update local data
+        if (isNew) {
+            allPurchases.push(purchaseData);
+        } else {
+            const index = allPurchases.findIndex(p => p.id === currentPurchaseId);
+            if (index !== -1) {
+                allPurchases[index] = purchaseData;
+            }
+        }
+        
+        // Update UI
+        updateFilters();
+        updateSummaryCards();
+        renderChart();
+        filterPurchases();
+        
+        // Close modal and show success
+        closeModal();
+        alert(`Purchase ${isNew ? 'added' : 'updated'} successfully!`);
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Error saving purchase. Please try again.");
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
 }
 
 function goToPrevPage() {
@@ -569,365 +987,8 @@ function goToNextPage() {
 }
 
 function closeModal() {
-    elements.purchaseModal.style.display = "none";
-    elements.paymentModal.style.display = "none";
-}
-
-function updateSummaryCards() {
-    // Calculate total purchases
-    const totalPurchases = allPurchases.reduce((sum, purchase) => sum + purchase.billAmount, 0);
-    elements.totalPurchases.textContent = `₹${totalPurchases.toLocaleString('en-IN', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    })}`;
-    
-    // Calculate credit due
-    const creditDue = allPurchases.reduce((sum, purchase) => sum + purchase.balance, 0);
-    elements.creditDue.textContent = `₹${creditDue.toLocaleString('en-IN', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    })}`;
-    
-    // Calculate stock value (simplified - would need actual inventory data)
-    const stockValue = allPurchases.reduce((sum, purchase) => {
-        return sum + purchase.items.reduce((itemSum, item) => {
-            return itemSum + ((item.quantity || 0) * (item.price || 0));
-        }, 0);
-    }, 0);
-    elements.stockValue.textContent = `₹${stockValue.toLocaleString('en-IN', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    })}`;
-    
-    // Count unique suppliers
-    const suppliersCount = new Set(allPurchases.map(p => p.supplier).filter(Boolean)).size;
-    elements.suppliersCount.textContent = suppliersCount;
-}
-
-function updatePurchaseChart() {
-    // Group purchases by month for the chart
-    const monthlyData = {};
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    
-    // Initialize for last 6 months
-    for (let i = 5; i >= 0; i--) {
-        const date = new Date(currentYear, now.getMonth() - i, 1);
-        const monthYear = date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
-        monthlyData[monthYear] = { total: 0, credit: 0 };
-    }
-    
-    // Process purchases
-    allPurchases.forEach(purchase => {
-        const purchaseDate = new Date(purchase.date);
-        const monthYear = purchaseDate.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
-        
-        if (monthlyData[monthYear]) {
-            monthlyData[monthYear].total += purchase.billAmount;
-            if (purchase.paymentMode === "Credit") {
-                monthlyData[monthYear].credit += purchase.billAmount;
-            }
-        }
-    });
-    
-    // Prepare chart data
-    const labels = Object.keys(monthlyData);
-    const totalData = labels.map(label => monthlyData[label].total);
-    const creditData = labels.map(label => monthlyData[label].credit);
-    
-    // Create or update chart
-    if (purchaseChart) {
-        purchaseChart.data.labels = labels;
-        purchaseChart.data.datasets[0].data = totalData;
-        purchaseChart.data.datasets[1].data = creditData;
-        purchaseChart.update();
-    } else {
-        const ctx = elements.purchaseChart.getContext('2d');
-        purchaseChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'Total Purchases',
-                        data: totalData,
-                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Credit Purchases',
-                        data: creditData,
-                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Month'
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Amount (₹)'
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return '₹' + value.toLocaleString('en-IN');
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.dataset.label}: ₹${context.raw.toLocaleString('en-IN', {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2
-                                })}`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-}
-
-function handlePurchaseSubmit(e) {
-    e.preventDefault();
-    
-    // Validate form
-    if (!validatePurchaseForm()) return;
-    
-    // Prepare purchase data
-    const purchaseData = {
-        date: elements.purchaseDate.value,
-        supplier: elements.supplierName.value.trim(),
-        contact: elements.supplierContact.value.trim(),
-        billNumber: elements.billNumber.value.trim(),
-        paymentMode: elements.paymentMode.value,
-        billAmount: parseFloat(elements.billAmount.value),
-        paidAmount: parseFloat(elements.paidAmount.value),
-        balance: parseFloat(elements.balanceAmount.value),
-        dueDate: elements.paymentMode.value === "Credit" ? elements.dueDate.value : null,
-        notes: elements.purchaseNotes.value.trim(),
-        items: []
-    };
-    
-    // Collect items
-    document.querySelectorAll(".purchase-item").forEach(itemDiv => {
-        purchaseData.items.push({
-            name: itemDiv.querySelector(".item-name").value.trim(),
-            quantity: parseFloat(itemDiv.querySelector(".item-qty").value),
-            price: parseFloat(itemDiv.querySelector(".item-price").value)
-        });
-    });
-    
-    // Handle bill image upload
-    const file = elements.billImage.files[0];
-    if (file) {
-        uploadBillImage(file)
-            .then(imageUrl => {
-                purchaseData.imageUrl = imageUrl;
-                savePurchase(purchaseData);
-            })
-            .catch(error => {
-                console.error("Error uploading image:", error);
-                alert("Error uploading bill image. The purchase will be saved without the image.");
-                savePurchase(purchaseData);
-            });
-    } else {
-        savePurchase(purchaseData);
-    }
-}
-
-function validatePurchaseForm() {
-    // Check required fields
-    if (!elements.supplierName.value.trim()) {
-        alert("Please enter supplier name");
-        return false;
-    }
-    
-    if (!elements.billNumber.value.trim()) {
-        alert("Please enter bill number");
-        return false;
-    }
-    
-    if (isNaN(elements.billAmount.value) || parseFloat(elements.billAmount.value) <= 0) {
-        alert("Please enter a valid bill amount");
-        return false;
-    }
-    
-    if (isNaN(elements.paidAmount.value) || parseFloat(elements.paidAmount.value) < 0) {
-        alert("Please enter a valid paid amount");
-        return false;
-    }
-    
-    // Check balance calculation
-    const balance = parseFloat(elements.billAmount.value) - parseFloat(elements.paidAmount.value);
-    if (balance < 0) {
-        alert("Paid amount cannot be greater than bill amount");
-        return false;
-    }
-    
-    // Check at least one item exists
-    if (document.querySelectorAll(".purchase-item").length === 0) {
-        alert("Please add at least one item");
-        return false;
-    }
-    
-    // Validate all items
-    let valid = true;
-    document.querySelectorAll(".purchase-item").forEach(itemDiv => {
-        const name = itemDiv.querySelector(".item-name").value.trim();
-        const qty = itemDiv.querySelector(".item-qty").value;
-        const price = itemDiv.querySelector(".item-price").value;
-        
-        if (!name || !qty || !price || isNaN(qty) || isNaN(price) || parseFloat(qty) <= 0 || parseFloat(price) < 0) {
-            itemDiv.style.border = "1px solid red";
-            valid = false;
-        } else {
-            itemDiv.style.border = "";
-        }
-    });
-    
-    if (!valid) {
-        alert("Please check all item fields. All items must have a name, positive quantity, and non-negative price.");
-        return false;
-    }
-    
-    return true;
-}
-
-function uploadBillImage(file) {
-    return new Promise((resolve, reject) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('filename', file.name);
-        formData.append('mimeType', file.type);
-        
-        fetch(`${SCRIPT_URL}?action=uploadImage`, {
-            method: "POST",
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) throw new Error("Network response was not ok");
-            return response.json();
-        })
-        .then(data => {
-            if (data.url) {
-                resolve(data.url);
-            } else {
-                throw new Error("No URL returned from server");
-            }
-        })
-        .catch(error => reject(error));
-    });
-}
-
-function savePurchase(purchaseData) {
-    const submitBtn = document.querySelector("#purchase-form [type='submit']");
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    submitBtn.disabled = true;
-    
-    // Add/update ID for existing purchase
-    if (currentPurchaseId) {
-        purchaseData.id = currentPurchaseId;
-    }
-    
-    // Determine status
-    purchaseData.status = purchaseData.balance > 0 ? 
-        (purchaseData.dueDate && new Date(purchaseData.dueDate) < new Date() ? "Overdue" : "Pending") : 
-        "Paid";
-    
-    fetch(`${SCRIPT_URL}?action=savePurchase`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(purchaseData)
-    })
-    .then(response => {
-        if (!response.ok) throw new Error("Network response was not ok");
-        return response.json();
-    })
-    .then(data => {
-        // Reset form
-        elements.purchaseForm.reset();
-        elements.purchaseItemsContainer.innerHTML = '';
-        currentPurchaseId = null;
-        elements.dueDateContainer.style.display = "none";
-        
-        // Reload purchases
-        loadPurchases();
-        
-        alert("Purchase saved successfully!");
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        alert("Error saving purchase. Please try again.");
-    })
-    .finally(() => {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    });
-}
-
-function handlePaymentSubmit(e) {
-    e.preventDefault();
-    
-    // Validate form
-    if (!elements.paymentAmount.value || parseFloat(elements.paymentAmount.value) <= 0) {
-        alert("Please enter a valid payment amount");
-        return;
-    }
-    
-    const paymentData = {
-        purchaseId: currentPurchaseId,
-        date: elements.paymentDate.value,
-        amount: parseFloat(elements.paymentAmount.value),
-        mode: elements.paymentModeInput.value,
-        reference: elements.paymentReference.value,
-        notes: elements.paymentNotes.value
-    };
-    
-    fetch(`${SCRIPT_URL}?action=savePayment`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(paymentData)
-    })
-    .then(response => {
-        if (!response.ok) throw new Error("Network response was not ok");
-        return response.json();
-    })
-    .then(data => {
-        // Reset form
-        elements.paymentForm.reset();
-        closeModal();
-        
-        // Reload purchases
-        loadPurchases();
-        
-        alert("Payment recorded successfully!");
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        alert("Error recording payment. Please try again.");
-    });
+    elements.purchaseModal.style.display = 'none';
+    elements.viewModal.style.display = 'none';
 }
 
 function showLoading() {
