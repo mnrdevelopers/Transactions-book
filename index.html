@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RK Fashions Bill Book</title>
+    <link rel="manifest" href="manifest.json">
     <style>
         * {
             margin: 0;
@@ -235,6 +236,14 @@
         <button class="enter-btn" id="enterBtn">Enter Dashboard</button>
         <div class="version">Version 1.0</div>
     </div>
+
+    <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(reg => console.log("Service Worker Registered"))
+      .catch(err => console.log("Service Worker Registration Failed", err));
+  }
+</script>
 
     <script>
         document.getElementById('enterBtn').addEventListener('click', function() {
