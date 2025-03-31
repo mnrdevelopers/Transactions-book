@@ -588,6 +588,11 @@ function setupRowEventListeners() {
 
 async function deletePurchase(e) {
     const purchaseId = e.target.getAttribute('data-id');
+    if (!purchaseId) {
+        showNotification('Error: Invalid purchase ID', 'error');
+        return;
+    }
+
     if (!confirm('Are you sure you want to delete this purchase?')) return;
 
     // Show loading state
@@ -599,23 +604,18 @@ async function deletePurchase(e) {
     try {
         const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec";
         
-        // Using URL parameters instead of request body
-        const formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('id', purchaseId);
+        // Send as JSON instead of FormData
+        const response = await fetch(scriptUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'delete',
+                id: purchaseId
+            }),
+        });
 
-       const response = await fetch(scriptUrl, {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json' // Ensure correct format
-    },
-    body: JSON.stringify({
-        action: 'delete',
-        id: purchaseId
-    }),
-});
-
-        // Handle the redirect response
         const result = await response.json();
 
         if (result.error) {
@@ -641,7 +641,7 @@ async function deletePurchase(e) {
     }
 }
 
-// Add this helper function for notifications
+// Helper function for notifications
 function showNotification(message, type = 'success') {
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
