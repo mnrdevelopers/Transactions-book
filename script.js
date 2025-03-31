@@ -314,7 +314,7 @@ ${data.paymentMode === "UPI" ? `
         }
     }
 
-  function handleFormSubmit(e) {
+function handleFormSubmit(e) {
     e.preventDefault();
     if (!validateForm()) return;
     
@@ -332,10 +332,9 @@ ${data.paymentMode === "UPI" ? `
     
     // Submit the bill and increment sequence after success
     submitBill(billData).then(() => {
-       
-    // Auto-increment the sequence number after successful submission
+        // Auto-increment the sequence number after successful submission
         const seqInput = document.getElementById("sequence-no");
-        seqInput.value = String(parseInt(seqInput.value) + 1;
+        seqInput.value = String(parseInt(seqInput.value) + 1);
     });
 }
 
