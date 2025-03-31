@@ -7,6 +7,10 @@ let filteredTransactions = [];
 
 // DOM Elements
 const elements = {
+    todaySales: document.getElementById("today-sales"),
+    todayProfit: document.getElementById("today-profit"),
+    todayTransactions: document.getElementById("today-transactions"),
+    dailyAverage: document.getElementById("daily-average"),
     searchInput: document.getElementById("search-input"),
     searchBtn: document.getElementById("search-btn"),
     dateFilter: document.getElementById("date-filter"),
@@ -48,9 +52,43 @@ function setupEventListeners() {
     document.querySelector(".close").addEventListener("click", closeModal);
 }
 
-function toggleTheme() {
-    document.body.classList.toggle("dark-theme");
-    localStorage.setItem('darkMode', document.body.classList.contains('dark-theme'));
+function updateSummaryCards() {
+    if (allTransactions.length === 0) return;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Calculate today's totals
+    const todayData = allTransactions.filter(t => {
+        const transDate = new Date(t.date);
+        transDate.setHours(0, 0, 0, 0);
+        return transDate.getTime() === today.getTime();
+    });
+    
+    // Today's sales
+    const todaySales = todayData.reduce((sum, t) => sum + t.totalAmount, 0);
+    elements.todaySales.textContent = `₹${todaySales.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    
+    // Today's profit
+    const todayProfit = todayData.reduce((sum, t) => sum + t.totalProfit, 0);
+    elements.todayProfit.textContent = `₹${todayProfit.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    
+    // Today's transaction count
+    elements.todayTransactions.textContent = todayData.length;
+    
+    // Calculate 7-day average
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const last7DaysData = allTransactions.filter(t => {
+        const transDate = new Date(t.date);
+        transDate.setHours(0, 0, 0, 0);
+        return transDate >= sevenDaysAgo && transDate <= today;
+    });
+    
+    const sevenDayTotal = last7DaysData.reduce((sum, t) => sum + t.totalAmount, 0);
+    const dailyAvg = sevenDayTotal / 7;
+    elements.dailyAverage.textContent = `₹${dailyAvg.toLocaleString('en-IN', {minimumFractionDigits: 2})`;
 }
 
 async function loadTransactions() {
@@ -66,6 +104,8 @@ async function loadTransactions() {
         
         const data = await response.json();
         allTransactions = processSheetData(data);
+
+        updateSummaryCards();
         
         // Update date filter options
         updateDateFilter();
@@ -191,6 +231,7 @@ function filterTransactions() {
     totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
     currentPage = 1;
     renderTransactions();
+    updateSummaryCards();
 }
 
 function renderTransactions() {
