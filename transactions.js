@@ -64,12 +64,17 @@ function updateSummaryCards() {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    // Get today's date string in the same format as transaction.dateString
+    
+    // Get today's date in the same format used in the table
     const todayString = formatDateForDisplay(today);
+    console.log("Looking for transactions with date:", todayString); // Debug log
 
     // Filter today's transactions
-    const todayData = allTransactions.filter(t => t.dateString === todayString);
+    const todayData = allTransactions.filter(t => {
+        console.log("Transaction date:", t.dateString); // Debug log
+        return t.dateString === todayString;
+    });
+    console.log("Found today's transactions:", todayData); // Debug log
 
     // Calculate today's totals
     const todaySales = todayData.reduce((sum, t) => sum + t.totalAmount, 0);
@@ -81,21 +86,19 @@ function updateSummaryCards() {
     elements.todayProfit.textContent = `₹${todayProfit.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
     elements.todayTransactions.textContent = todayTransactionCount;
 
-    // Calculate 7-day average (only if we have data)
-    if (allTransactions.length > 0) {
-        const sevenDaysAgo = new Date(today);
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // Include today + 6 previous days
-        
-        const last7DaysData = allTransactions.filter(t => {
-            const transDate = new Date(t.date);
-            transDate.setHours(0, 0, 0, 0);
-            return transDate >= sevenDaysAgo && transDate <= today;
-        });
-        
-        const sevenDayTotal = last7DaysData.reduce((sum, t) => sum + t.totalAmount, 0);
-        const dailyAvg = sevenDayTotal / 7;
-        elements.dailyAverage.textContent = `₹${dailyAvg.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-    }
+    // Calculate 7-day average
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // Include today + 6 previous days
+    
+    const last7DaysData = allTransactions.filter(t => {
+        const transDate = new Date(t.date);
+        transDate.setHours(0, 0, 0, 0);
+        return transDate >= sevenDaysAgo && transDate <= today;
+    });
+    
+    const sevenDayTotal = last7DaysData.reduce((sum, t) => sum + t.totalAmount, 0);
+    const dailyAvg = sevenDayTotal / 7;
+    elements.dailyAverage.textContent = `₹${dailyAvg.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
 }
 
 async function loadTransactions() {
