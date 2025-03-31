@@ -6,109 +6,7 @@
     <title>Purchase Management - RK Fashions</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        /* Purchase specific styles */
-.purchase-item {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: var(--border-radius);
-    margin-bottom: 15px;
-    border: 1px solid #eee;
-}
-
-.purchase-item .remove-item {
-    background: var(--danger);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 12px;
-    cursor: pointer;
-}
-
-.purchase-item .remove-item:hover {
-    background: #c0392b;
-}
-
-.status-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.status-badge.paid {
-    background: #d4edda;
-    color: #155724;
-}
-
-.status-badge.pending {
-    background: #fff3cd;
-    color: #856404;
-}
-
-.status-badge.overdue {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.items-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 15px 0;
-}
-
-.items-table th, .items-table td {
-    padding: 8px;
-    border: 1px solid #ddd;
-    text-align: left;
-}
-
-.items-table th {
-    background-color: #f2f2f2;
-}
-
-.transaction-header {
-    margin-bottom: 15px;
-}
-
-.transaction-header p {
-    margin: 5px 0;
-}
-
-.transaction-items {
-    margin: 15px 0;
-}
-
-.transaction-totals {
-    margin: 15px 0;
-    font-weight: 500;
-}
-
-.transaction-totals p {
-    margin: 5px 0;
-}
-
-.transaction-notes {
-    margin: 15px 0;
-    padding: 10px;
-    background: #f8f9fa;
-    border-radius: var(--border-radius);
-}
-
-/* Payment form in modal */
-#payment-form .form-row {
-    margin-bottom: 15px;
-}
-
-#payment-reference-container {
-    display: none;
-}
-
-#payment-mode-input:not([value="Cash"]) ~ #payment-reference-container {
-    display: block;
-}
-        </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -120,8 +18,8 @@
             <a href="add-transaction.html" class="nav-btn">
                 <i class="fas fa-cash-register"></i> Sales
             </a>
-            <a href="transactions.html" class="nav-btn">
-                <i class="fas fa-history"></i> Transactions
+            <a href="purchase-management.html" class="nav-btn active">
+                <i class="fas fa-boxes"></i> Purchases
             </a>
             <a href="reports.html" class="nav-btn">
                 <i class="fas fa-chart-bar"></i> Reports
@@ -135,242 +33,203 @@
         <header>
             <div class="store-info">
                 <h1>RK Fashions - Purchase Management</h1>
-                <p>Gram Panchayath Complex, Dichpally Busstand - 503174</p>
-                <p>Mobile: +91 7893433457, +91 7842694544</p>
+                <p>Manage your stock purchases and supplier payments</p>
             </div>
         </header>
 
-        <!-- Purchase Summary Cards -->
-        <div class="daily-stats">
-            <div class="stat-card">
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card">
                 <h3><i class="fas fa-rupee-sign"></i> Total Purchases</h3>
-                <p class="stat-value" id="total-purchases">₹0.00</p>
-                <p class="stat-time">This month</p>
+                <p class="amount" id="total-purchases">₹0.00</p>
+                <p class="change"><span id="purchase-change">0%</span> vs last month</p>
             </div>
-            <div class="stat-card">
-                <h3><i class="fas fa-credit-card"></i> Credit Due</h3>
-                <p class="stat-value" id="credit-due">₹0.00</p>
-                <p class="stat-time">Unpaid balance</p>
+            <div class="summary-card">
+                <h3><i class="fas fa-credit-card"></i> Pending Payments</h3>
+                <p class="amount" id="pending-payments">₹0.00</p>
+                <p class="change"><span id="pending-change">0</span> suppliers</p>
             </div>
-            <div class="stat-card">
-                <h3><i class="fas fa-box-open"></i> Stock Value</h3>
-                <p class="stat-value" id="stock-value">₹0.00</p>
-                <p class="stat-time">Current inventory</p>
+            <div class="summary-card">
+                <h3><i class="fas fa-box-open"></i> Current Stock Value</h3>
+                <p class="amount" id="stock-value">₹0.00</p>
+                <p class="change"><span id="stock-change">0</span> items</p>
             </div>
-            <div class="stat-card">
-                <h3><i class="fas fa-truck"></i> Suppliers</h3>
-                <p class="stat-value" id="suppliers-count">0</p>
-                <p class="stat-time">Active vendors</p>
+            <div class="summary-card">
+                <h3><i class="fas fa-truck"></i> Recent Suppliers</h3>
+                <p class="amount" id="supplier-count">0</p>
+                <p class="change">Last: <span id="last-supplier">None</span></p>
             </div>
         </div>
 
-        <!-- Purchase Chart -->
+        <!-- Charts -->
         <div class="chart-container">
-            <canvas id="purchase-chart"></canvas>
+            <canvas id="purchaseChart"></canvas>
         </div>
 
-        <!-- Purchase Form -->
-        <div class="card">
-            <h2><i class="fas fa-plus-circle"></i> Add New Purchase</h2>
-            <form id="purchase-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="purchase-date">Date</label>
-                        <input type="date" id="purchase-date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="supplier-name">Supplier Name</label>
-                        <input type="text" id="supplier-name" list="supplier-list" required>
-                        <datalist id="supplier-list">
-                            <!-- Suppliers will be populated from storage -->
-                        </datalist>
-                    </div>
-                    <div class="form-group">
-                        <label for="supplier-contact">Contact</label>
-                        <input type="text" id="supplier-contact">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="bill-number">Bill Number</label>
-                        <input type="text" id="bill-number" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="payment-mode">Payment Mode</label>
-                        <select id="payment-mode" required>
-                            <option value="Cash">Cash</option>
-                            <option value="Credit">Credit</option>
-                            <option value="UPI">UPI</option>
-                            <option value="Bank Transfer">Bank Transfer</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="due-date-container" style="display:none;">
-                        <label for="due-date">Due Date</label>
-                        <input type="date" id="due-date">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="bill-amount">Bill Amount (₹)</label>
-                        <input type="number" id="bill-amount" min="0" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="paid-amount">Paid Amount (₹)</label>
-                        <input type="number" id="paid-amount" min="0" step="0.01" value="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="balance-amount">Balance (₹)</label>
-                        <input type="number" id="balance-amount" readonly>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="bill-image">Upload Bill Image</label>
-                    <input type="file" id="bill-image" accept="image/*">
-                </div>
-
-                <div class="form-group">
-                    <label for="purchase-notes">Notes</label>
-                    <textarea id="purchase-notes" rows="2"></textarea>
-                </div>
-
-                <div id="purchase-items-container">
-                    <!-- Items will be added here -->
-                </div>
-
-                <button type="button" id="add-purchase-item" class="submit-btn">
-                    <i class="fas fa-plus"></i> Add Item
-                </button>
-
-                <button type="submit" class="submit-btn">
-                    <i class="fas fa-save"></i> Save Purchase
-                </button>
-            </form>
-        </div>
-
-        <!-- Purchase Records -->
-        <div class="card">
-            <h2><i class="fas fa-list"></i> Purchase Records</h2>
+        <!-- Purchase Management Controls -->
+        <div class="report-controls">
+            <div class="period-selector">
+                <button class="period-btn active" data-period="monthly">Monthly</button>
+                <button class="period-btn" data-period="quarterly">Quarterly</button>
+                <button class="period-btn" data-period="yearly">Yearly</button>
+            </div>
             
-            <div class="table-controls">
-                <div class="filters">
-                    <select id="purchase-supplier-filter">
-                        <option value="">All Suppliers</option>
-                    </select>
-                    <select id="purchase-payment-filter">
-                        <option value="">All Payment Types</option>
-                        <option value="Cash">Cash</option>
-                        <option value="Credit">Credit</option>
-                        <option value="UPI">UPI</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                    </select>
-                    <select id="purchase-status-filter">
-                        <option value="">All Statuses</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Overdue">Overdue</option>
-                    </select>
-                </div>
-                <div class="search-box">
-                    <input type="text" id="purchase-search" placeholder="Search purchases...">
-                    <button id="purchase-search-btn"><i class="fas fa-search"></i></button>
-                </div>
+            <div class="date-filter">
+                <input type="date" id="report-date" class="form-control">
+                <button id="generate-report" class="generate-btn">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
             </div>
+        </div>
 
-            <div class="table-container">
-                <table id="purchases-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Supplier</th>
-                            <th>Bill No</th>
-                            <th>Amount</th>
-                            <th>Paid</th>
-                            <th>Balance</th>
-                            <th>Payment</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="purchases-body">
-                        <!-- Purchases will be loaded here -->
-                    </tbody>
-                </table>
+        <!-- Table Controls -->
+        <div class="table-controls">
+            <div class="filters">
+                <select id="supplier-filter" class="form-control">
+                    <option value="">All Suppliers</option>
+                </select>
+                <select id="payment-filter" class="form-control">
+                    <option value="">All Payments</option>
+                    <option value="paid">Paid</option>
+                    <option value="pending">Pending</option>
+                    <option value="partial">Partial</option>
+                </select>
+                <select id="item-filter" class="form-control">
+                    <option value="">All Items</option>
+                </select>
             </div>
+            
+            <div class="search-box">
+                <input type="text" id="search-purchases" placeholder="Search purchases...">
+                <button id="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
 
-            <div class="pagination">
-                <button id="purchase-prev-btn" disabled><i class="fas fa-chevron-left"></i></button>
-                <span id="purchase-page-info">Page 1 of 1</span>
-                <button id="purchase-next-btn" disabled><i class="fas fa-chevron-right"></i></button>
+        <!-- Purchase Table -->
+        <div class="table-container">
+            <table id="purchases-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Bill No</th>
+                        <th>Supplier</th>
+                        <th>Items</th>
+                        <th>Amount</th>
+                        <th>Paid</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="purchases-body">
+                    <!-- Purchases will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <button id="prev-btn" disabled><i class="fas fa-chevron-left"></i></button>
+            <span id="page-info">Page 1 of 1</span>
+            <button id="next-btn" disabled><i class="fas fa-chevron-right"></i></button>
+        </div>
+
+        <!-- Add Purchase Button -->
+        <button id="add-purchase-btn" class="submit-btn">
+            <i class="fas fa-plus-circle"></i> Add New Purchase
+        </button>
+
+        <!-- Purchase Modal -->
+        <div id="purchase-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2><i class="fas fa-cart-plus"></i> <span id="modal-title">Add New Purchase</span></h2>
+                
+                <form id="purchase-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="purchase-date">Date</label>
+                            <input type="date" id="purchase-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="bill-no">Bill No</label>
+                            <input type="text" id="bill-no" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="supplier-name">Supplier Name</label>
+                            <input type="text" id="supplier-name" list="supplier-list" required>
+                            <datalist id="supplier-list">
+                                <!-- Suppliers will be populated here -->
+                            </datalist>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="payment-type">Payment Type</label>
+                            <select id="payment-type" required>
+                                <option value="credit">Credit</option>
+                                <option value="spot">Spot Payment</option>
+                                <option value="partial">Partial Payment</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="amount-paid-group">
+                            <label for="amount-paid">Amount Paid (₹)</label>
+                            <input type="number" id="amount-paid" min="0" step="0.01" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="due-date">Due Date</label>
+                            <input type="date" id="due-date">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bill-image">Upload Bill Image</label>
+                        <input type="file" id="bill-image" accept="image/*">
+                        <div id="image-preview" style="margin-top: 10px;"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Purchase Items</label>
+                        <div id="purchase-items-container">
+                            <!-- Items will be added here -->
+                        </div>
+                        <button type="button" id="add-item-btn" class="submit-btn" style="margin-top: 10px;">
+                            <i class="fas fa-plus"></i> Add Item
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="total-amount">Total Amount (₹)</label>
+                        <input type="number" id="total-amount" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn" id="cancel-purchase">Cancel</button>
+                        <button type="submit" class="save-btn" id="save-purchase">Save Purchase</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- View Purchase Modal -->
+        <div id="view-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2><i class="fas fa-file-invoice"></i> Purchase Details</h2>
+                <div id="purchase-details">
+                    <!-- Purchase details will be loaded here -->
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Purchase Detail Modal -->
-    <div id="purchase-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2 id="modal-title">Purchase Details</h2>
-            <div id="purchase-details">
-                <!-- Purchase details will be loaded here -->
-            </div>
-            <div id="bill-image-container" style="text-align:center; margin-top:20px;">
-                <!-- Bill image will be displayed here -->
-            </div>
-            <div class="form-actions" id="payment-actions">
-                <button id="make-payment-btn" class="save-btn"><i class="fas fa-money-bill-wave"></i> Record Payment</button>
-                <button class="cancel-btn" id="close-modal-btn">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Payment Modal -->
-    <div id="payment-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Record Payment</h2>
-            <form id="payment-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="payment-date">Payment Date</label>
-                        <input type="date" id="payment-date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="payment-amount">Amount (₹)</label>
-                        <input type="number" id="payment-amount" min="0.01" step="0.01" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="payment-mode-input">Payment Mode</label>
-                        <select id="payment-mode-input" required>
-                            <option value="Cash">Cash</option>
-                            <option value="UPI">UPI</option>
-                            <option value="Bank Transfer">Bank Transfer</option>
-                            <option value="Cheque">Cheque</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="payment-reference-container">
-                        <label for="payment-reference">Reference/UTR</label>
-                        <input type="text" id="payment-reference">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="payment-notes">Notes</label>
-                    <textarea id="payment-notes" rows="2"></textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="save-btn"><i class="fas fa-save"></i> Save Payment</button>
-                    <button type="button" class="cancel-btn" id="cancel-payment-btn">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
-    <script src="purchases.js"></script>
+    <script src="purchase-management.js"></script>
 </body>
 </html>
