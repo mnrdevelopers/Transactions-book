@@ -580,6 +580,46 @@ function setupRowEventListeners() {
     document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', editPurchase);
     });
+
+     document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', deletePurchase);
+    });
+}
+
+async function deletePurchase(e) {
+    const purchaseId = e.target.getAttribute('data-id');
+    if (!confirm('Are you sure you want to delete this purchase?')) return;
+    
+    try {
+        // This would be replaced with your actual API call
+        const scriptUrl = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
+        const response = await fetch(scriptUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: purchaseId })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to delete purchase');
+        }
+        
+        // Remove from local data
+        allPurchases = allPurchases.filter(p => p.id !== purchaseId);
+        filteredPurchases = filteredPurchases.filter(p => p.id !== purchaseId);
+        
+        // Update UI
+        updateFilters();
+        updateSummaryCards();
+        renderChart();
+        filterPurchases();
+        
+        alert('Purchase deleted successfully');
+    } catch (error) {
+        console.error('Error deleting purchase:', error);
+        alert('Failed to delete purchase. Please try again.');
+    }
 }
 
 function viewPurchaseDetails(e) {
