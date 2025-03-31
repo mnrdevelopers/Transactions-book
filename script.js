@@ -379,5 +379,5 @@ function submitBill(data) {
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
         });
-    });
+    }
 }
