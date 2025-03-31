@@ -105,3 +105,30 @@ if (typeof module !== 'undefined' && module.exports) {
         getWeekNumber
     };
 }
+
+// Format date for display
+function formatDateForDisplay(date) {
+    try {
+        const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+        return date.toLocaleDateString('en-IN', options);
+    } catch {
+        return "Invalid Date";
+    }
+}
+
+// Get week number
+function getWeekNumber(date) {
+    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+    const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+}
+
+// Show loading indicator
+function showLoading(container) {
+    container.innerHTML = `
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            Loading...
+        </div>
+    `;
+}
