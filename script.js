@@ -38,6 +38,10 @@ document.getElementById("day-month-part").textContent = `${day}${month}`;
     document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
     setupPrintButton(); // Initialize print button once
 
+    // Set initial sequence number - ADD THIS RIGHT HERE
+    const initialSequence = getNextSequenceNumber();
+    document.getElementById("sequence-no").value = initialSequence;
+
     // ======================
     // DAILY STATS FUNCTIONS
     // ======================
