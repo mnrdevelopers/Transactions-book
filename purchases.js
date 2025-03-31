@@ -580,64 +580,6 @@ function setupRowEventListeners() {
     document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', editPurchase);
     });
-
-     document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', deletePurchase);
-    });
-}
-
-async function deletePurchase(e) {
-    const purchaseId = e.target.getAttribute('data-id');
-    if (!purchaseId) {
-        showNotification('Error: Invalid purchase ID', 'error');
-        return;
-    }
-
-    if (!confirm('Are you sure you want to delete this purchase?')) return;
-
-    // Show loading state
-    const deleteBtn = e.target;
-    const originalText = deleteBtn.innerHTML;
-    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    deleteBtn.disabled = true;
-
-    try {
-        const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec";
-        
-        const response = await fetch(scriptUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                action: 'delete',
-                id: purchaseId
-            })
-        });
-
-        const result = await response.json();
-
-        if (!result.success) {
-            throw new Error(result.error || result.message || "Delete failed");
-        }
-
-        // Update UI
-        allPurchases = allPurchases.filter(p => p.id !== purchaseId);
-        filteredPurchases = filteredPurchases.filter(p => p.id !== purchaseId);
-        updateFilters();
-        updateSummaryCards();
-        renderChart();
-        filterPurchases();
-
-        showNotification('Purchase deleted successfully', 'success');
-    } catch (error) {
-        console.error('Delete error:', error);
-        showNotification('Delete failed: ' + error.message, 'error');
-    } finally {
-        // Restore button state
-        deleteBtn.innerHTML = originalText;
-        deleteBtn.disabled = false;
-    }
 }
 
 function viewPurchaseDetails(e) {
