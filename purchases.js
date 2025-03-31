@@ -162,7 +162,7 @@ async function loadPurchases() {
         showLoading();
         
         // This would be replaced with your actual API call
-        const scriptUrl = "YOUR_APPS_SCRIPT_URL_FOR_PURCHASES";
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec";
         const response = await fetch(scriptUrl);
         
         if (!response.ok) {
@@ -931,7 +931,7 @@ function savePurchase(purchaseData) {
     submitBtn.disabled = true;
     
     // This would be replaced with your actual API call
-    const scriptUrl = "YOUR_APPS_SCRIPT_URL_FOR_SAVING_PURCHASES";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec";
     
     fetch(scriptUrl, {
         method: "POST",
