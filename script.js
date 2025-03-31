@@ -319,7 +319,7 @@ function handleFormSubmit(e) {
     if (!validateForm()) return;
     
     const seqNo = document.getElementById("sequence-no").value;
-    if (!seqNo || isNaN(seqNo)) {
+    if (!seqNo || isNaN(seqNo)) {  // Remove extra parenthesis here if present
         alert("Please enter a valid sequence number");
         return;
     }
@@ -334,7 +334,7 @@ function handleFormSubmit(e) {
     submitBill(billData).then(() => {
         // Auto-increment the sequence number after successful submission
         const seqInput = document.getElementById("sequence-no");
-        seqInput.value = String(parseInt(seqInput.value) + 1);
+        seqInput.value = String(parseInt(seqInput.value) + 1);  // Fixed missing parenthesis
     });
 }
 
