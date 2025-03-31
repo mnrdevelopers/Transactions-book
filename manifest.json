@@ -1,7 +1,7 @@
 {
     "name": "Lens Prescription App",
     "short_name": "LensApp",
-    "start_url": "https://mnrdevelopers.github.io/LensPrescriptionApp/",
+    "start_url": "https://mnrdevelopers.github.io/Transactions-book/",
     "display": "standalone",
     "icons": [
         {
