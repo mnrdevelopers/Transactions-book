@@ -516,7 +516,7 @@ function renderPurchases() {
     if (pagePurchases.length === 0) {
         elements.purchasesBody.innerHTML = `
             <tr>
-                <td colspan="9" class="no-results">
+                <td colspan="10" class="no-results"> <!-- Update colspan to 10 -->
                     No purchases found matching your criteria
                 </td>
             </tr>
@@ -529,6 +529,11 @@ function renderPurchases() {
             ? purchase.items[0].name 
             : `${purchase.items.length} items`;
         
+        // Create image link or placeholder
+        const billImageLink = purchase.billImage 
+            ? `<a href="${purchase.billImage}" target="_blank" class="view-image-btn">View Bill</a>`
+            : '<span class="no-image">No Image</span>';
+        
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${formatDate(purchase.date)}</td>
@@ -539,9 +544,11 @@ function renderPurchases() {
             <td>₹${purchase.amountPaid.toFixed(2)}</td>
             <td>₹${purchase.balance.toFixed(2)}</td>
             <td><span class="status-badge ${purchase.status}">${purchase.status}</span></td>
+            <td>${billImageLink}</td>
             <td class="actions">
                 <button class="view-btn" data-id="${purchase.id}">View</button>
                 <button class="edit-btn" data-id="${purchase.id}">Edit</button>
+                <button class="delete-btn" data-id="${purchase.id}">Delete</button>
             </td>
         `;
         elements.purchasesBody.appendChild(row);
