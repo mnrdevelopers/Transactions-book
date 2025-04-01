@@ -807,6 +807,13 @@ async function handlePurchaseSubmit(e) {
     // Validate form
     if (!validatePurchaseForm()) return;
     
+    // Disable form during submission
+    const formElements = elements.purchaseForm.elements;
+    for (let i = 0; i < formElements.length; i++) {
+        formElements[i].disabled = true;
+    }
+    elements.savePurchase.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    
     // Prepare items data
     const items = [];
     document.querySelectorAll('.item-row').forEach(row => {
@@ -852,6 +859,14 @@ async function handlePurchaseSubmit(e) {
     
     // Save purchase
     savePurchase(purchaseData);
+    
+    // Re-enable form elements (they'll be cleared when modal closes)
+    setTimeout(() => {
+        for (let i = 0; i < formElements.length; i++) {
+            formElements[i].disabled = false;
+        }
+        elements.savePurchase.innerHTML = '<i class="fas fa-save"></i> Save Purchase';
+    }, 3000);
 }
 
 function validatePurchaseForm() {
