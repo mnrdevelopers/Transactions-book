@@ -51,38 +51,35 @@ function parseDate(dateValue) {
     if (dateValue instanceof Date) return dateValue;
     
     if (typeof dateValue === 'string') {
-        // Try DD/MM/YYYY format first (as shown in your screenshot)
-        const parts = dateValue.split('/');
-        if (parts.length === 3) {
-            // Note: months are 0-based in JavaScript Date
-            const date = new Date(parts[2], parts[1] - 1, parts[0]);
-            if (!isNaN(date.getTime())) return date;
-        }
+        // Try ISO format
+        let date = new Date(dateValue);
+        if (!isNaN(date)) return date;
         
-        // Try ISO format (YYYY-MM-DD)
-        const date = new Date(dateValue);
-        if (!isNaN(date.getTime())) return date;
+        // Try DD/MM/YYYY format
+        date = new Date(dateValue.replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$2/$1/$3'));
+        if (!isNaN(date)) return date;
+        
+        // Try YYYY-MM-DD format
+        date = new Date(dateValue.replace(/(\d{4})-(\d{2})-(\d{2})/, '$2/$3/$1'));
+        if (!isNaN(date)) return date;
     }
     
     console.warn("Could not parse date:", dateValue);
-    return new Date(); // fallback to current date
+    return new Date();
 }
 
 /**
- * Formats a date for display in the correct format
+ * Formats a date for display
  * @param {Date} date - Date to format
- * @returns {string} Formatted date string (DD/MM/YYYY)
+ * @returns {string} Formatted date string
  */
 function formatDateForDisplay(date) {
     try {
-        if (isNaN(date.getTime())) return "Invalid Date";
-        
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        
-        // For display purposes, use DD/MM/YYYY format
-        return `${day}/${month}/${year}`;
+        return date.toLocaleDateString(undefined, { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit' 
+        });
     } catch {
         return "Invalid Date";
     }
@@ -107,4 +104,31 @@ if (typeof module !== 'undefined' && module.exports) {
         formatDateForDisplay,
         getWeekNumber
     };
+}
+
+// Format date for display
+function formatDateForDisplay(date) {
+    try {
+        const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+        return date.toLocaleDateString('en-IN', options);
+    } catch {
+        return "Invalid Date";
+    }
+}
+
+// Get week number
+function getWeekNumber(date) {
+    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+    const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+}
+
+// Show loading indicator
+function showLoading(container) {
+    container.innerHTML = `
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            Loading...
+        </div>
+    `;
 }
