@@ -67,23 +67,22 @@ function updateSummaryCards() {
     
     // Get today's date in the same format used in the table
     const todayString = formatDateForDisplay(today);
-    console.log("Looking for transactions with date:", todayString); // Debug log
-
-    // Filter today's transactions
+    
+    // Filter today's transactions - compare dates as Date objects
     const todayData = allTransactions.filter(t => {
-        console.log("Transaction date:", t.dateString); // Debug log
-        return t.dateString === todayString;
+        const transDate = new Date(t.date);
+        transDate.setHours(0, 0, 0, 0);
+        return transDate.getTime() === today.getTime();
     });
-    console.log("Found today's transactions:", todayData); // Debug log
 
     // Calculate today's totals
-    const todaySales = todayData.reduce((sum, t) => sum + t.totalAmount, 0);
-    const todayProfit = todayData.reduce((sum, t) => sum + t.totalProfit, 0);
+    const todaySales = todayData.reduce((sum, t) => sum + parseFloat(t.totalAmount || 0), 0);
+    const todayProfit = todayData.reduce((sum, t) => sum + parseFloat(t.totalProfit || 0), 0);
     const todayTransactionCount = todayData.length;
 
     // Update today's cards
-    elements.todaySales.textContent = `₹${todaySales.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-    elements.todayProfit.textContent = `₹${todayProfit.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    elements.todaySales.textContent = `₹${todaySales.toFixed(2)}`;
+    elements.todayProfit.textContent = `₹${todayProfit.toFixed(2)}`;
     elements.todayTransactions.textContent = todayTransactionCount;
 
     // Calculate 7-day average
@@ -96,9 +95,9 @@ function updateSummaryCards() {
         return transDate >= sevenDaysAgo && transDate <= today;
     });
     
-    const sevenDayTotal = last7DaysData.reduce((sum, t) => sum + t.totalAmount, 0);
+    const sevenDayTotal = last7DaysData.reduce((sum, t) => sum + parseFloat(t.totalAmount || 0), 0);
     const dailyAvg = sevenDayTotal / 7;
-    elements.dailyAverage.textContent = `₹${dailyAvg.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    elements.dailyAverage.textContent = `₹${dailyAvg.toFixed(2)}`;
 }
 
 async function loadTransactions() {
@@ -136,18 +135,18 @@ function processSheetData(sheetData) {
     
     for (let i = startRow; i < sheetData.length; i++) {
         const row = sheetData[i];
-        const siNo = String(row[2]); // Ensure SI No is a string
+        const siNo = String(row[2] || "").trim(); // Ensure SI No is a string
         const date = parseDate(row[1]); // Parse date properly
         
         if (!transactionsMap.has(siNo)) {
             transactionsMap.set(siNo, {
-                storeName: row[0],
+                storeName: String(row[0] || ""),
                 date: date,
                 dateString: formatDateForDisplay(date),
                 siNo: siNo,
-                customerName: String(row[3]),
+                customerName: String(row[3] || ""),
                 items: [],
-                paymentMode: row[8],
+                paymentMode: String(row[8] || ""),
                 totalAmount: parseFloat(row[9]) || 0,
                 totalProfit: parseFloat(row[10]) || 0
             });
@@ -155,7 +154,7 @@ function processSheetData(sheetData) {
         
         // Add item to transaction
         transactionsMap.get(siNo).items.push({
-            itemName: String(row[4]),
+            itemName: String(row[4] || ""),
             quantity: parseFloat(row[5]) || 0,
             purchasePrice: parseFloat(row[6]) || 0,
             salePrice: parseFloat(row[7]) || 0,
@@ -171,25 +170,34 @@ function processSheetData(sheetData) {
 }
 
 function parseDate(dateValue) {
-    // Try different date formats
-    if (dateValue instanceof Date) {
+    // If it's already a Date object, return it
+    if (dateValue instanceof Date && !isNaN(dateValue)) {
         return dateValue;
     }
     
+    // If it's a string, try to parse it
     if (typeof dateValue === 'string') {
-        // Try ISO format first
-        let date = new Date(dateValue);
-        if (!isNaN(date)) return date;
-        
-        // Try common spreadsheet formats
-        date = new Date(dateValue.replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$2/$1/$3'));
-        if (!isNaN(date)) return date;
-        
-        date = new Date(dateValue.replace(/(\d{4})-(\d{2})-(\d{2})/, '$2/$3/$1'));
-        if (!isNaN(date)) return date;
+        // Try ISO format (from Google Sheets)
+        if (dateValue.includes('-')) {
+            const parts = dateValue.split('-');
+            if (parts.length === 3) {
+                // Format: YYYY-MM-DD
+                return new Date(parts[0], parts[1] - 1, parts[2]);
+            }
+        }
+        // Try DD/MM/YYYY format
+        else if (dateValue.includes('/')) {
+            const parts = dateValue.split('/');
+            if (parts.length === 3) {
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+        }
+        // Try parsing as is
+        const parsed = new Date(dateValue);
+        if (!isNaN(parsed)) return parsed;
     }
     
-    // Fallback to current date if parsing fails
+    // If all parsing fails, return current date
     console.warn("Could not parse date:", dateValue);
     return new Date();
 }
@@ -342,12 +350,14 @@ function formatDateHeader(date) {
 }
 
 function formatDateForDisplay(date) {
-    try {
-        const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-        return date.toLocaleDateString(undefined, options);
-    } catch {
-        return "Invalid Date";
-    }
+    const d = new Date(date);
+    if (isNaN(d)) return "Invalid Date";
+    
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    
+    return `${day}/${month}/${year}`;
 }
 
 function updatePagination() {
