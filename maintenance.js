@@ -171,7 +171,6 @@ async function loadVendors() {
 // Load transactions from backend
 async function loadTransactions() {
     try {
-        showLoading();
         
         const response = await fetch(`${API_URL}?action=getMaintenance`);
         const data = await response.json();
