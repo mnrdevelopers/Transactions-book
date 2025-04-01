@@ -268,23 +268,21 @@ if (document.getElementById("transaction-form")) {
     };
 }
     
-    function displayBillPreview(data) {
+   function displayBillPreview(data) {
     // Hide the template
     document.getElementById("bill-template").style.display = "none";
     
     // Show the preview container
     document.getElementById("bill-preview").style.display = "block";
-    document.getElementById("bill-details").innerHTML = "<h3>TEST BILL</h3>";
     document.getElementById("bill-details").style.display = "block";
     
     // Show the dynamic bill container
     const preview = document.getElementById("bill-details");
     preview.style.display = "block";
 
-        // Force-show UPI row if needed
-if (data.paymentMode === "UPI") {
-    document.getElementById("upi-qr-row").style.display = "table-row";
-}
+    // Force-show UPI row if needed
+    const upiRow = document.getElementById("upi-qr-row");
+    upiRow.style.display = data.paymentMode === "UPI" ? "table-row" : "none";
     
     // Build the bill with smaller font sizes for thermal printer
     preview.innerHTML = `
@@ -328,17 +326,27 @@ if (data.paymentMode === "UPI") {
                     <td colspan="3"><strong>Payment Mode</strong></td>
                     <td><strong>${data.paymentMode}</strong></td>
                 </tr>
-${data.paymentMode === "UPI" ? `
-    <tr>
-        <td colspan="4" style="text-align:center; padding:8px 0;">
-            <div style="margin: 0 auto; width: fit-content;">
-                <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
-                <img src="upi-qr.png" alt="UPI QR Code" style="width:120px; height:120px;">
-                <p style="font-size:10px; margin-top:3px;">UPI ID: maniteja1098@oksbi</p>
-            </div>
-        </td>
-    </tr>
-    ` : ''}
+                ${data.paymentMode === "Cash" ? `
+                <tr>
+                    <td colspan="3"><strong>Amount Received</strong></td>
+                    <td><strong>₹${document.getElementById('amount-received').value || data.totalAmount}</strong></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>Change Given</strong></td>
+                    <td><strong>₹${document.getElementById('change-amount').value || '0.00'}</strong></td>
+                </tr>
+                ` : ''}
+                ${data.paymentMode === "UPI" ? `
+                <tr id="upi-qr-row">
+                    <td colspan="4" style="text-align:center; padding:8px 0;">
+                        <div style="margin: 0 auto; width: fit-content;">
+                            <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
+                            <img src="upi-qr.png" alt="UPI QR Code" style="width:120px; height:120px;">
+                            <p style="font-size:10px; margin-top:3px;">UPI ID: maniteja1098@oksbi</p>
+                        </div>
+                    </td>
+                </tr>
+                ` : ''}
             </tfoot>
         </table>
         
@@ -350,7 +358,7 @@ ${data.paymentMode === "UPI" ? `
     // Scroll to the bill preview
     document.getElementById("bill-preview").scrollIntoView({ behavior: 'smooth' });
 }
-
+    
     function setupPrintButton() {
         const printBtn = document.getElementById("print-bill");
         if (printBtn) {
@@ -483,6 +491,9 @@ function submitTransactionAfterCashPayment() {
         .then(() => {
             currentSequenceData = incrementSequenceNumber();
             document.getElementById("sequence-no").value = currentSequenceData.nextSequence;
+            
+            // Display the bill preview before showing success message
+            displayBillPreview(pendingTransactionData);
             showSuccessMessage();
         })
         .catch(error => {
@@ -509,6 +520,9 @@ function submitTransaction() {
         .then(() => {
             currentSequenceData = incrementSequenceNumber();
             document.getElementById("sequence-no").value = currentSequenceData.nextSequence;
+            
+            // Display the bill preview before showing success message
+            displayBillPreview(pendingTransactionData);
             showSuccessMessage();
         })
         .catch(error => {
