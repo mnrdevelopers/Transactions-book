@@ -155,8 +155,10 @@ function groupByPeriod(transactions, period) {
         switch(period) {
             case 'daily':
                 periodKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
-                periodStart = new Date(date.setHours(0, 0, 0, 0));
-                periodEnd = new Date(date.setHours(23, 59, 59, 999));
+                periodStart = new Date(date);
+                periodStart.setHours(0, 0, 0, 0);
+                periodEnd = new Date(date);
+                periodEnd.setHours(23, 59, 59, 999);
                 break;
                 
             case 'weekly':
