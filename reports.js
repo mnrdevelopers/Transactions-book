@@ -49,50 +49,6 @@ function setupEventListeners() {
     elements.searchInput.addEventListener('input', filterTransactions);
 }
 
-function parseDate(dateValue) {
-    // If it's already a Date object, return it
-    if (dateValue instanceof Date && !isNaN(dateValue)) {
-        return dateValue;
-    }
-    
-    // Handle ISO format (YYYY-MM-DD)
-    if (typeof dateValue === 'string' && dateValue.includes('-')) {
-        const parts = dateValue.split('-');
-        if (parts.length === 3) {
-            return new Date(parts[0], parts[1] - 1, parts[2]);
-        }
-    }
-    
-    // Handle DD/MM/YYYY format
-    if (typeof dateValue === 'string' && dateValue.includes('/')) {
-        const parts = dateValue.split('/');
-        if (parts.length === 3) {
-            // Check if day > 12 (indicating DD/MM format)
-            if (parseInt(parts[0]) > 12) {
-                return new Date(parts[2], parts[1] - 1, parts[0]);
-            }
-            // Otherwise assume MM/DD/YYYY
-            return new Date(parts[2], parts[0] - 1, parts[1]);
-        }
-    }
-    
-    // Fallback to current date if parsing fails
-    console.warn("Could not parse date:", dateValue);
-    return new Date();
-}
-
-function formatDateForDisplay(date) {
-    const d = new Date(date);
-    if (isNaN(d)) return "Invalid Date";
-    
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    
-    // Use DD/MM/YYYY format (Indian standard)
-    return `${day}/${month}/${year}`;
-}
-
 function updateSummaryCards(summary) {
     elements.totalSales.textContent = `₹${summary.totalSales.toLocaleString('en-IN', {
         minimumFractionDigits: 2,
@@ -152,7 +108,8 @@ async function loadReport() {
 }
 
 async function fetchTransactions(date, period) {
-    console.log("Fetching transactions for:", date, "with period:", period);
+    // This should be replaced with your actual API call
+    // For now, we'll use mock data
     const scriptUrl = "https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec";
     const response = await fetch(scriptUrl);
     
@@ -161,8 +118,7 @@ async function fetchTransactions(date, period) {
     }
     
     const data = await response.json();
-    console.log("Raw data from API:", data);
-    return processSheetData(data);
+    return processSheetData(data); // Reuse your existing function
 }
 
 function processReportData(transactions, period) {
@@ -186,23 +142,21 @@ function groupByPeriod(transactions, period) {
     const groupsMap = new Map();
 
     transactions.forEach(transaction => {
-        // Ensure we have a valid Date object
+        // Parse the date and validate it
         let date = new Date(transaction.date);
         if (isNaN(date.getTime())) {
-            date = parseDate(transaction.dateString); // Fallback parsing
+            console.warn("Invalid date in transaction:", transaction.date);
+            date = new Date(); // Fallback to current date
         }
 
-        // Create a new date object to avoid modifying the original
-        const date = new Date(transactionDate);
-        
         // Create appropriate period key based on selected period
         let periodKey, periodStart, periodEnd;
         
         switch(period) {
             case 'daily':
                 periodKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
-                periodStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                periodEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+                periodStart = new Date(date.setHours(0, 0, 0, 0));
+                periodEnd = new Date(date.setHours(23, 59, 59, 999));
                 break;
                 
             case 'weekly':
