@@ -233,6 +233,29 @@ function calculateSummary(groups) {
     // Calculate percentage changes (you would compare with previous period)
     const salesChange = 0; // Calculate based on previous period
     const profitChange = 0; // Calculate based on previous period
+
+     // Calculate changes if previous data exists
+    if (previousPeriodData) {
+        salesChange = calculatePercentageChange(
+            previousPeriodData.totalSales, 
+            totalSales
+        );
+        profitChange = calculatePercentageChange(
+            previousPeriodData.totalProfit, 
+            totalProfit
+        );
+    }
+
+    // Store current data for next comparison
+    previousPeriodData = { totalSales, totalProfit };
+
+    return { totalSales, totalProfit, transactionCount, salesChange, profitChange };
+}
+
+function calculatePercentageChange(previous, current) {
+    if (previous === 0) return 0; // Avoid division by zero
+    return ((current - previous) / Math.abs(previous)) * 100;
+}
     
     return {
         totalSales,
@@ -450,3 +473,33 @@ function getWeekNumber(date) {
     const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
     return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
 }
+
+function processSheetData(sheetData) {
+    return sheetData.map((row, index) => ({
+        siNo: index + 1,
+        date: row.date || new Date().toISOString(), // Fallback to current date
+        dateString: formatDate(row.date),
+        customerName: row.customer || 'Anonymous',
+        totalAmount: parseFloat(row.amount) || 0,
+        totalProfit: parseFloat(row.profit) || 0,
+        paymentMode: row.payment || 'Cash'
+    }));
+}
+
+function formatDate(dateString) {
+    const options = { day: '2-digit', month: 'short', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-IN', options);
+}
+
+function parseTransactionDate(dateString) {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+        console.error(`Invalid date: ${dateString}`);
+        throw new Error(`Invalid transaction date: ${dateString}`);
+    }
+    return date;
+}
+
+// Usage in processSheetData():
+date: parseTransactionDate(row.date),
+
