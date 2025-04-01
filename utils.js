@@ -13,8 +13,8 @@ function processSheetData(sheetData) {
     
     for (let i = startRow; i < sheetData.length; i++) {
         const row = sheetData[i];
-        const siNo = String(row[2]);
-        const date = parseDate(row[1]);
+        const siNo = String(row[2] || "").trim(); // Ensure SI No is a string
+        const date = parseDate(row[1]); // Use the proper parseDate function
         
         if (!transactionsMap.has(siNo)) {
             transactionsMap.set(siNo, {
@@ -48,22 +48,18 @@ function processSheetData(sheetData) {
  * @returns {Date} Parsed date
  */
 function parseDate(dateValue) {
-    if (dateValue instanceof Date) return dateValue;
-    
-    if (typeof dateValue === 'string') {
-        // Try ISO format
-        let date = new Date(dateValue);
-        if (!isNaN(date)) return date;
-        
-        // Try DD/MM/YYYY format
-        date = new Date(dateValue.replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$2/$1/$3'));
-        if (!isNaN(date)) return date;
-        
-        // Try YYYY-MM-DD format
-        date = new Date(dateValue.replace(/(\d{4})-(\d{2})-(\d{2})/, '$2/$3/$1'));
-        if (!isNaN(date)) return date;
+    // If it's already a Date object, return it
+    if (dateValue instanceof Date && !isNaN(dateValue)) {
+        return dateValue;
     }
     
+    // If it's in ISO format (YYYY-MM-DD)
+    if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+        const parts = dateValue.split('-');
+        return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+    
+    // Fallback to current date
     console.warn("Could not parse date:", dateValue);
     return new Date();
 }
