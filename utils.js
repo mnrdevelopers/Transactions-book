@@ -51,20 +51,16 @@ function parseDate(dateValue) {
     if (dateValue instanceof Date) return dateValue;
     
     if (typeof dateValue === 'string') {
-        // Try ISO format first (YYYY-MM-DD)
-        let date = new Date(dateValue);
-        if (!isNaN(date.getTime())) return date;
-        
-        // Try DD/MM/YYYY format
+        // Try DD/MM/YYYY format first (as shown in your screenshot)
         const parts = dateValue.split('/');
         if (parts.length === 3) {
             // Note: months are 0-based in JavaScript Date
-            date = new Date(parts[2], parts[1] - 1, parts[0]);
+            const date = new Date(parts[2], parts[1] - 1, parts[0]);
             if (!isNaN(date.getTime())) return date;
         }
         
-        // Try any other format the Date constructor can handle
-        date = new Date(dateValue);
+        // Try ISO format (YYYY-MM-DD)
+        const date = new Date(dateValue);
         if (!isNaN(date.getTime())) return date;
     }
     
@@ -73,17 +69,20 @@ function parseDate(dateValue) {
 }
 
 /**
- * Formats a date for display
+ * Formats a date for display in the correct format
  * @param {Date} date - Date to format
- * @returns {string} Formatted date string
+ * @returns {string} Formatted date string (DD/MM/YYYY)
  */
 function formatDateForDisplay(date) {
     try {
-        return date.toLocaleDateString(undefined, { 
-            year: 'numeric', 
-            month: '2-digit', 
-            day: '2-digit' 
-        });
+        if (isNaN(date.getTime())) return "Invalid Date";
+        
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        
+        // For display purposes, use DD/MM/YYYY format
+        return `${day}/${month}/${year}`;
     } catch {
         return "Invalid Date";
     }
