@@ -85,20 +85,27 @@ function parseDate(dateValue) {
  * @param {Date} date - Date to format
  * @returns {string} Formatted date string (DD/MM/YYYY)
  */
-function formatDateForDisplay(date) {
+function formatDateForDisplay(date, options) {
     if (!(date instanceof Date) || isNaN(date)) {
         console.warn("Invalid date provided to formatDateForDisplay:", date);
         return "Invalid Date";
     }
     
+    const defaultOptions = { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        ...options
+    };
+    
     try {
+        return date.toLocaleDateString('en-IN', defaultOptions);
+    } catch (error) {
+        console.error("Error formatting date:", error);
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
         return `${day}/${month}/${year}`;
-    } catch (error) {
-        console.error("Error formatting date:", error);
-        return "Invalid Date";
     }
 }
 
