@@ -143,22 +143,23 @@ function groupByPeriod(transactions, period) {
 
     transactions.forEach(transaction => {
         // Parse the date and validate it
-        let date = new Date(transaction.date);
-        if (isNaN(date.getTime())) {
+        let transactionDate = new Date(transaction.date);
+        if (isNaN(transactionDate.getTime())) {
             console.warn("Invalid date in transaction:", transaction.date);
-            date = new Date(); // Fallback to current date
+            transactionDate = new Date(); // Fallback to current date
         }
 
+        // Create a new date object to avoid modifying the original
+        const date = new Date(transactionDate);
+        
         // Create appropriate period key based on selected period
         let periodKey, periodStart, periodEnd;
         
         switch(period) {
             case 'daily':
                 periodKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
-                periodStart = new Date(date);
-                periodStart.setHours(0, 0, 0, 0);
-                periodEnd = new Date(date);
-                periodEnd.setHours(23, 59, 59, 999);
+                periodStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                periodEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
                 break;
                 
             case 'weekly':
