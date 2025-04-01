@@ -65,6 +65,30 @@ const elements = {
     savePurchase: document.getElementById('save-purchase')
 };
 
+// UI Helpers for loading and success messages
+function showLoading() {
+    document.getElementById('loading-overlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loading-overlay').style.display = 'none';
+}
+
+function showSuccessMessage(message = 'Operation completed successfully!') {
+    document.getElementById('success-message').textContent = message;
+    document.getElementById('success-modal').style.display = 'flex';
+    
+    // Auto-close after 3 seconds
+    setTimeout(() => {
+        document.getElementById('success-modal').style.display = 'none';
+    }, 3000);
+}
+
+// Setup success modal close button
+document.getElementById('close-success-modal')?.addEventListener('click', function() {
+    document.getElementById('success-modal').style.display = 'none';
+});
+
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
     // Set default date to today
@@ -961,14 +985,7 @@ function savePurchase(purchaseData) {
     const submitBtn = elements.savePurchase;
     const originalText = submitBtn.innerHTML;
     
-    // Create loading overlay
-    const loadingOverlay = document.createElement('div');
-    loadingOverlay.className = 'loading-overlay';
-    loadingOverlay.innerHTML = `
-        <div class="loading-spinner"></div>
-        <p>Saving purchase data...</p>
-    `;
-    document.body.appendChild(loadingOverlay);
+    showLoading();
     
     // This would be replaced with your actual API call
     const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec";
@@ -998,33 +1015,18 @@ function savePurchase(purchaseData) {
         renderChart();
         filterPurchases();
         
-        // Change to success message
-        loadingOverlay.innerHTML = `
-            <div class="success-message">
-                <i class="fas fa-check-circle"></i>
-                <h3>Success!</h3>
-                <p>Purchase ${isNew ? 'added' : 'updated'} successfully.</p>
-            </div>
-        `;
+        // Show success message
+        showSuccessMessage(`Purchase ${isNew ? 'added' : 'updated'} successfully!`);
         
-        // Close modal and remove overlay after delay
+        // Close modal
         closeModal();
-        setTimeout(() => {
-            loadingOverlay.remove();
-        }, 2000);
     })
     .catch(error => {
         console.error("Error:", error);
-        loadingOverlay.innerHTML = `
-            <div class="error-message">
-                <i class="fas fa-exclamation-circle"></i>
-                <h3>Error</h3>
-                <p>Failed to save purchase. Please try again.</p>
-                <button onclick="this.closest('.loading-overlay').remove()">Close</button>
-            </div>
-        `;
+        alert('Failed to save purchase. Please try again.');
     })
     .finally(() => {
+        hideLoading();
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     });
