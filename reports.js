@@ -1,3 +1,97 @@
+// ======================
+// UTILITY FUNCTIONS
+// ======================
+
+function processSheetData(sheetData) {
+    const transactionsMap = new Map();
+    
+    // Skip header row if it exists
+    const startRow = sheetData[0][0] === "Store Name" ? 1 : 0;
+    
+    for (let i = startRow; i < sheetData.length; i++) {
+        const row = sheetData[i];
+        const siNo = String(row[2]);
+        const date = parseDate(row[1]);
+        
+        if (!transactionsMap.has(siNo)) {
+            transactionsMap.set(siNo, {
+                storeName: row[0],
+                date: date,
+                dateString: formatDateForDisplay(date),
+                siNo: siNo,
+                customerName: String(row[3]),
+                items: [],
+                paymentMode: row[8],
+                totalAmount: parseFloat(row[9]) || 0,
+                totalProfit: parseFloat(row[10]) || 0
+            });
+        }
+        
+        transactionsMap.get(siNo).items.push({
+            itemName: String(row[4]),
+            quantity: parseFloat(row[5]) || 0,
+            purchasePrice: parseFloat(row[6]) || 0,
+            salePrice: parseFloat(row[7]) || 0,
+            itemTotal: (parseFloat(row[5]) || 0) * (parseFloat(row[7]) || 0)
+        });
+    }
+    
+    return Array.from(transactionsMap.values());
+}
+
+function parseDate(dateValue) {
+    if (dateValue instanceof Date) return dateValue;
+    
+    if (typeof dateValue === 'string') {
+        // Try ISO format (YYYY-MM-DD)
+        let date = new Date(dateValue);
+        if (!isNaN(date.getTime())) return date;
+        
+        // Try DD/MM/YYYY format
+        const dd_mm_yyyy = dateValue.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        if (dd_mm_yyyy) {
+            return new Date(`${dd_mm_yyyy[3]}-${dd_mm_yyyy[2]}-${dd_mm_yyyy[1]}`);
+        }
+        
+        // Try YYYY-MM-DD format (alternative)
+        const yyyy_mm_dd = dateValue.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if (yyyy_mm_dd) {
+            return new Date(`${yyyy_mm_dd[1]}-${yyyy_mm_dd[2]}-${yyyy_mm_dd[3]}`);
+        }
+    }
+    
+    console.warn("Could not parse date:", dateValue);
+    return new Date();
+}
+
+function formatDateForDisplay(date) {
+    try {
+        return date.toLocaleDateString('en-IN', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit' 
+        });
+    } catch {
+        return "Invalid Date";
+    }
+}
+
+function getWeekNumber(date) {
+    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+    const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+}
+
+function getWeekStartDate(date) {
+    const day = date.getDay();
+    const diff = date.getDate() - day;
+    return new Date(date.setDate(diff));
+}
+
+// ======================
+// REPORTS FUNCTIONS
+// ======================
+
 // Reports Configuration
 let currentPeriod = 'daily';
 let currentDate = new Date();
