@@ -6,10 +6,11 @@
  * @returns {Array} Processed transactions
  */
 function processSheetData(sheetData) {
-    if (!Array.isArray(sheetData);
+    if (!Array.isArray(sheetData)) {
         console.error("Invalid sheet data:", sheetData);
         return [];
     }
+}
 
     const transactionsMap = new Map();
     
