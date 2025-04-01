@@ -6,10 +6,11 @@ if (document.getElementById("transaction-form")) {
     
     // Initialize date display
     const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD
     const day = String(today.getDate()).padStart(2, '0');
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const currentDateKey = `${day}${month}`;
-    document.getElementById("date").textContent = today.toLocaleDateString();
+    document.getElementById("date").textContent = formattedDate;
     document.getElementById("day-month-part").textContent = currentDateKey;
 
     // Sequence number management
