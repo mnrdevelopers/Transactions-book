@@ -49,6 +49,50 @@ function setupEventListeners() {
     elements.searchInput.addEventListener('input', filterTransactions);
 }
 
+function parseDate(dateValue) {
+    // If it's already a Date object, return it
+    if (dateValue instanceof Date && !isNaN(dateValue)) {
+        return dateValue;
+    }
+    
+    // Handle ISO format (YYYY-MM-DD)
+    if (typeof dateValue === 'string' && dateValue.includes('-')) {
+        const parts = dateValue.split('-');
+        if (parts.length === 3) {
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+    }
+    
+    // Handle DD/MM/YYYY format
+    if (typeof dateValue === 'string' && dateValue.includes('/')) {
+        const parts = dateValue.split('/');
+        if (parts.length === 3) {
+            // Check if day > 12 (indicating DD/MM format)
+            if (parseInt(parts[0]) > 12) {
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            // Otherwise assume MM/DD/YYYY
+            return new Date(parts[2], parts[0] - 1, parts[1]);
+        }
+    }
+    
+    // Fallback to current date if parsing fails
+    console.warn("Could not parse date:", dateValue);
+    return new Date();
+}
+
+function formatDateForDisplay(date) {
+    const d = new Date(date);
+    if (isNaN(d)) return "Invalid Date";
+    
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    
+    // Use DD/MM/YYYY format (Indian standard)
+    return `${day}/${month}/${year}`;
+}
+
 function updateSummaryCards(summary) {
     elements.totalSales.textContent = `₹${summary.totalSales.toLocaleString('en-IN', {
         minimumFractionDigits: 2,
@@ -142,11 +186,10 @@ function groupByPeriod(transactions, period) {
     const groupsMap = new Map();
 
     transactions.forEach(transaction => {
-        // Parse the date and validate it
-        let transactionDate = new Date(transaction.date);
-        if (isNaN(transactionDate.getTime())) {
-            console.warn("Invalid date in transaction:", transaction.date);
-            transactionDate = new Date(); // Fallback to current date
+        // Ensure we have a valid Date object
+        let date = new Date(transaction.date);
+        if (isNaN(date.getTime())) {
+            date = parseDate(transaction.dateString); // Fallback parsing
         }
 
         // Create a new date object to avoid modifying the original
