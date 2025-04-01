@@ -142,21 +142,19 @@ function groupByPeriod(transactions, period) {
     const groupsMap = new Map();
 
     transactions.forEach(transaction => {
-        // Parse the date and validate it
-        let date = new Date(transaction.date);
-        if (isNaN(date.getTime())) {
-            console.warn("Invalid date in transaction:", transaction.date);
-            date = new Date(); // Fallback to current date
-        }
-
-        // Create appropriate period key based on selected period
+        // Parse the date with our improved function
+        const date = parseDateForReport(transaction.date);
+        
+        // Create period key based on selected period
         let periodKey, periodStart, periodEnd;
         
         switch(period) {
             case 'daily':
-                periodKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
-                periodStart = new Date(date.setHours(0, 0, 0, 0));
-                periodEnd = new Date(date.setHours(23, 59, 59, 999));
+                periodKey = formatReportDate(date);
+                periodStart = new Date(date);
+                periodStart.setHours(0, 0, 0, 0);
+                periodEnd = new Date(date);
+                periodEnd.setHours(23, 59, 59, 999);
                 break;
                 
             case 'weekly':
@@ -164,13 +162,7 @@ function groupByPeriod(transactions, period) {
                 const weekEnd = new Date(weekStart);
                 weekEnd.setDate(weekStart.getDate() + 6);
                 
-                periodKey = `Week ${getWeekNumber(date)} (${weekStart.toLocaleDateString('en-IN', { 
-                    day: '2-digit', 
-                    month: 'short' 
-                })} - ${weekEnd.toLocaleDateString('en-IN', { 
-                    day: '2-digit', 
-                    month: 'short' 
-                })})`;
+                periodKey = `Week ${getWeekNumber(date)} (${formatReportDate(weekStart)} - ${formatReportDate(weekEnd)})`;
                 periodStart = weekStart;
                 periodEnd = weekEnd;
                 break;
@@ -208,7 +200,6 @@ function groupByPeriod(transactions, period) {
         group.totalProfit += transaction.totalProfit;
     });
 
-    // Sort groups by period start date
     return Array.from(groupsMap.values()).sort((a, b) => a.periodStart - b.periodStart);
 }
 
@@ -401,10 +392,13 @@ function renderTransactionsTable(transactions) {
     let html = '';
     
     transactions.forEach(transaction => {
+        // Parse the date properly for display
+        const displayDate = formatReportDate(transaction.date);
+        
         html += `
             <tr>
                 <td>${transaction.siNo}</td>
-                <td>${transaction.dateString}</td>
+                <td>${displayDate}</td>
                 <td>${transaction.customerName}</td>
                 <td>₹${transaction.totalAmount.toFixed(2)}</td>
                 <td>₹${transaction.totalProfit.toFixed(2)}</td>
