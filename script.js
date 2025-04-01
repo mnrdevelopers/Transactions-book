@@ -359,71 +359,79 @@ ${data.paymentMode === "UPI" ? `
         }
     }
 
-    function handleFormSubmit(e) {
-        e.preventDefault();
-        if (!validateForm()) return;
-        
-        const sequenceNo = document.getElementById("sequence-no").value;
-        if (!sequenceNo || isNaN(sequenceNo)) {
-            alert("Please enter a valid sequence number");
-            return;
-        }
+  // In the handleFormSubmit function, modify it like this:
+function handleFormSubmit(e) {
+    e.preventDefault();
+    if (!validateForm()) return;
+    
+    const sequenceNo = document.getElementById("sequence-no").value;
+    if (!sequenceNo || isNaN(sequenceNo)) {
+        alert("Please enter a valid sequence number");
+        return;
+    }
 
-        const billData = prepareBillData();
-        displayBillPreview(billData);
-        
-        // Only increment after successful submission
-        submitBill(billData)
-            .then(() => {
-                currentSequenceData = incrementSequenceNumber();
-                document.getElementById("sequence-no").value = currentSequenceData.nextSequence;
-            })
-            .catch(error => {
-                console.error("Submission failed:", error);
-                // Don't increment sequence if submission failed
-            });
-        
-        // Show print button
-        document.getElementById("print-bill").style.display = "block";
-    }
-  
-    function submitBill(data) {
-        const submitBtn = document.querySelector("#transaction-form [type='submit']");
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-        submitBtn.disabled = true;
-        
-        // Update local stats
-        const salesToAdd = data.items.length;
-        const profitToAdd = parseFloat(data.totalProfit) || 0;
-        updateLocalStats(salesToAdd, profitToAdd);
-        
-        return new Promise((resolve, reject) => {
-            fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
-                method: "POST",
-                mode: "no-cors",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-            })
-            .then(() => {
-                // Reset form but keep customer name
-                const customerName = document.getElementById("customer-name").value;
-                document.getElementById("transaction-form").reset();
-                document.getElementById("customer-name").value = customerName;
-                document.getElementById("items-container").innerHTML = "";
-                addItem();
-                resolve();
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                reject(error);
-            })
-            .finally(() => {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            });
+    // Show loading overlay
+    document.getElementById("loading-overlay").style.display = "flex";
+    
+    const billData = prepareBillData();
+    displayBillPreview(billData);
+    
+    // Only increment after successful submission
+    submitBill(billData)
+        .then(() => {
+            currentSequenceData = incrementSequenceNumber();
+            document.getElementById("sequence-no").value = currentSequenceData.nextSequence;
+        })
+        .catch(error => {
+            console.error("Submission failed:", error);
+            alert("Transaction submission failed. Please try again.");
+        })
+        .finally(() => {
+            // Hide loading overlay regardless of success/failure
+            document.getElementById("loading-overlay").style.display = "none";
         });
-    }
+    
+    // Show print button
+    document.getElementById("print-bill").style.display = "block";
+}
+
+// In the submitBill function, remove the spinner code since we're handling it globally:
+function submitBill(data) {
+    const submitBtn = document.querySelector("#transaction-form [type='submit']");
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = 'Processing...';
+    submitBtn.disabled = true;
+    
+    // Update local stats
+    const salesToAdd = data.items.length;
+    const profitToAdd = parseFloat(data.totalProfit) || 0;
+    updateLocalStats(salesToAdd, profitToAdd);
+    
+    return new Promise((resolve, reject) => {
+        fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        })
+        .then(() => {
+            // Reset form but keep customer name
+            const customerName = document.getElementById("customer-name").value;
+            document.getElementById("transaction-form").reset();
+            document.getElementById("customer-name").value = customerName;
+            document.getElementById("items-container").innerHTML = "";
+            addItem();
+            resolve();
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            reject(error);
+        })
+        .finally(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
+    });
 }
