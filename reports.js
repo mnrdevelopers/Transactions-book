@@ -108,8 +108,7 @@ async function loadReport() {
 }
 
 async function fetchTransactions(date, period) {
-    // This should be replaced with your actual API call
-    // For now, we'll use mock data
+    console.log("Fetching transactions for:", date, "with period:", period);
     const scriptUrl = "https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec";
     const response = await fetch(scriptUrl);
     
@@ -118,7 +117,8 @@ async function fetchTransactions(date, period) {
     }
     
     const data = await response.json();
-    return processSheetData(data); // Reuse your existing function
+    console.log("Raw data from API:", data);
+    return processSheetData(data);
 }
 
 function processReportData(transactions, period) {
