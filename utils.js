@@ -51,21 +51,25 @@ function parseDate(dateValue) {
     if (dateValue instanceof Date) return dateValue;
     
     if (typeof dateValue === 'string') {
-        // Try ISO format
+        // Try ISO format first (YYYY-MM-DD)
         let date = new Date(dateValue);
-        if (!isNaN(date)) return date;
+        if (!isNaN(date.getTime())) return date;
         
         // Try DD/MM/YYYY format
-        date = new Date(dateValue.replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$2/$1/$3'));
-        if (!isNaN(date)) return date;
+        const parts = dateValue.split('/');
+        if (parts.length === 3) {
+            // Note: months are 0-based in JavaScript Date
+            date = new Date(parts[2], parts[1] - 1, parts[0]);
+            if (!isNaN(date.getTime())) return date;
+        }
         
-        // Try YYYY-MM-DD format
-        date = new Date(dateValue.replace(/(\d{4})-(\d{2})-(\d{2})/, '$2/$3/$1'));
-        if (!isNaN(date)) return date;
+        // Try any other format the Date constructor can handle
+        date = new Date(dateValue);
+        if (!isNaN(date.getTime())) return date;
     }
     
     console.warn("Could not parse date:", dateValue);
-    return new Date();
+    return new Date(); // fallback to current date
 }
 
 /**
