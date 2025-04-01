@@ -169,39 +169,20 @@ function processSheetData(sheetData) {
     return transactions;
 }
 
+// Update the parseDate function to:
 function parseDate(dateValue) {
     // If it's already a Date object, return it
     if (dateValue instanceof Date && !isNaN(dateValue)) {
         return dateValue;
     }
     
-    // If it's a string, try to parse it
-    if (typeof dateValue === 'string') {
-        // Try DD/MM/YYYY format (common in India)
-        if (dateValue.includes('/')) {
-            const parts = dateValue.split('/');
-            if (parts.length === 3) {
-                // Check if it's likely DD/MM (not MM/DD)
-                if (parts[0] > 12) { // Day is >12, must be DD/MM
-                    return new Date(parts[2], parts[1] - 1, parts[0]);
-                }
-                // Otherwise assume it's MM/DD (American format)
-                return new Date(parts[2], parts[0] - 1, parts[1]);
-            }
-        }
-        // Try YYYY-MM-DD format (ISO format from Google Sheets)
-        else if (dateValue.includes('-')) {
-            const parts = dateValue.split('-');
-            if (parts.length === 3) {
-                return new Date(parts[0], parts[1] - 1, parts[2]);
-            }
-        }
-        // Try parsing as is
-        const parsed = new Date(dateValue);
-        if (!isNaN(parsed)) return parsed;
+    // If it's in ISO format (YYYY-MM-DD)
+    if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+        const parts = dateValue.split('-');
+        return new Date(parts[0], parts[1] - 1, parts[2]);
     }
     
-    // If all parsing fails, return current date
+    // Fallback to current date
     console.warn("Could not parse date:", dateValue);
     return new Date();
 }
