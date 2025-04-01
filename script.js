@@ -434,4 +434,5 @@ function submitBill(data) {
             submitBtn.disabled = false;
         });
     });
+  }
 }
