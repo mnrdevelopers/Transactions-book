@@ -360,7 +360,94 @@ ${data.paymentMode === "UPI" ? `
         }
     }
 
-  // In the handleFormSubmit function, modify it like this:
+ // Add these at the top of the script.js file
+function showCashPaymentModal(totalAmount) {
+    const modal = document.getElementById('cash-payment-modal');
+    document.getElementById('modal-total-amount').value = totalAmount;
+    document.getElementById('amount-received').value = '';
+    document.getElementById('change-amount').value = '0.00';
+    modal.style.display = 'flex';
+    
+    // Focus on amount received field
+    document.getElementById('amount-received').focus();
+}
+
+function calculateChange() {
+    const amountReceived = parseFloat(document.getElementById('amount-received').value) || 0;
+    const totalAmount = parseFloat(document.getElementById('modal-total-amount').value) || 0;
+    const change = amountReceived - totalAmount;
+    
+    document.getElementById('change-amount').value = change.toFixed(2);
+    
+    // Highlight if change is negative (customer didn't pay enough)
+    const changeField = document.getElementById('change-amount');
+    if (change < 0) {
+        changeField.style.color = 'red';
+        changeField.style.fontWeight = 'bold';
+    } else {
+        changeField.style.color = 'green';
+        changeField.style.fontWeight = 'normal';
+    }
+}
+
+function setupCashPaymentModal() {
+    const modal = document.getElementById('cash-payment-modal');
+    const closeBtn = document.querySelector('#cash-payment-modal .close');
+    const cancelBtn = document.getElementById('cancel-cash-payment');
+    const confirmBtn = document.getElementById('confirm-cash-payment');
+    const amountReceived = document.getElementById('amount-received');
+    
+    // Close modal events
+    closeBtn.onclick = function() {
+        modal.style.display = 'none';
+    }
+    
+    cancelBtn.onclick = function() {
+        modal.style.display = 'none';
+    }
+    
+    // Calculate change when amount received changes
+    amountReceived.addEventListener('input', calculateChange);
+    
+    // Confirm payment
+    confirmBtn.onclick = function() {
+        const amountReceivedVal = parseFloat(amountReceived.value) || 0;
+        const totalAmount = parseFloat(document.getElementById('modal-total-amount').value) || 0;
+        
+        if (amountReceivedVal < totalAmount) {
+            if (!confirm('Customer has paid less than the total amount. Are you sure you want to proceed?')) {
+                return;
+            }
+        }
+        
+        modal.style.display = 'none';
+        // Continue with form submission
+        submitTransactionAfterCashPayment();
+    }
+}
+
+function setupSuccessModal() {
+    const modal = document.getElementById('success-modal');
+    const closeBtn = document.getElementById('close-success-modal');
+    
+    closeBtn.onclick = function() {
+        modal.style.display = 'none';
+    }
+}
+
+function showSuccessMessage() {
+    const modal = document.getElementById('success-modal');
+    modal.style.display = 'flex';
+    
+    // Auto-close after 3 seconds
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 3000);
+}
+
+let pendingTransactionData = null;
+
+// Modify the handleFormSubmit function
 function handleFormSubmit(e) {
     e.preventDefault();
     if (!validateForm()) return;
@@ -371,17 +458,32 @@ function handleFormSubmit(e) {
         return;
     }
 
+    const paymentMode = document.getElementById("payment-mode").value;
+    const totalAmount = parseFloat(document.getElementById("total-amount").value) || 0;
+    
+    // Store the bill data for later submission
+    pendingTransactionData = prepareBillData();
+    
+    // Show cash payment modal if payment mode is cash
+    if (paymentMode === "Cash") {
+        showCashPaymentModal(totalAmount);
+    } else {
+        // For other payment modes, submit directly
+        submitTransaction();
+    }
+}
+
+function submitTransactionAfterCashPayment() {
+    if (!pendingTransactionData) return;
+    
     // Show loading overlay
     document.getElementById("loading-overlay").style.display = "flex";
     
-    const billData = prepareBillData();
-    displayBillPreview(billData);
-    
-    // Only increment after successful submission
-    submitBill(billData)
+    submitBill(pendingTransactionData)
         .then(() => {
             currentSequenceData = incrementSequenceNumber();
             document.getElementById("sequence-no").value = currentSequenceData.nextSequence;
+            showSuccessMessage();
         })
         .catch(error => {
             console.error("Submission failed:", error);
@@ -390,11 +492,42 @@ function handleFormSubmit(e) {
         .finally(() => {
             // Hide loading overlay regardless of success/failure
             document.getElementById("loading-overlay").style.display = "none";
+            pendingTransactionData = null;
         });
     
     // Show print button
     document.getElementById("print-bill").style.display = "block";
 }
+
+function submitTransaction() {
+    if (!pendingTransactionData) return;
+    
+    // Show loading overlay
+    document.getElementById("loading-overlay").style.display = "flex";
+    
+    submitBill(pendingTransactionData)
+        .then(() => {
+            currentSequenceData = incrementSequenceNumber();
+            document.getElementById("sequence-no").value = currentSequenceData.nextSequence;
+            showSuccessMessage();
+        })
+        .catch(error => {
+            console.error("Submission failed:", error);
+            alert("Transaction submission failed. Please try again.");
+        })
+        .finally(() => {
+            // Hide loading overlay regardless of success/failure
+            document.getElementById("loading-overlay").style.display = "none";
+            pendingTransactionData = null;
+        });
+    
+    // Show print button
+    document.getElementById("print-bill").style.display = "block";
+}
+
+// In the existing initialization code, add these:
+setupCashPaymentModal();
+setupSuccessModal();
 
 // In the submitBill function, remove the spinner code since we're handling it globally:
 function submitBill(data) {
