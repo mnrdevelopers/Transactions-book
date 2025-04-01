@@ -943,10 +943,15 @@ async function uploadImageToImgBB(imageFile) {
 
 function savePurchase(purchaseData) {
     const isNew = !currentPurchaseId;
-    const submitBtn = elements.savePurchase;
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    submitBtn.disabled = true;
+    
+    // Create loading overlay
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.className = 'loading-overlay';
+    loadingOverlay.innerHTML = `
+        <div class="loading-spinner"></div>
+        <p>Saving purchase data...</p>
+    `;
+    document.body.appendChild(loadingOverlay);
     
     // This would be replaced with your actual API call
     const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec";
@@ -976,14 +981,33 @@ function savePurchase(purchaseData) {
         renderChart();
         filterPurchases();
         
-        // Close modal and show success
+        // Change to success message
+        loadingOverlay.innerHTML = `
+            <div class="success-message">
+                <i class="fas fa-check-circle"></i>
+                <h3>Success!</h3>
+                <p>Purchase ${isNew ? 'added' : 'updated'} successfully.</p>
+            </div>
+        `;
+        
+        // Close modal and remove overlay after delay
         closeModal();
-        alert(`Purchase ${isNew ? 'added' : 'updated'} successfully!`);
+        setTimeout(() => {
+            loadingOverlay.remove();
+        }, 2000);
     })
     .catch(error => {
         console.error("Error:", error);
-        alert("Error saving purchase. Please try again.");
-    })
+        loadingOverlay.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <h3>Error</h3>
+                <p>Failed to save purchase. Please try again.</p>
+                <button onclick="this.closest('.loading-overlay').remove()">Close</button>
+            </div>
+        `;
+    });
+}
     .finally(() => {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
