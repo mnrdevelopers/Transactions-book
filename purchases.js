@@ -958,6 +958,8 @@ async function uploadImageToImgBB(imageFile) {
 
 function savePurchase(purchaseData) {
     const isNew = !currentPurchaseId;
+    const submitBtn = elements.savePurchase;
+    const originalText = submitBtn.innerHTML;
     
     // Create loading overlay
     const loadingOverlay = document.createElement('div');
@@ -1021,8 +1023,7 @@ function savePurchase(purchaseData) {
                 <button onclick="this.closest('.loading-overlay').remove()">Close</button>
             </div>
         `;
-    });
-}
+    })
     .finally(() => {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
