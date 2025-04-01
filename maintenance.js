@@ -92,6 +92,30 @@ function setupEventListeners() {
     });
 }
 
+// UI Helpers for loading and success messages
+function showLoading() {
+    document.getElementById('loading-overlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loading-overlay').style.display = 'none';
+}
+
+function showSuccessMessage(message = 'Operation completed successfully!') {
+    document.getElementById('success-message').textContent = message;
+    document.getElementById('success-modal').style.display = 'flex';
+    
+    // Auto-close after 3 seconds
+    setTimeout(() => {
+        document.getElementById('success-modal').style.display = 'none';
+    }, 3000);
+}
+
+// Setup success modal close button
+document.getElementById('close-success-modal')?.addEventListener('click', function() {
+    document.getElementById('success-modal').style.display = 'none';
+});
+
 // Load categories from backend
 async function loadCategories() {
     try {
@@ -240,6 +264,7 @@ function renderTransactions() {
 // Add new maintenance record
 async function addMaintenanceRecord(e) {
     e.preventDefault();
+    showLoading();
     
     const record = {
         action: 'addMaintenance',
@@ -263,7 +288,7 @@ async function addMaintenanceRecord(e) {
         const data = await response.json();
         
         if (data.status === 'success') {
-            alert('Maintenance record added successfully!');
+            showSuccessMessage('Maintenance record added successfully!');
             elements.maintenanceForm.reset();
             loadTransactions();
             loadReport();
@@ -273,6 +298,8 @@ async function addMaintenanceRecord(e) {
     } catch (error) {
         console.error('Error adding maintenance record:', error);
         alert('Failed to add maintenance record. Please try again.');
+    } finally {
+        hideLoading();
     }
 }
 
@@ -394,6 +421,7 @@ function closeEditModal() {
 // Update maintenance record
 async function updateMaintenanceRecord(e) {
     e.preventDefault();
+    showLoading();
     
     const transactionId = document.getElementById('edit-id').value;
     const updatedData = {
@@ -420,7 +448,7 @@ async function updateMaintenanceRecord(e) {
         const data = await response.json();
         
         if (data.status === 'success') {
-            alert('Maintenance record updated successfully!');
+            showSuccessMessage('Maintenance record updated successfully!');
             closeEditModal();
             loadTransactions();
             loadReport();
@@ -430,6 +458,8 @@ async function updateMaintenanceRecord(e) {
     } catch (error) {
         console.error('Error updating maintenance record:', error);
         alert('Failed to update maintenance record. Please try again.');
+    } finally {
+        hideLoading();
     }
 }
 
@@ -439,12 +469,14 @@ async function deleteTransaction(transactionId) {
         return;
     }
     
+    showLoading();
+    
     try {
         const response = await fetch(`${API_URL}?action=deleteMaintenance&id=${transactionId}`);
         const data = await response.json();
         
         if (data.status === 'success') {
-            alert('Maintenance record deleted successfully!');
+            showSuccessMessage('Maintenance record deleted successfully!');
             loadTransactions();
             loadReport();
         } else {
@@ -453,6 +485,8 @@ async function deleteTransaction(transactionId) {
     } catch (error) {
         console.error('Error deleting maintenance record:', error);
         alert('Failed to delete maintenance record. Please try again.');
+    } finally {
+        hideLoading();
     }
 }
 
@@ -545,27 +579,4 @@ function updatePagination() {
     elements.pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
     elements.prevBtn.disabled = currentPage === 1;
     elements.nextBtn.disabled = currentPage === totalPages || totalPages === 0;
-}
-
-// UI helpers
-function showLoading() {
-    elements.transactionsBody.innerHTML = `
-        <tr>
-            <td colspan="8" class="loading-spinner">
-                <div class="spinner"></div>
-                Loading transactions...
-            </td>
-        </tr>
-    `;
-}
-
-function showError(message) {
-    elements.transactionsBody.innerHTML = `
-        <tr>
-            <td colspan="8" class="error-message">
-                ${message}
-                <button onclick="loadTransactions()">Retry</button>
-            </td>
-        </tr>
-    `;
 }
