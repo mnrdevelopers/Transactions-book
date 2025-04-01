@@ -9,48 +9,61 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
     /* Add these styles to your existing style section */
-    .loading-overlay {
+/* Loading Overlay Styles */
+    #loading-overlay {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(255, 255, 255, 0.8);
+        background: rgba(0, 0, 0, 0.2);
+        z-index: 9999;
         display: flex;
-        flex-direction: column;
         justify-content: center;
         align-items: center;
-        z-index: 1000;
     }
     
-    .loading-spinner {
-        border: 5px solid #f3f3f3;
-        border-top: 5px solid #4a6bff;
+    .loading-spinner .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
         border-radius: 50%;
-        width: 50px;
-        height: 50px;
+        border-top: 4px solid #4a6bff;
+        width: 40px;
+        height: 40px;
         animation: spin 1s linear infinite;
-        margin-bottom: 15px;
     }
     
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
-    
-    .success-message {
-        background-color: #4CAF50;
-        color: white;
-        padding: 20px;
-        border-radius: 5px;
-        text-align: center;
-        max-width: 300px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+    /* Success Message Modal */
+    #success-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
     }
     
-    .success-message i {
-        font-size: 40px;
-        margin-bottom: 10px;
+    #success-modal .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+    }
+    
+    #success-modal i {
+        font-size: 48px;
+        color: #4CAF50;
+        margin-bottom: 20px;
     }
 
         /* Add Purchase Button Container */
@@ -470,6 +483,25 @@
             </div>
         </div>
     </div>
+
+    <!-- Loading Overlay -->
+<div id="loading-overlay" style="display: none;">
+    <div class="loading-spinner">
+        <div class="spinner"></div>
+    </div>
+</div>
+
+<!-- Success Message Modal -->
+<div id="success-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="text-align: center;">
+        <div style="font-size: 48px; color: #4CAF50; margin-bottom: 20px;">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h2>Purchase Record Successful!</h2>
+        <p id="success-message">Your request has been processed successfully.</p>
+        <button type="button" id="close-success-modal" class="save-btn" style="margin-top: 20px;">OK</button>
+    </div>
+</div>
 
     <script src="script.js"></script>
     <script src="purchases.js"></script>
