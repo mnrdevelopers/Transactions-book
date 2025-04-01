@@ -19,9 +19,9 @@ const elements = {
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
-    // Set default date to today
-    const today = new Date().toISOString().split('T')[0];
-    elements.reportDate.value = today;
+    // Set default date to today in proper format
+    const today = formatDateForDisplay(new Date());
+    elements.reportDate.value = today.split('/').reverse().join('-'); // Convert to YYYY-MM-DD for input
     
     // Load initial report
     loadReport();
@@ -46,33 +46,40 @@ function setupEventListeners() {
     
     // Filters
     elements.paymentFilter.addEventListener('change', filterTransactions);
-    elements.searchInput.addEventListener('input', filterTransactions);
+    elements.searchInput.addEventListener('input', debounce(filterTransactions, 300));
 }
 
 function updateSummaryCards(summary) {
-    elements.totalSales.textContent = `₹${summary.totalSales.toLocaleString('en-IN', {
+    if (!summary) {
+        console.error("Invalid summary data");
+        return;
+    }
+
+    elements.totalSales.textContent = `₹${(summary.totalSales || 0).toLocaleString('en-IN', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     })}`;
     
-    elements.totalProfit.textContent = `₹${summary.totalProfit.toLocaleString('en-IN', {
+    elements.totalProfit.textContent = `₹${(summary.totalProfit || 0).toLocaleString('en-IN', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     })}`;
     
-    elements.totalTransactions.textContent = summary.transactionCount.toLocaleString('en-IN');
+    elements.totalTransactions.textContent = (summary.transactionCount || 0).toLocaleString('en-IN');
     
     updateChangeIndicator(
         elements.totalSales.parentElement.querySelector('.change'), 
-        summary.salesChange
+        summary.salesChange || 0
     );
     updateChangeIndicator(
         elements.totalProfit.parentElement.querySelector('.change'), 
-        summary.profitChange
+        summary.profitChange || 0
     );
 }
 
 function updateChangeIndicator(element, change) {
+    if (!element) return;
+    
     if (change > 0) {
         element.className = 'change positive';
         element.innerHTML = `<i class="fas fa-arrow-up"></i> ${Math.abs(change)}%`;
@@ -93,6 +100,10 @@ async function loadReport() {
         const selectedDate = elements.reportDate.value;
         const transactions = await fetchTransactions(selectedDate, currentPeriod);
         
+        if (!transactions || !Array.isArray(transactions)) {
+            throw new Error("Invalid transactions data received");
+        }
+        
         // Process data and store it
         reportData = groupByPeriod(transactions, currentPeriod);
         const chartData = prepareChartData(reportData, currentPeriod);
@@ -103,48 +114,47 @@ async function loadReport() {
         
     } catch (error) {
         console.error('Error loading report:', error);
-        alert('Failed to load report data. Please try again.');
+        showError('Failed to load report data. Please try again.');
     }
 }
 
 async function fetchTransactions(date, period) {
-    // This should be replaced with your actual API call
-    // For now, we'll use mock data
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec";
-    const response = await fetch(scriptUrl);
-    
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec";
+        const response = await fetch(scriptUrl);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return processSheetData(data);
+    } catch (error) {
+        console.error("Error fetching transactions:", error);
+        throw error;
     }
-    
-    const data = await response.json();
-    return processSheetData(data); // Reuse your existing function
-}
-
-function processReportData(transactions, period) {
-    // Group transactions by period
-    const grouped = groupByPeriod(transactions, period);
-    
-    // Calculate summary
-    const summary = calculateSummary(grouped);
-    
-    // Prepare chart data
-    const chartData = prepareChartData(grouped, period);
-    
-    return {
-        summary,
-        chartData,
-        transactions: grouped.flatMap(group => group.transactions)
-    };
 }
 
 function groupByPeriod(transactions, period) {
+    if (!transactions || !Array.isArray(transactions)) {
+        console.warn("Invalid transactions array");
+        return [];
+    }
+
     const groupsMap = new Map();
 
     transactions.forEach(transaction => {
-        // Parse the date and validate it
-        let date = new Date(transaction.date);
-        if (isNaN(date.getTime())) {
+        if (!transaction || !transaction.date) {
+            console.warn("Invalid transaction:", transaction);
+            return;
+        }
+
+        // Parse the date using the utility function
+        let date;
+        try {
+            date = parseDate(transaction.date);
+            if (isNaN(date.getTime())) throw new Error("Invalid date");
+        } catch (e) {
             console.warn("Invalid date in transaction:", transaction.date);
             date = new Date(); // Fallback to current date
         }
@@ -154,9 +164,11 @@ function groupByPeriod(transactions, period) {
         
         switch(period) {
             case 'daily':
-                periodKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
-                periodStart = new Date(date.setHours(0, 0, 0, 0));
-                periodEnd = new Date(date.setHours(23, 59, 59, 999));
+                periodKey = formatDateForDisplay(date);
+                periodStart = new Date(date);
+                periodStart.setHours(0, 0, 0, 0);
+                periodEnd = new Date(date);
+                periodEnd.setHours(23, 59, 59, 999);
                 break;
                 
             case 'weekly':
@@ -164,22 +176,13 @@ function groupByPeriod(transactions, period) {
                 const weekEnd = new Date(weekStart);
                 weekEnd.setDate(weekStart.getDate() + 6);
                 
-                periodKey = `Week ${getWeekNumber(date)} (${weekStart.toLocaleDateString('en-IN', { 
-                    day: '2-digit', 
-                    month: 'short' 
-                })} - ${weekEnd.toLocaleDateString('en-IN', { 
-                    day: '2-digit', 
-                    month: 'short' 
-                })})`;
+                periodKey = `Week ${getWeekNumber(date)} (${formatDateForDisplay(weekStart, {month: 'short'})} - ${formatDateForDisplay(weekEnd, {month: 'short'})})`;
                 periodStart = weekStart;
                 periodEnd = weekEnd;
                 break;
                 
             case 'monthly':
-                periodKey = date.toLocaleDateString('en-IN', { 
-                    month: 'long', 
-                    year: 'numeric' 
-                });
+                periodKey = formatDateForDisplay(date, {month: 'long', year: 'numeric'});
                 periodStart = new Date(date.getFullYear(), date.getMonth(), 1);
                 periodEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
                 break;
@@ -204,46 +207,57 @@ function groupByPeriod(transactions, period) {
 
         const group = groupsMap.get(periodKey);
         group.transactions.push(transaction);
-        group.totalSales += transaction.totalAmount;
-        group.totalProfit += transaction.totalProfit;
+        group.totalSales += transaction.totalAmount || 0;
+        group.totalProfit += transaction.totalProfit || 0;
     });
 
-    // Sort groups by period start date
-    return Array.from(groupsMap.values()).sort((a, b) => a.periodStart - b.periodStart);
+    // Sort groups by period start date (newest first)
+    return Array.from(groupsMap.values()).sort((a, b) => b.periodStart - a.periodStart);
 }
 
 // Helper function to get start of week (Sunday)
 function getWeekStartDate(date) {
     const day = date.getDay();
     const diff = date.getDate() - day;
-    return new Date(date.setDate(diff));
+    const weekStart = new Date(date);
+    weekStart.setDate(diff);
+    weekStart.setHours(0, 0, 0, 0);
+    return weekStart;
 }
 
 function calculateSummary(groups) {
-    let totalSales = 0;
-    let totalProfit = 0;
-    let transactionCount = 0;
+    if (!groups || !Array.isArray(groups)) {
+        return {
+            totalSales: 0,
+            totalProfit: 0,
+            transactionCount: 0,
+            salesChange: 0,
+            profitChange: 0
+        };
+    }
+
+    const summary = groups.reduce((acc, group) => {
+        acc.totalSales += group.totalSales || 0;
+        acc.totalProfit += group.totalProfit || 0;
+        acc.transactionCount += group.transactions?.length || 0;
+        return acc;
+    }, { totalSales: 0, totalProfit: 0, transactionCount: 0 });
+
+    // TODO: Implement proper change calculation
+    summary.salesChange = 0;
+    summary.profitChange = 0;
     
-    groups.forEach(group => {
-        totalSales += group.totalSales;
-        totalProfit += group.totalProfit;
-        transactionCount += group.transactions.length;
-    });
-    
-    // Calculate percentage changes (you would compare with previous period)
-    const salesChange = 0; // Calculate based on previous period
-    const profitChange = 0; // Calculate based on previous period
-    
-    return {
-        totalSales,
-        totalProfit,
-        transactionCount,
-        salesChange,
-        profitChange
-    };
+    return summary;
 }
 
 function prepareChartData(groups, period) {
+    if (!groups || !Array.isArray(groups)) {
+        return {
+            labels: [],
+            datasets: []
+        };
+    }
+
     const labels = [];
     const salesData = [];
     const profitData = [];
@@ -253,30 +267,24 @@ function prepareChartData(groups, period) {
         let label;
         switch(period) {
             case 'daily':
-                label = group.periodStart.toLocaleDateString('en-IN', { 
-                    day: 'numeric', 
-                    month: 'short' 
-                });
+                label = formatDateForDisplay(group.periodStart, {day: 'numeric', month: 'short'});
                 break;
-                
             case 'weekly':
                 label = `Week ${getWeekNumber(group.periodStart)}`;
                 break;
-                
             case 'monthly':
-                label = group.periodStart.toLocaleDateString('en-IN', { 
-                    month: 'short' 
-                });
+                label = formatDateForDisplay(group.periodStart, {month: 'short'});
                 break;
-                
             case 'yearly':
                 label = group.periodStart.getFullYear().toString();
                 break;
+            default:
+                label = group.periodKey;
         }
         
         labels.push(label);
-        salesData.push(group.totalSales);
-        profitData.push(group.totalProfit);
+        salesData.push(group.totalSales || 0);
+        profitData.push(group.totalProfit || 0);
     });
     
     return {
@@ -301,6 +309,8 @@ function prepareChartData(groups, period) {
 }
 
 function renderChart(chartData) {
+    if (!elements.salesChart) return;
+
     if (salesChart) {
         salesChart.destroy();
     }
@@ -362,67 +372,62 @@ function getPeriodLabel(period) {
 }
 
 function getTooltipTitle(context, period) {
-    const index = context[0].dataIndex;
-    const group = reportData[index]; // Assuming reportData is accessible
+    if (!reportData || !Array.isArray(reportData)) return '';
     
+    const index = context[0].dataIndex;
+    const group = reportData[index];
+    if (!group) return '';
+
     switch(period) {
         case 'daily':
-            return group.periodStart.toLocaleDateString('en-IN', { 
-                weekday: 'long', 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
-            });
-            
+            return formatDateForDisplay(group.periodStart, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'});
         case 'weekly':
-            return `Week ${getWeekNumber(group.periodStart)} (${group.periodStart.toLocaleDateString('en-IN', { 
-                day: 'numeric', 
-                month: 'short' 
-            })} - ${group.periodEnd.toLocaleDateString('en-IN', { 
-                day: 'numeric', 
-                month: 'short' 
-            })})`;
-            
+            return `Week ${getWeekNumber(group.periodStart)} (${formatDateForDisplay(group.periodStart, {day: 'numeric', month: 'short'})} - ${formatDateForDisplay(group.periodEnd, {day: 'numeric', month: 'short'})})`;
         case 'monthly':
-            return group.periodStart.toLocaleDateString('en-IN', { 
-                month: 'long', 
-                year: 'numeric' 
-            });
-            
+            return formatDateForDisplay(group.periodStart, {month: 'long', year: 'numeric'});
         case 'yearly':
             return group.periodStart.getFullYear().toString();
-            
         default:
             return group.periodKey;
     }
 }
 
 function renderTransactionsTable(transactions) {
+    if (!elements.reportData) return;
+
     let html = '';
     
-    transactions.forEach(transaction => {
-        html += `
-            <tr>
-                <td>${transaction.siNo}</td>
-                <td>${transaction.dateString}</td>
-                <td>${transaction.customerName}</td>
-                <td>₹${transaction.totalAmount.toFixed(2)}</td>
-                <td>₹${transaction.totalProfit.toFixed(2)}</td>
-                <td>${transaction.paymentMode}</td>
-            </tr>
-        `;
-    });
+    if (transactions && Array.isArray(transactions)) {
+        transactions.forEach(transaction => {
+            if (!transaction) return;
+            
+            html += `
+                <tr>
+                    <td>${transaction.siNo || ''}</td>
+                    <td>${transaction.dateString || formatDateForDisplay(new Date(transaction.date))}</td>
+                    <td>${transaction.customerName || ''}</td>
+                    <td>₹${(transaction.totalAmount || 0).toFixed(2)}</td>
+                    <td>₹${(transaction.totalProfit || 0).toFixed(2)}</td>
+                    <td>${transaction.paymentMode || ''}</td>
+                </tr>
+            `;
+        });
+    }
     
     elements.reportData.innerHTML = html || '<tr><td colspan="6">No transactions found</td></tr>';
 }
 
 function filterTransactions() {
+    if (!elements.reportData || !elements.paymentFilter || !elements.searchInput) return;
+    
     const paymentFilter = elements.paymentFilter.value.toLowerCase();
     const searchTerm = elements.searchInput.value.toLowerCase();
     
     const rows = elements.reportData.querySelectorAll('tr');
     
     rows.forEach(row => {
+        if (!row.cells || row.cells.length < 6) return;
+        
         const payment = row.cells[5].textContent.toLowerCase();
         const rowText = row.textContent.toLowerCase();
         
@@ -434,6 +439,8 @@ function filterTransactions() {
 }
 
 function showLoading() {
+    if (!elements.reportData) return;
+    
     elements.reportData.innerHTML = `
         <tr>
             <td colspan="6" class="loading-spinner">
@@ -444,9 +451,26 @@ function showLoading() {
     `;
 }
 
-// Helper functions
-function getWeekNumber(date) {
-    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-    const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
-    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+function showError(message) {
+    if (!elements.reportData) return;
+    
+    elements.reportData.innerHTML = `
+        <tr>
+            <td colspan="6" class="error-message">
+                ${message || 'An error occurred'}
+                <button onclick="loadReport()">Retry</button>
+            </td>
+        </tr>
+    `;
+}
+
+// Utility function for debouncing
+function debounce(func, wait) {
+    let timeout;
+    return function() {
+        const context = this;
+        const args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
 }
