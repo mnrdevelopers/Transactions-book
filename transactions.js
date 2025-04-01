@@ -177,19 +177,23 @@ function parseDate(dateValue) {
     
     // If it's a string, try to parse it
     if (typeof dateValue === 'string') {
-        // Try ISO format (from Google Sheets)
-        if (dateValue.includes('-')) {
-            const parts = dateValue.split('-');
-            if (parts.length === 3) {
-                // Format: YYYY-MM-DD
-                return new Date(parts[0], parts[1] - 1, parts[2]);
-            }
-        }
-        // Try DD/MM/YYYY format
-        else if (dateValue.includes('/')) {
+        // Try DD/MM/YYYY format (common in India)
+        if (dateValue.includes('/')) {
             const parts = dateValue.split('/');
             if (parts.length === 3) {
-                return new Date(parts[2], parts[1] - 1, parts[0]);
+                // Check if it's likely DD/MM (not MM/DD)
+                if (parts[0] > 12) { // Day is >12, must be DD/MM
+                    return new Date(parts[2], parts[1] - 1, parts[0]);
+                }
+                // Otherwise assume it's MM/DD (American format)
+                return new Date(parts[2], parts[0] - 1, parts[1]);
+            }
+        }
+        // Try YYYY-MM-DD format (ISO format from Google Sheets)
+        else if (dateValue.includes('-')) {
+            const parts = dateValue.split('-');
+            if (parts.length === 3) {
+                return new Date(parts[0], parts[1] - 1, parts[2]);
             }
         }
         // Try parsing as is
@@ -222,28 +226,26 @@ function filterTransactions() {
     const paymentFilter = elements.paymentFilter.value;
     
     filteredTransactions = allTransactions.filter(transaction => {
-        // Ensure all fields are strings before calling toLowerCase()
-        const siNo = String(transaction.siNo || "").toLowerCase();
-        const customerName = String(transaction.customerName || "").toLowerCase();
-        
         // Search filter
         const matchesSearch = 
-            siNo.includes(searchTerm) ||
-            customerName.includes(searchTerm) ||
+            String(transaction.siNo || "").toLowerCase().includes(searchTerm) ||
+            String(transaction.customerName || "").toLowerCase().includes(searchTerm) ||
             transaction.items.some(item => 
                 String(item.itemName || "").toLowerCase().includes(searchTerm)
             );
         
-        // Date filter
-        const matchesDate = dateFilter === "" || transaction.dateString === dateFilter;
+        // Date filter - compare formatted dates
+        const matchesDate = dateFilter === "" || 
+                          formatDateForDisplay(transaction.date) === dateFilter;
         
         // Payment filter
-        const matchesPayment = paymentFilter === "" || transaction.paymentMode === paymentFilter;
+        const matchesPayment = paymentFilter === "" || 
+                             transaction.paymentMode === paymentFilter;
         
         return matchesSearch && matchesDate && matchesPayment;
     });
     
-    // Maintain sorting by date (newest first)
+    // Sort by date (newest first)
     filteredTransactions.sort((a, b) => b.date - a.date);
     
     totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
@@ -340,7 +342,9 @@ function getDateHeaderText(date) {
     } else if (transactionDate.getTime() === yesterday.getTime()) {
         return "Yesterday";
     } else {
-        return formatDateHeader(transactionDate);
+        // Use Indian date format with weekday
+        const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+        return transactionDate.toLocaleDateString('en-IN', options);
     }
 }
 
@@ -357,6 +361,7 @@ function formatDateForDisplay(date) {
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const year = d.getFullYear();
     
+    // Use DD/MM/YYYY format (Indian standard)
     return `${day}/${month}/${year}`;
 }
 
