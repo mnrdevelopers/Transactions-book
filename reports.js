@@ -1,3 +1,6 @@
+// At the top of reports.js
+import { formatDateForDisplay, parseDate, processSheetData } from './utils.js';
+
 // Reports Configuration
 let currentPeriod = 'daily';
 let currentDate = new Date();
