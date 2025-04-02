@@ -67,6 +67,18 @@ if (document.getElementById("transaction-form")) {
     
     return sequenceData;
 }
+    
+function updateSINoDisplay() {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const sequenceNo = document.getElementById("sequence-no").value.padStart(3, '0');
+    document.getElementById("si-no-display").textContent = `${month}${day}-RK-${sequenceNo}`;
+}
+
+// Call this after initializing the sequence number
+currentSequenceData = initializeSequenceNumber();
+updateSINoDisplay();
 
     // Initialize form and sequence number
     let currentSequenceData = initializeSequenceNumber();
@@ -79,6 +91,23 @@ if (document.getElementById("transaction-form")) {
     });
     document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
     setupPrintButton();
+
+    function incrementSequenceNumber() {
+    const sequenceData = loadSequenceData();
+    sequenceData.lastUsedSequence = sequenceData.nextSequence;
+    sequenceData.nextSequence = sequenceData.nextSequence + 1;
+    saveSequenceData(sequenceData);
+    
+    // Update the display
+    document.getElementById("sequence-no").value = sequenceData.nextSequence;
+    updateSINoDisplay();
+    
+    // Update customer name
+    const customerNo = String(sequenceData.nextSequence).padStart(2, '0');
+    document.getElementById("customer-name").value = `RK-CUSTOMER-${customerNo}`;
+    
+    return sequenceData;
+}
 
     // ======================
     // DAILY STATS FUNCTIONS
