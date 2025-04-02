@@ -282,6 +282,9 @@ if (document.getElementById("transaction-form")) {
 }
     
    function displayBillPreview(data) {
+    // Update template date as well
+    document.getElementById("template-date").textContent = data.date;
+       
     // Hide the template
     document.getElementById("bill-template").style.display = "none";
     
