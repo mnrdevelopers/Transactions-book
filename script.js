@@ -5,23 +5,14 @@ if (document.getElementById("transaction-form")) {
     const SEQUENCE_STORAGE_KEY = 'rkFashionsBillSequenceData';
     
     // Initialize date display
-   function updateCurrentDate() {
     const today = new Date();
     const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD
     const day = String(today.getDate()).padStart(2, '0');
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const currentDateKey = `${day}${month}`;
-    
     document.getElementById("date").textContent = formattedDate;
     document.getElementById("day-month-part").textContent = currentDateKey;
-    document.getElementById("template-date").textContent = formattedDate;
-    
-    return { formattedDate, currentDateKey };
-}
 
-// Call this when initializing and whenever needed
-updateCurrentDate();
-    
     // Sequence number management
     function loadSequenceData() {
         const savedData = localStorage.getItem(SEQUENCE_STORAGE_KEY);
