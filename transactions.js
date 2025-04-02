@@ -171,26 +171,28 @@ function processSheetData(sheetData) {
 
 // Update the parseDate function to:
 function parseDate(dateValue) {
-    // If it's already a Date object, return it
-    if (dateValue instanceof Date && !isNaN(dateValue)) {
-        dateValue.setHours(0, 0, 0, 0); // Normalize time to midnight
-        return dateValue;
+    if (dateValue instanceof Date) return dateValue;
+    
+    if (typeof dateValue === 'string') {
+        // Try ISO format (YYYY-MM-DD)
+        let date = new Date(dateValue);
+        if (!isNaN(date.getTime())) return date;
+        
+        // Try DD/MM/YYYY format
+        const dd_mm_yyyy = dateValue.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        if (dd_mm_yyyy) {
+            return new Date(`${dd_mm_yyyy[3]}-${dd_mm_yyyy[2]}-${dd_mm_yyyy[1]}`);
+        }
+        
+        // Try YYYY-MM-DD format (alternative)
+        const yyyy_mm_dd = dateValue.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if (yyyy_mm_dd) {
+            return new Date(`${yyyy_mm_dd[1]}-${yyyy_mm_dd[2]}-${yyyy_mm_dd[3]}`);
+        }
     }
     
-    // If it's in ISO format (YYYY-MM-DD)
-    if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
-        // Parse as local date without timezone conversion
-        const parts = dateValue.split('-');
-        const date = new Date(parts[0], parts[1] - 1, parts[2]);
-        date.setHours(0, 0, 0, 0); // Explicitly set to midnight
-        return date;
-    }
-    
-    // Fallback to current date (only if no valid date found)
     console.warn("Could not parse date:", dateValue);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
+    return new Date();
 }
 
 function updateDateFilter() {
