@@ -178,8 +178,8 @@ function parseDate(dateValue) {
     
     // If it's in ISO format (YYYY-MM-DD)
     if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
-        const parts = dateValue.split('-');
-        return new Date(parts[0], parts[1] - 1, parts[2]);
+        // Create date in local timezone by adding 'T00:00'
+        return new Date(dateValue + 'T00:00');
     }
     
     // Fallback to current date
@@ -338,9 +338,10 @@ function formatDateForDisplay(date) {
     const d = new Date(date);
     if (isNaN(d)) return "Invalid Date";
     
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
+    // Use UTC methods to avoid timezone issues
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const year = d.getUTCFullYear();
     
     // Use DD/MM/YYYY format (Indian standard)
     return `${day}/${month}/${year}`;
