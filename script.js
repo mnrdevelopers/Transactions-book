@@ -13,7 +13,6 @@ if (document.getElementById("transaction-form")) {
     
     document.getElementById("date").textContent = formattedDate;
     document.getElementById("day-month-part").textContent = currentDateKey;
-}
 
     // Sequence number management
     function loadSequenceData() {
