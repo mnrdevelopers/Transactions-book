@@ -4,20 +4,14 @@ if (document.getElementById("transaction-form")) {
     const DAILY_STATS_KEY = 'rkFashionsDailyStats';
     const SEQUENCE_STORAGE_KEY = 'rkFashionsBillSequenceData';
     
-    function getCurrentDate() {
+    // Initialize date display
     const today = new Date();
-    return {
-        formattedDate: today.toISOString().split('T')[0], // YYYY-MM-DD
-        day: String(today.getDate()).padStart(2, '0'),
-        month: String(today.getMonth() + 1).padStart(2, '0'),
-        currentDateKey: `${String(today.getDate()).padStart(2, '0')}${String(today.getMonth() + 1).padStart(2, '0')}`
-    };
-}
-
-// Initialize date display
-const currentDate = getCurrentDate();
-document.getElementById("date").textContent = currentDate.formattedDate;
-document.getElementById("day-month-part").textContent = currentDate.currentDateKey;
+    const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const currentDateKey = `${day}${month}`;
+    document.getElementById("date").textContent = formattedDate;
+    document.getElementById("day-month-part").textContent = currentDateKey;
 
     // Sequence number management
     function loadSequenceData() {
@@ -167,29 +161,10 @@ document.getElementById("day-month-part").textContent = currentDate.currentDateK
     }
     
     function startAutoRefresh() {
-    updateCurrentTime();
-    setInterval(() => {
         updateCurrentTime();
-        
-        // Check if date has changed
-        const newDate = getCurrentDate();
-        if (document.getElementById("date").textContent !== newDate.formattedDate) {
-            // Reset sequence number for new day
-            const sequenceData = {
-                date: newDate.currentDateKey,
-                lastUsedSequence: 0,
-                nextSequence: 1
-            };
-            saveSequenceData(sequenceData);
-            document.getElementById("sequence-no").value = 1;
-            
-            // Update date displays
-            document.getElementById("date").textContent = newDate.formattedDate;
-            document.getElementById("day-month-part").textContent = newDate.currentDateKey;
-        }
-    }, 60000); // Check every minute
-}
-    
+        setInterval(updateCurrentTime, 60000); // Update every minute
+    }
+
     function addItem() {
         const itemsContainer = document.getElementById("items-container");
         const newItem = document.createElement("div");
@@ -267,7 +242,6 @@ document.getElementById("day-month-part").textContent = currentDate.currentDateK
     }
 
   function prepareBillData() {
-    const currentDate = getCurrentDate();
     const items = [];
     document.querySelectorAll(".item-row").forEach(row => {
         items.push({
@@ -284,8 +258,8 @@ document.getElementById("day-month-part").textContent = currentDate.currentDateK
     
     return {
         storeName: "RK Fashions",
-        date: currentDate.formattedDate,
-        siNo: `${currentDate.currentDateKey}-${sequenceNo}`,
+        date: document.getElementById("date").textContent,
+        siNo: `${dayMonthPart}-${sequenceNo}`,
         customerName: document.getElementById("customer-name").value,
         items: items,
         paymentMode: document.getElementById("payment-mode").value,
