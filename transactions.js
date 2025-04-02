@@ -169,7 +169,7 @@ function processSheetData(sheetData) {
     return transactions;
 }
 
-// Update the parseDate function to:
+// Update the parseDate function to properly handle different date formats
 function parseDate(dateValue) {
     // If it's already a Date object, return it
     if (dateValue instanceof Date && !isNaN(dateValue)) {
@@ -182,7 +182,24 @@ function parseDate(dateValue) {
         return new Date(parts[0], parts[1] - 1, parts[2]);
     }
     
-    // Fallback to current date
+    // Handle Excel serial date numbers (common in Google Sheets)
+    if (typeof dateValue === 'number' && dateValue > 0)) {
+        const excelEpoch = new Date(1899, 11, 30); // Excel's epoch is Dec 31, 1899
+        const days = Math.floor(dateValue);
+        const ms = Math.round((dateValue - days) * 86400 * 1000);
+        const result = new Date(excelEpoch.getTime());
+        result.setDate(result.getDate() + days);
+        result.setTime(result.getTime() + ms);
+        return result;
+    }
+    
+    // Handle DD/MM/YYYY format (common in India)
+    if (typeof dateValue === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(dateValue)) {
+        const parts = dateValue.split('/');
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    
+    // Fallback to current date with warning
     console.warn("Could not parse date:", dateValue);
     return new Date();
 }
