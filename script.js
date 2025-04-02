@@ -81,18 +81,35 @@ currentSequenceData = initializeSequenceNumber();
 updateSINoDisplay();
 
     // Initialize form and sequence number
-    let currentSequenceData = initializeSequenceNumber();
-    addItem();
-    document.getElementById("add-item").addEventListener("click", addItem);
-    document.getElementById("items-container").addEventListener("input", function(e) {
-        if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
-            calculateTotals();
-        }
-    });
-    document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
-    setupPrintButton();
+   // Initialize form and sequence number
+let currentSequenceData = initializeSequenceNumber();
+updateSINoDisplay();  // Add this line to display the initial SI No
+addItem();
 
-    function incrementSequenceNumber() {
+// Update initializeSequenceNumber() to ensure it returns the correct data
+function initializeSequenceNumber() {
+    const sequenceData = loadSequenceData();
+    const sequenceNo = String(sequenceData.nextSequence).padStart(3, '0');
+    
+    // Generate MMDD-RK-001 format
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const siNo = `${month}${day}-RK-${sequenceNo}`;
+    
+    // Generate customer name RK-CUSTOMER-01 format
+    const customerNo = String(sequenceData.nextSequence).padStart(2, '0');
+    const customerName = `RK-CUSTOMER-${customerNo}`;
+    
+    // Update the UI
+    document.getElementById("sequence-no").value = sequenceData.nextSequence;
+    document.getElementById("customer-name").value = customerName;
+    
+    return sequenceData;
+}
+
+// Update incrementSequenceNumber() to properly increment and update displays
+function incrementSequenceNumber() {
     const sequenceData = loadSequenceData();
     sequenceData.lastUsedSequence = sequenceData.nextSequence;
     sequenceData.nextSequence = sequenceData.nextSequence + 1;
@@ -108,7 +125,6 @@ updateSINoDisplay();
     
     return sequenceData;
 }
-
     // ======================
     // DAILY STATS FUNCTIONS
     // ======================
