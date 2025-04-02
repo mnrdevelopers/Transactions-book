@@ -295,6 +295,8 @@ function renderTransactions() {
             <td>${transaction.paymentMode}</td>
             <td class="actions">
                 <button class="view-btn" data-si-no="${transaction.siNo}">View</button>
+                <button class="edit-btn" data-si-no="${transaction.siNo}">Edit</button>
+                <button class="delete-btn" data-si-no="${transaction.siNo}">Delete</button>
             </td>
         `;
         elements.transactionsBody.appendChild(row);
@@ -364,6 +366,12 @@ function setupRowEventListeners() {
     document.querySelectorAll(".view-btn").forEach(btn => {
         btn.addEventListener("click", viewTransactionDetails);
     });
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+        btn.addEventListener("click", editTransaction);
+    });
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", deleteTransaction);
+    });
 }
 
 function viewTransactionDetails(e) {
@@ -422,6 +430,48 @@ function viewTransactionDetails(e) {
     
     // Show modal
     elements.viewModal.style.display = "block";
+}
+
+// Add new function to handle edit
+function editTransaction(e) {
+    const siNo = e.target.getAttribute("data-si-no");
+    const transaction = allTransactions.find(t => t.siNo === siNo);
+    
+    if (!transaction) return;
+    
+    // Store the transaction in localStorage and redirect to edit page
+    localStorage.setItem('editTransaction', JSON.stringify(transaction));
+    window.location.href = 'add-transaction.html?edit=' + encodeURIComponent(siNo);
+}
+
+// Add new function to handle delete
+function deleteTransaction(e) {
+    const siNo = e.target.getAttribute("data-si-no");
+    const transaction = allTransactions.find(t => t.siNo === siNo);
+    
+    if (!transaction) return;
+    
+    if (confirm(`Are you sure you want to delete transaction ${siNo}? This cannot be undone.`)) {
+        // Show loading
+        const row = e.target.closest('tr');
+        row.innerHTML = '<td colspan="8" class="loading-spinner"><div class="spinner"></div> Deleting...</td>';
+        
+        // Call backend to delete
+        fetch(`https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=delete&siNo=${encodeURIComponent(siNo)}`, {
+            method: "GET",
+            mode: "no-cors"
+        })
+        .then(() => {
+            // Remove from local data and refresh
+            allTransactions = allTransactions.filter(t => t.siNo !== siNo);
+            filterTransactions();
+        })
+        .catch(error => {
+            console.error("Delete failed:", error);
+            alert("Failed to delete transaction. Please try again.");
+            renderTransactions();
+        });
+    }
 }
 
 function goToPrevPage() {
