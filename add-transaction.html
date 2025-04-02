@@ -267,12 +267,12 @@
 </div>
 
         <div class="bill-details">
+<!-- Replace the existing bill number section with this: -->
 <div>
     <label for="si-no"><strong>Bill No:</strong></label>
     <div style="display: flex; align-items: center; gap: 5px;">
-        <span id="day-month-part" style="font-weight: bold; padding: 5px; background: #f0f0f0; border-radius: 4px;"></span>
-        <span>-</span>
-        <input type="number" id="sequence-no" min="1" style="width: 80px; padding: 5px;" placeholder="001">
+        <span id="si-no-display" style="font-weight: bold; padding: 5px; background: #f0f0f0; border-radius: 4px;"></span>
+        <input type="hidden" id="sequence-no">
     </div>
 </div>
     <p><strong>Date:</strong> <span id="date"></span></p>
