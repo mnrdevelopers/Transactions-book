@@ -65,9 +65,6 @@ function updateSummaryCards() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Get today's date in the same format used in the table
-    const todayString = formatDateForDisplay(today);
-    
     // Filter today's transactions - compare dates as Date objects
     const todayData = allTransactions.filter(t => {
         const transDate = new Date(t.date);
@@ -85,7 +82,7 @@ function updateSummaryCards() {
     elements.todayProfit.textContent = `₹${todayProfit.toFixed(2)}`;
     elements.todayTransactions.textContent = todayTransactionCount;
 
-    // Calculate 7-day average
+    // Calculate 7-day average - now using proper date comparisons
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // Include today + 6 previous days
     
@@ -99,6 +96,7 @@ function updateSummaryCards() {
     const dailyAvg = sevenDayTotal / 7;
     elements.dailyAverage.textContent = `₹${dailyAvg.toFixed(2)}`;
 }
+
 
 async function loadTransactions() {
     try {
@@ -340,9 +338,13 @@ function getDateHeaderText(date) {
     } else if (transactionDate.getTime() === yesterday.getTime()) {
         return "Yesterday";
     } else {
-        // Use Indian date format with weekday
-        const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-        return transactionDate.toLocaleDateString('en-IN', options);
+        // Use consistent Indian date format with weekday
+        return transactionDate.toLocaleDateString('en-IN', { 
+            weekday: 'long', 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+        });
     }
 }
 
@@ -352,15 +354,15 @@ function formatDateHeader(date) {
 }
 
 function formatDateForDisplay(date) {
-    const d = new Date(date);
-    if (isNaN(d)) return "Invalid Date";
-    
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    
-    // Use DD/MM/YYYY format (Indian standard)
-    return `${day}/${month}/${year}`;
+    try {
+        return date.toLocaleDateString('en-IN', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit' 
+        });
+    } catch {
+        return "Invalid Date";
+    }
 }
 
 function updatePagination() {
