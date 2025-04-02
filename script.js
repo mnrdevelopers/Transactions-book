@@ -167,10 +167,29 @@ document.getElementById("day-month-part").textContent = currentDate.currentDateK
     }
     
     function startAutoRefresh() {
+    updateCurrentTime();
+    setInterval(() => {
         updateCurrentTime();
-        setInterval(updateCurrentTime, 60000); // Update every minute
-    }
-
+        
+        // Check if date has changed
+        const newDate = getCurrentDate();
+        if (document.getElementById("date").textContent !== newDate.formattedDate) {
+            // Reset sequence number for new day
+            const sequenceData = {
+                date: newDate.currentDateKey,
+                lastUsedSequence: 0,
+                nextSequence: 1
+            };
+            saveSequenceData(sequenceData);
+            document.getElementById("sequence-no").value = 1;
+            
+            // Update date displays
+            document.getElementById("date").textContent = newDate.formattedDate;
+            document.getElementById("day-month-part").textContent = newDate.currentDateKey;
+        }
+    }, 60000); // Check every minute
+}
+    
     function addItem() {
         const itemsContainer = document.getElementById("items-container");
         const newItem = document.createElement("div");
@@ -248,6 +267,7 @@ document.getElementById("day-month-part").textContent = currentDate.currentDateK
     }
 
   function prepareBillData() {
+    const currentDate = getCurrentDate();
     const items = [];
     document.querySelectorAll(".item-row").forEach(row => {
         items.push({
@@ -264,8 +284,8 @@ document.getElementById("day-month-part").textContent = currentDate.currentDateK
     
     return {
         storeName: "RK Fashions",
-        date: document.getElementById("date").textContent,
-        siNo: `${dayMonthPart}-${sequenceNo}`,
+        date: currentDate.formattedDate,
+        siNo: `${currentDate.currentDateKey}-${sequenceNo}`,
         customerName: document.getElementById("customer-name").value,
         items: items,
         paymentMode: document.getElementById("payment-mode").value,
