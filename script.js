@@ -17,27 +17,33 @@ if (document.getElementById("transaction-form")) {
 
     // Sequence number management
     function loadSequenceData() {
-        const savedData = localStorage.getItem(SEQUENCE_STORAGE_KEY);
-        if (!savedData) {
-            return {
-                date: currentDateKey,
-                lastUsedSequence: 1,
-                nextSequence: 1
-            };
-        }
-        
-        const data = JSON.parse(savedData);
-        
-        // Reset if it's a new day
-        if (data.date !== currentDateKey) {
-            return {
-                date: currentDateKey,
-                lastUsedSequence: 0,
-                nextSequence: 1
-            };
-        }
-        
-        return data;
+    const savedData = localStorage.getItem(SEQUENCE_STORAGE_KEY);
+    const today = new Date();
+    const currentDay = String(today.getDate()).padStart(2, '0');
+    const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
+    const currentDateKey = `${currentDay}${currentMonth}`;
+    
+    // If no saved data, initialize for current date
+    if (!savedData) {
+        return {
+            date: currentDateKey,
+            lastUsedSequence: 0,
+            nextSequence: 1
+        };
+    }
+    
+    const data = JSON.parse(savedData);
+    
+    // Reset if it's a new day
+    if (data.date !== currentDateKey) {
+        return {
+            date: currentDateKey,
+            lastUsedSequence: 0,
+            nextSequence: 1
+        };
+    }
+    
+    return data;
     }
 
     function saveSequenceData(data) {
@@ -150,36 +156,50 @@ if (document.getElementById("transaction-form")) {
         return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     }
     
-  function updateCurrentTime() {
+function updateCurrentTime() {
     // Update time display
     document.getElementById("current-time").textContent = 
         new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
-    // Check if day changed
+    // Get current date components
     const today = new Date();
-    const newFormattedDate = today.toISOString().split('T')[0];
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const newCurrentDateKey = `${day}${month}`;
+    const currentDay = String(today.getDate()).padStart(2, '0');
+    const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
+    const currentYear = today.getFullYear();
+    const newFormattedDate = `${currentYear}-${currentMonth}-${currentDay}`;
+    const newCurrentDateKey = `${currentDay}${currentMonth}`;
     
-    // Update date display if it's different
-    if (document.getElementById("date").textContent !== newFormattedDate) {
+    // Get displayed date components
+    const displayedDate = document.getElementById("date").textContent;
+    const displayedDateKey = document.getElementById("day-month-part").textContent;
+    
+    // Check if date has changed (either day or month)
+    if (displayedDate !== newFormattedDate || displayedDateKey !== newCurrentDateKey) {
+        // Update date displays
         document.getElementById("date").textContent = newFormattedDate;
         document.getElementById("day-month-part").textContent = newCurrentDateKey;
-    }
-    
-    const savedStats = localStorage.getItem(DAILY_STATS_KEY);
-    if (savedStats && JSON.parse(savedStats).date !== getTodayDateString()) {
-        resetDailyStats();
+        document.getElementById("template-date").textContent = newFormattedDate;
         
-        // Also reset sequence number for new day
-        currentSequenceData = {
-            date: newCurrentDateKey,
-            lastUsedSequence: 0,
-            nextSequence: 1
-        };
-        saveSequenceData(currentSequenceData);
-        document.getElementById("sequence-no").value = currentSequenceData.nextSequence;
+        // Reset sequence number if date changed
+        const sequenceData = loadSequenceData();
+        if (sequenceData.date !== newCurrentDateKey) {
+            const newSequenceData = {
+                date: newCurrentDateKey,
+                lastUsedSequence: 0,
+                nextSequence: 1
+            };
+            saveSequenceData(newSequenceData);
+            document.getElementById("sequence-no").value = newSequenceData.nextSequence;
+        }
+        
+        // Reset daily stats if date changed
+        const savedStats = localStorage.getItem(DAILY_STATS_KEY);
+        if (savedStats) {
+            const stats = JSON.parse(savedStats);
+            if (stats.date !== newFormattedDate) {
+                resetDailyStats();
+            }
+        }
     }
 }
     
