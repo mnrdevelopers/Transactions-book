@@ -343,16 +343,15 @@ function formatDateHeader(date) {
 }
 
 function formatDateForDisplay(date) {
-    const d = new Date(date);
-    if (isNaN(d)) return "Invalid Date";
-    
-    // Always work with local date components
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    
-    // Use DD/MM/YYYY format (Indian standard)
-    return `${day}/${month}/${year}`;
+    try {
+        return date.toLocaleDateString('en-IN', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit' 
+        });
+    } catch {
+        return "Invalid Date";
+    }
 }
 
 function updatePagination() {
