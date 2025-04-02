@@ -148,17 +148,27 @@ if (document.getElementById("transaction-form")) {
         return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     }
     
-    function updateCurrentTime() {
-        document.getElementById("current-time").textContent = 
-            new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        // Check if day changed
-        const today = getTodayDateString();
-        const savedStats = localStorage.getItem(DAILY_STATS_KEY);
-        if (savedStats && JSON.parse(savedStats).date !== today) {
-            resetDailyStats();
-        }
+   function updateCurrentTime() {
+    // Update time display
+    document.getElementById("current-time").textContent = 
+        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    // Check if day changed
+    const today = new Date();
+    const newFormattedDate = today.toISOString().split('T')[0];
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const newDateKey = `${day}${month}`;
+    
+    // Update displayed date if it changed
+    document.getElementById("date").textContent = newFormattedDate;
+    document.getElementById("day-month-part").textContent = newDateKey;
+    
+    const savedStats = localStorage.getItem(DAILY_STATS_KEY);
+    if (savedStats && JSON.parse(savedStats).date !== getTodayDateString()) {
+        resetDailyStats();
     }
+}
     
     function startAutoRefresh() {
         updateCurrentTime();
