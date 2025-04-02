@@ -4,14 +4,20 @@ if (document.getElementById("transaction-form")) {
     const DAILY_STATS_KEY = 'rkFashionsDailyStats';
     const SEQUENCE_STORAGE_KEY = 'rkFashionsBillSequenceData';
     
-    // Initialize date display
+    function getCurrentDate() {
     const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const currentDateKey = `${day}${month}`;
-    document.getElementById("date").textContent = formattedDate;
-    document.getElementById("day-month-part").textContent = currentDateKey;
+    return {
+        formattedDate: today.toISOString().split('T')[0], // YYYY-MM-DD
+        day: String(today.getDate()).padStart(2, '0'),
+        month: String(today.getMonth() + 1).padStart(2, '0'),
+        currentDateKey: `${String(today.getDate()).padStart(2, '0')}${String(today.getMonth() + 1).padStart(2, '0')}`
+    };
+}
+
+// Initialize date display
+const currentDate = getCurrentDate();
+document.getElementById("date").textContent = currentDate.formattedDate;
+document.getElementById("day-month-part").textContent = currentDate.currentDateKey;
 
     // Sequence number management
     function loadSequenceData() {
