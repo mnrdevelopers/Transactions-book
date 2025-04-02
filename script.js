@@ -150,7 +150,7 @@ if (document.getElementById("transaction-form")) {
         return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     }
     
-   function updateCurrentTime() {
+  function updateCurrentTime() {
     // Update time display
     document.getElementById("current-time").textContent = 
         new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -160,15 +160,26 @@ if (document.getElementById("transaction-form")) {
     const newFormattedDate = today.toISOString().split('T')[0];
     const day = String(today.getDate()).padStart(2, '0');
     const month = String(today.getMonth() + 1).padStart(2, '0');
-    const newDateKey = `${day}${month}`;
+    const newCurrentDateKey = `${day}${month}`;
     
-    // Update displayed date if it changed
-    document.getElementById("date").textContent = newFormattedDate;
-    document.getElementById("day-month-part").textContent = newDateKey;
+    // Update date display if it's different
+    if (document.getElementById("date").textContent !== newFormattedDate) {
+        document.getElementById("date").textContent = newFormattedDate;
+        document.getElementById("day-month-part").textContent = newCurrentDateKey;
+    }
     
     const savedStats = localStorage.getItem(DAILY_STATS_KEY);
     if (savedStats && JSON.parse(savedStats).date !== getTodayDateString()) {
         resetDailyStats();
+        
+        // Also reset sequence number for new day
+        currentSequenceData = {
+            date: newCurrentDateKey,
+            lastUsedSequence: 0,
+            nextSequence: 1
+        };
+        saveSequenceData(currentSequenceData);
+        document.getElementById("sequence-no").value = currentSequenceData.nextSequence;
     }
 }
     
