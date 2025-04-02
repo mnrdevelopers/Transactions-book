@@ -14,117 +14,60 @@ if (document.getElementById("transaction-form")) {
     document.getElementById("day-month-part").textContent = currentDateKey;
 
     // Sequence number management
-  function loadSequenceData() {
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const currentDateKey = `${month}${day}`;
-    
-    const savedData = localStorage.getItem(SEQUENCE_STORAGE_KEY);
-    if (!savedData) {
-        return {
-            date: currentDateKey,
-            lastUsedSequence: 0,
-            nextSequence: 1
-        };
+    function loadSequenceData() {
+        const savedData = localStorage.getItem(SEQUENCE_STORAGE_KEY);
+        if (!savedData) {
+            return {
+                date: currentDateKey,
+                lastUsedSequence: 1,
+                nextSequence: 1
+            };
+        }
+        
+        const data = JSON.parse(savedData);
+        
+        // Reset if it's a new day
+        if (data.date !== currentDateKey) {
+            return {
+                date: currentDateKey,
+                lastUsedSequence: 0,
+                nextSequence: 1
+            };
+        }
+        
+        return data;
     }
-    
-    const data = JSON.parse(savedData);
-    
-    // Reset if it's a new day
-    if (data.date !== currentDateKey) {
-        return {
-            date: currentDateKey,
-            lastUsedSequence: 0,
-            nextSequence: 1
-        };
-    }
-    
-    return data;
-}
 
     function saveSequenceData(data) {
         localStorage.setItem(SEQUENCE_STORAGE_KEY, JSON.stringify(data));
     }
 
     function initializeSequenceNumber() {
-    const sequenceData = loadSequenceData();
-    const sequenceNo = String(sequenceData.nextSequence).padStart(3, '0');
-    
-    // Generate MMDD-RK-001 format
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const siNo = `${month}${day}-RK-${sequenceNo}`;
-    
-    // Generate customer name RK-CUSTOMER-01 format
-    const customerNo = String(sequenceData.nextSequence).padStart(2, '0');
-    const customerName = `RK-CUSTOMER-${customerNo}`;
-    
-    // Update the UI
-    document.getElementById("sequence-no").value = sequenceNo;
-    document.getElementById("customer-name").value = customerName;
-    
-    return sequenceData;
-}
-    
-function updateSINoDisplay() {
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const sequenceNo = document.getElementById("sequence-no").value.padStart(3, '0');
-    document.getElementById("si-no-display").textContent = `${month}${day}-RK-${sequenceNo}`;
-}
+        const sequenceData = loadSequenceData();
+        document.getElementById("sequence-no").value = sequenceData.nextSequence;
+        return sequenceData;
+    }
 
-// Call this after initializing the sequence number
-currentSequenceData = initializeSequenceNumber();
-updateSINoDisplay();
-
+    function incrementSequenceNumber() {
+        const sequenceData = loadSequenceData();
+        sequenceData.lastUsedSequence = sequenceData.nextSequence;
+        sequenceData.nextSequence = sequenceData.nextSequence + 1;
+        saveSequenceData(sequenceData);
+        return sequenceData;
+    }
+    
     // Initialize form and sequence number
-   // Initialize form and sequence number
-let currentSequenceData = initializeSequenceNumber();
-updateSINoDisplay();  // Add this line to display the initial SI No
-addItem();
+    let currentSequenceData = initializeSequenceNumber();
+    addItem();
+    document.getElementById("add-item").addEventListener("click", addItem);
+    document.getElementById("items-container").addEventListener("input", function(e) {
+        if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
+            calculateTotals();
+        }
+    });
+    document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
+    setupPrintButton();
 
-// Update initializeSequenceNumber() to ensure it returns the correct data
-function initializeSequenceNumber() {
-    const sequenceData = loadSequenceData();
-    const sequenceNo = String(sequenceData.nextSequence).padStart(3, '0');
-    
-    // Generate MMDD-RK-001 format
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const siNo = `${month}${day}-RK-${sequenceNo}`;
-    
-    // Generate customer name RK-CUSTOMER-01 format
-    const customerNo = String(sequenceData.nextSequence).padStart(2, '0');
-    const customerName = `RK-CUSTOMER-${customerNo}`;
-    
-    // Update the UI
-    document.getElementById("sequence-no").value = sequenceData.nextSequence;
-    document.getElementById("customer-name").value = customerName;
-    
-    return sequenceData;
-}
-
-// Update incrementSequenceNumber() to properly increment and update displays
-function incrementSequenceNumber() {
-    const sequenceData = loadSequenceData();
-    sequenceData.lastUsedSequence = sequenceData.nextSequence;
-    sequenceData.nextSequence = sequenceData.nextSequence + 1;
-    saveSequenceData(sequenceData);
-    
-    // Update the display
-    document.getElementById("sequence-no").value = sequenceData.nextSequence;
-    updateSINoDisplay();
-    
-    // Update customer name
-    const customerNo = String(sequenceData.nextSequence).padStart(2, '0');
-    document.getElementById("customer-name").value = `RK-CUSTOMER-${customerNo}`;
-    
-    return sequenceData;
-}
     // ======================
     // DAILY STATS FUNCTIONS
     // ======================
@@ -298,7 +241,7 @@ function incrementSequenceNumber() {
         return valid;
     }
 
-function prepareBillData() {
+  function prepareBillData() {
     const items = [];
     document.querySelectorAll(".item-row").forEach(row => {
         items.push({
@@ -310,15 +253,13 @@ function prepareBillData() {
         });
     });
     
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const dayMonthPart = document.getElementById("day-month-part").textContent;
     const sequenceNo = document.getElementById("sequence-no").value.padStart(3, '0');
     
     return {
         storeName: "RK Fashions",
         date: document.getElementById("date").textContent,
-        siNo: `${month}${day}-RK-${sequenceNo}`, // MMDD-RK-001 format
+        siNo: `${dayMonthPart}-${sequenceNo}`,
         customerName: document.getElementById("customer-name").value,
         items: items,
         paymentMode: document.getElementById("payment-mode").value,
