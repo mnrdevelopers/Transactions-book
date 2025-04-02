@@ -14,48 +14,60 @@ if (document.getElementById("transaction-form")) {
     document.getElementById("day-month-part").textContent = currentDateKey;
 
     // Sequence number management
-    function loadSequenceData() {
-        const savedData = localStorage.getItem(SEQUENCE_STORAGE_KEY);
-        if (!savedData) {
-            return {
-                date: currentDateKey,
-                lastUsedSequence: 1,
-                nextSequence: 1
-            };
-        }
-        
-        const data = JSON.parse(savedData);
-        
-        // Reset if it's a new day
-        if (data.date !== currentDateKey) {
-            return {
-                date: currentDateKey,
-                lastUsedSequence: 0,
-                nextSequence: 1
-            };
-        }
-        
-        return data;
+  function loadSequenceData() {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const currentDateKey = `${month}${day}`;
+    
+    const savedData = localStorage.getItem(SEQUENCE_STORAGE_KEY);
+    if (!savedData) {
+        return {
+            date: currentDateKey,
+            lastUsedSequence: 0,
+            nextSequence: 1
+        };
     }
+    
+    const data = JSON.parse(savedData);
+    
+    // Reset if it's a new day
+    if (data.date !== currentDateKey) {
+        return {
+            date: currentDateKey,
+            lastUsedSequence: 0,
+            nextSequence: 1
+        };
+    }
+    
+    return data;
+}
 
     function saveSequenceData(data) {
         localStorage.setItem(SEQUENCE_STORAGE_KEY, JSON.stringify(data));
     }
 
     function initializeSequenceNumber() {
-        const sequenceData = loadSequenceData();
-        document.getElementById("sequence-no").value = sequenceData.nextSequence;
-        return sequenceData;
-    }
-
-    function incrementSequenceNumber() {
-        const sequenceData = loadSequenceData();
-        sequenceData.lastUsedSequence = sequenceData.nextSequence;
-        sequenceData.nextSequence = sequenceData.nextSequence + 1;
-        saveSequenceData(sequenceData);
-        return sequenceData;
-    }
+    const sequenceData = loadSequenceData();
+    const sequenceNo = String(sequenceData.nextSequence).padStart(3, '0');
     
+    // Generate MMDD-RK-001 format
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const siNo = `${month}${day}-RK-${sequenceNo}`;
+    
+    // Generate customer name RK-CUSTOMER-01 format
+    const customerNo = String(sequenceData.nextSequence).padStart(2, '0');
+    const customerName = `RK-CUSTOMER-${customerNo}`;
+    
+    // Update the UI
+    document.getElementById("sequence-no").value = sequenceNo;
+    document.getElementById("customer-name").value = customerName;
+    
+    return sequenceData;
+}
+
     // Initialize form and sequence number
     let currentSequenceData = initializeSequenceNumber();
     addItem();
@@ -241,7 +253,7 @@ if (document.getElementById("transaction-form")) {
         return valid;
     }
 
-  function prepareBillData() {
+function prepareBillData() {
     const items = [];
     document.querySelectorAll(".item-row").forEach(row => {
         items.push({
@@ -253,13 +265,15 @@ if (document.getElementById("transaction-form")) {
         });
     });
     
-    const dayMonthPart = document.getElementById("day-month-part").textContent;
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
     const sequenceNo = document.getElementById("sequence-no").value.padStart(3, '0');
     
     return {
         storeName: "RK Fashions",
         date: document.getElementById("date").textContent,
-        siNo: `${dayMonthPart}-${sequenceNo}`,
+        siNo: `${month}${day}-RK-${sequenceNo}`, // MMDD-RK-001 format
         customerName: document.getElementById("customer-name").value,
         items: items,
         paymentMode: document.getElementById("payment-mode").value,
