@@ -173,6 +173,7 @@ function processSheetData(sheetData) {
 function parseDate(dateValue) {
     // If it's already a Date object, return it
     if (dateValue instanceof Date && !isNaN(dateValue)) {
+        dateValue.setHours(0, 0, 0, 0); // Normalize time to midnight
         return dateValue;
     }
     
@@ -180,12 +181,16 @@ function parseDate(dateValue) {
     if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
         // Parse as local date without timezone conversion
         const parts = dateValue.split('-');
-        return new Date(parts[0], parts[1] - 1, parts[2]);
+        const date = new Date(parts[0], parts[1] - 1, parts[2]);
+        date.setHours(0, 0, 0, 0); // Explicitly set to midnight
+        return date;
     }
     
     // Fallback to current date (only if no valid date found)
     console.warn("Could not parse date:", dateValue);
-    return new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
 }
 
 function updateDateFilter() {
@@ -339,10 +344,11 @@ function formatDateForDisplay(date) {
     const d = new Date(date);
     if (isNaN(d)) return "Invalid Date";
     
-    // Use local date methods (not UTC)
+    // Always work with local date components
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const year = d.getFullYear();
+    
     // Use DD/MM/YYYY format (Indian standard)
     return `${day}/${month}/${year}`;
 }
