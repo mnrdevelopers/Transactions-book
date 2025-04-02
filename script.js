@@ -550,10 +550,20 @@ function submitBill(data) {
     submitBtn.innerHTML = 'Processing...';
     submitBtn.disabled = true;
     
-    // Update local stats
-    const salesToAdd = data.items.length;
-    const profitToAdd = parseFloat(data.totalProfit) || 0;
-    updateLocalStats(salesToAdd, profitToAdd);
+    // Check if we're in edit mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const editSiNo = urlParams.get('edit');
+    
+    if (editSiNo) {
+        data.action = "update"; // Flag this as an update
+    }
+    
+    // Update local stats only for new transactions
+    if (!editSiNo) {
+        const salesToAdd = data.items.length;
+        const profitToAdd = parseFloat(data.totalProfit) || 0;
+        updateLocalStats(salesToAdd, profitToAdd);
+    }
     
     return new Promise((resolve, reject) => {
         fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
@@ -571,6 +581,13 @@ function submitBill(data) {
             document.getElementById("customer-name").value = customerName;
             document.getElementById("items-container").innerHTML = "";
             addItem();
+            
+            // If we were editing, redirect back to transactions
+            if (editSiNo) {
+                localStorage.removeItem('editTransaction');
+                window.location.href = 'transactions.html';
+            }
+            
             resolve();
         })
         .catch(error => {
