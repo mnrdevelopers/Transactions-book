@@ -439,9 +439,144 @@ function editTransaction(e) {
     
     if (!transaction) return;
     
-    // Store the transaction in localStorage and redirect to edit page
-    localStorage.setItem('editTransaction', JSON.stringify(transaction));
-    window.location.href = 'add-transaction.html?edit=' + encodeURIComponent(siNo);
+    // Create edit form
+    const editForm = document.createElement("div");
+    editForm.className = "edit-form";
+    editForm.innerHTML = `
+        <h3>Edit Transaction ${siNo}</h3>
+        
+        <div class="form-group">
+            <label>Customer Name:</label>
+            <input type="text" id="edit-customer-name" value="${transaction.customerName}">
+        </div>
+        
+        <div class="form-group">
+            <label>Payment Mode:</label>
+            <select id="edit-payment-mode">
+                <option value="Cash" ${transaction.paymentMode === 'Cash' ? 'selected' : ''}>Cash</option>
+                <option value="Card" ${transaction.paymentMode === 'Card' ? 'selected' : ''}>Card</option>
+                <option value="UPI" ${transaction.paymentMode === 'UPI' ? 'selected' : ''}>UPI</option>
+            </select>
+        </div>
+        
+        <h4>Items:</h4>
+        <div id="edit-items-container">
+            ${transaction.items.map((item, index) => `
+                <div class="edit-item-row" data-index="${index}">
+                    <input type="text" class="edit-item-name" value="${item.itemName}">
+                    <input type="number" class="edit-item-qty" value="${item.quantity}">
+                    <input type="number" class="edit-item-purchase" value="${item.purchasePrice}">
+                    <input type="number" class="edit-item-sale" value="${item.salePrice}">
+                    <button class="remove-edit-item">Remove</button>
+                </div>
+            `).join('')}
+        </div>
+        
+        <button type="button" id="add-edit-item">Add Item</button>
+        
+        <div class="form-actions">
+            <button type="button" id="cancel-edit">Cancel</button>
+            <button type="button" id="save-edit">Save Changes</button>
+        </div>
+    `;
+    
+    // Show in modal
+    elements.transactionDetails.innerHTML = "";
+    elements.transactionDetails.appendChild(editForm);
+    elements.viewModal.style.display = "block";
+    
+    // Add event listeners
+    document.getElementById("add-edit-item").addEventListener("click", addEditItem);
+    document.getElementById("cancel-edit").addEventListener("click", closeModal);
+    document.getElementById("save-edit").addEventListener("click", () => saveEditedTransaction(siNo));
+    
+    document.querySelectorAll(".remove-edit-item").forEach(btn => {
+        btn.addEventListener("click", function() {
+            this.parentElement.remove();
+        });
+    });
+}
+
+// Add function to add items in edit mode
+function addEditItem() {
+    const container = document.getElementById("edit-items-container");
+    const newItem = document.createElement("div");
+    newItem.className = "edit-item-row";
+    newItem.innerHTML = `
+        <input type="text" class="edit-item-name" placeholder="Item name">
+        <input type="number" class="edit-item-qty" placeholder="Qty" value="1">
+        <input type="number" class="edit-item-purchase" placeholder="Purchase price">
+        <input type="number" class="edit-item-sale" placeholder="Sale price">
+        <button class="remove-edit-item">Remove</button>
+    `;
+    container.appendChild(newItem);
+    
+    newItem.querySelector(".remove-edit-item").addEventListener("click", function() {
+        newItem.remove();
+    });
+}
+
+// Add function to save edited transaction
+function saveEditedTransaction(siNo) {
+    const customerName = document.getElementById("edit-customer-name").value;
+    const paymentMode = document.getElementById("edit-payment-mode").value;
+    
+    const items = [];
+    document.querySelectorAll(".edit-item-row").forEach(row => {
+        items.push({
+            itemName: row.querySelector(".edit-item-name").value,
+            quantity: parseFloat(row.querySelector(".edit-item-qty").value) || 0,
+            purchasePrice: parseFloat(row.querySelector(".edit-item-purchase").value) || 0,
+            salePrice: parseFloat(row.querySelector(".edit-item-sale").value) || 0
+        });
+    });
+    
+    if (!customerName) {
+        alert("Please enter customer name");
+        return;
+    }
+    
+    if (items.length === 0) {
+        alert("Please add at least one item");
+        return;
+    }
+    
+    // Calculate totals
+    const totalAmount = items.reduce((sum, item) => sum + (item.quantity * item.salePrice), 0);
+    const totalProfit = items.reduce((sum, item) => sum + (item.quantity * (item.salePrice - item.purchasePrice)), 0);
+    
+    // Prepare data for update
+    const updateData = {
+        action: "update",
+        siNo: siNo,
+        customerName: customerName,
+        paymentMode: paymentMode,
+        items: items,
+        totalAmount: totalAmount,
+        totalProfit: totalProfit
+    };
+    
+    // Show loading
+    showLoading();
+    
+    // Send to backend
+    fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(updateData)
+    })
+    .then(() => {
+        // Reload transactions
+        loadTransactions();
+        closeModal();
+    })
+    .catch(error => {
+        console.error("Error updating transaction:", error);
+        alert("Failed to update transaction. Please try again.");
+    });
 }
 
 // Add new function to handle delete
