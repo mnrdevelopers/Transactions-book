@@ -155,7 +155,7 @@ async function loadTransactions() {
 
 function processSheetData(sheetData) {
     // Check if sheetData is valid
-    if (!sheetData || !Array.isArray(sheetData) {
+    if (!sheetData || !Array.isArray(sheetData)) {
         console.error("Invalid sheet data received:", sheetData);
         return [];
     }
