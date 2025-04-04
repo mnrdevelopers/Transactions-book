@@ -467,5 +467,40 @@
 </style>
 
     <script src="script.js"></script>
+<script>
+    // At the start of the script.js code for add-transaction.html
+const urlParams = new URLSearchParams(window.location.search);
+const editSiNo = urlParams.get('edit');
+
+if (editSiNo) {
+    const transaction = JSON.parse(localStorage.getItem('editTransaction'));
+    if (transaction) {
+        // Populate form with transaction data
+        document.getElementById("customer-name").value = transaction.customerName;
+        document.getElementById("payment-mode").value = transaction.paymentMode;
+        
+        // Clear existing items
+        document.getElementById("items-container").innerHTML = "";
+        
+        // Add items from transaction
+        transaction.items.forEach(item => {
+            addItem();
+            const lastItem = document.querySelector(".item-row:last-child");
+            lastItem.querySelector(".item-name").value = item.itemName;
+            lastItem.querySelector(".quantity").value = item.quantity;
+            lastItem.querySelector(".purchase-price").value = item.purchasePrice;
+            lastItem.querySelector(".sale-price").value = item.salePrice;
+        });
+        
+        // Update totals
+        calculateTotals();
+        
+        // Update sequence number display (but keep it disabled for edits)
+        document.getElementById("sequence-no").value = transaction.siNo.split('-')[1];
+        document.getElementById("sequence-no").disabled = true;
+    }
+}
+</script>
+        
 </body>
 </html>
