@@ -234,37 +234,40 @@ function updateCurrentTime() {
     }
 
   function addItem() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const editSiNo = urlParams.get('edit');
-    
-    // Don't auto-add item if we're in edit mode
-    if (!editSiNo && document.querySelectorAll(".item-row").length === 0) {
-        const itemsContainer = document.getElementById("items-container");
-        const newItem = document.createElement("div");
-        newItem.className = "item-row";
-        newItem.innerHTML = `
-            <label>Item Name:</label>
-            <input type="text" class="item-name" required>
-            
-            <label>Quantity:</label>
-            <input type="number" class="quantity" min="1" value="1" required>
-            
-            <label>Purchase Price (₹):</label>
-            <input type="number" class="purchase-price" min="0" step="0.01" required>
-            
-            <label>Sale Price (₹):</label>
-            <input type="number" class="sale-price" min="0" step="0.01" required>
-            
-            <button type="button" class="remove-item">Remove</button>
-        `;
-        itemsContainer.appendChild(newItem);
-        
-        // Add remove event
-        newItem.querySelector(".remove-item").addEventListener("click", function() {
-            newItem.remove();
-            calculateTotals();
-        });
+    // Don't add empty item if we're in edit mode
+    if (editSiNo && document.querySelectorAll(".item-row").length > 0) {
+        return;
     }
+
+    const itemsContainer = document.getElementById("items-container");
+    const newItem = document.createElement("div");
+    newItem.className = "item-row";
+    newItem.innerHTML = `
+        <label>Item Name:</label>
+        <input type="text" class="item-name" required>
+        
+        <label>Quantity:</label>
+        <input type="number" class="quantity" min="1" value="1" required>
+        
+        <label>Purchase Price (₹):</label>
+        <input type="number" class="purchase-price" min="0" step="0.01" required>
+        
+        <label>Sale Price (₹):</label>
+        <input type="number" class="sale-price" min="0" step="0.01" required>
+        
+        <button type="button" class="remove-item">Remove</button>
+    `;
+    
+    itemsContainer.appendChild(newItem);
+    
+    // Add remove event
+    newItem.querySelector(".remove-item").addEventListener("click", function() {
+        newItem.remove();
+        calculateTotals();
+    });
+    
+    // Recalculate totals when new item is added
+    calculateTotals();
 }
 
     function calculateTotals() {
