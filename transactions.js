@@ -130,31 +130,60 @@ async function loadTransactions() {
         }
         
         const data = await response.json();
+        
+        // Check if we got valid data
+        if (!data || !Array.isArray(data)) {
+            throw new Error("Invalid data format received from server");
+        }
+        
         allTransactions = processSheetData(data);
-
+        
+        if (allTransactions.length === 0) {
+            console.warn("No transactions found in the data");
+        }
+        
         updateSummaryCards();
-        
-        // Update date filter options
         updateDateFilter();
-        
-        // Initial filter and render
         filterTransactions();
     } catch (error) {
         console.error("Error loading transactions:", error);
         showError("Failed to load transactions. Please try again.");
+    } finally {
+        hideLoading();
     }
 }
 
 function processSheetData(sheetData) {
+    // Check if sheetData is valid
+    if (!sheetData || !Array.isArray(sheetData) {
+        console.error("Invalid sheet data received:", sheetData);
+        return [];
+    }
+
     const transactionsMap = new Map();
     
-    // Skip header row if it exists
-    const startRow = sheetData[0][0] === "Store Name" ? 1 : 0;
+    // Skip header row if it exists (check if first row contains header labels)
+    const startRow = sheetData.length > 0 && sheetData[0].length > 2 && 
+                    sheetData[0][0] === "Store Name" && 
+                    sheetData[0][1] === "Date" && 
+                    sheetData[0][2] === "SI No" ? 1 : 0;
     
     for (let i = startRow; i < sheetData.length; i++) {
         const row = sheetData[i];
-        const siNo = String(row[2] || "").trim(); // Ensure SI No is a string
-        const date = parseDate(row[1]); // Parse date properly
+        
+        // Skip empty or invalid rows
+        if (!row || !Array.isArray(row) || row.length < 11) {
+            console.warn("Skipping invalid row:", row);
+            continue;
+        }
+
+        const siNo = String(row[2] || "").trim();
+        if (!siNo) {
+            console.warn("Skipping row with empty SI No:", row);
+            continue;
+        }
+
+        const date = parseDate(row[1]);
         
         if (!transactionsMap.has(siNo)) {
             transactionsMap.set(siNo, {
@@ -170,14 +199,16 @@ function processSheetData(sheetData) {
             });
         }
         
-        // Add item to transaction
-        transactionsMap.get(siNo).items.push({
-            itemName: String(row[4] || ""),
-            quantity: parseFloat(row[5]) || 0,
-            purchasePrice: parseFloat(row[6]) || 0,
-            salePrice: parseFloat(row[7]) || 0,
-            itemTotal: (parseFloat(row[5]) || 0) * (parseFloat(row[7]) || 0)
-        });
+        // Add item to transaction only if we have required fields
+        if (row[4] && row[5] && row[7]) { // itemName, quantity, salePrice
+            transactionsMap.get(siNo).items.push({
+                itemName: String(row[4] || ""),
+                quantity: parseFloat(row[5]) || 0,
+                purchasePrice: parseFloat(row[6]) || 0,
+                salePrice: parseFloat(row[7]) || 0,
+                itemTotal: (parseFloat(row[5]) || 0) * (parseFloat(row[7]) || 0)
+            });
+        }
     }
     
     // Convert to array and sort by date (newest first)
@@ -187,9 +218,11 @@ function processSheetData(sheetData) {
     return transactions;
 }
 
-// Update the parseDate function to:
+// Update the parseDate function to be more robust
 function parseDate(dateValue) {
     if (dateValue instanceof Date) return dateValue;
+    
+    if (!dateValue) return new Date(); // Return current date if no date provided
     
     if (typeof dateValue === 'string') {
         // Try ISO format (YYYY-MM-DD)
@@ -210,7 +243,7 @@ function parseDate(dateValue) {
     }
     
     console.warn("Could not parse date:", dateValue);
-    return new Date();
+    return new Date(); // Return current date as fallback
 }
 
 function updateDateFilter() {
