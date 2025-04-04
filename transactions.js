@@ -439,6 +439,13 @@ function editTransaction(e) {
     
     if (!transaction) return;
     
+    // Store the transaction in localStorage for the edit page
+    localStorage.setItem('editTransaction', JSON.stringify(transaction));
+    
+    // Redirect to add-transaction.html with edit parameter
+    window.location.href = `add-transaction.html?edit=${encodeURIComponent(siNo)}`;
+}
+    
     // Create edit form
     const editForm = document.createElement("div");
     editForm.className = "edit-form";
@@ -554,7 +561,7 @@ function saveEditedTransaction(siNo, originalTransaction) {
     const totalAmount = items.reduce((sum, item) => sum + (item.quantity * item.salePrice), 0);
     const totalProfit = items.reduce((sum, item) => sum + (item.quantity * (item.salePrice - item.purchasePrice)), 0);
     
-    // Prepare data for update - preserve original date if not changed
+    // Prepare data for update
     const updateData = {
         action: "update",
         siNo: siNo,
@@ -563,7 +570,8 @@ function saveEditedTransaction(siNo, originalTransaction) {
         paymentMode: paymentMode,
         items: items,
         totalAmount: totalAmount,
-        totalProfit: totalProfit
+        totalProfit: totalProfit,
+        storeName: "RK Fashions" // Ensure store name is consistent
     };
     
     // Show loading
