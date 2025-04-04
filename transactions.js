@@ -54,9 +54,16 @@ function setupEventListeners() {
     elements.prevBtn.addEventListener("click", goToPrevPage);
     elements.nextBtn.addEventListener("click", goToNextPage);
     document.querySelector(".close").addEventListener("click", closeModal);
-    elements.summaryRangeFilter.addEventListener("change", updateSummaryCards);
-    elements.customDateApply.addEventListener("click", updateSummaryCards);
-}
+
+elements.summaryRangeFilter.addEventListener("change", function() {
+    const customDateRange = document.getElementById("custom-date-range");
+    if (this.value === "custom") {
+        customDateRange.style.display = "flex";
+    } else {
+        customDateRange.style.display = "none";
+        updateSummaryCards();
+    }
+});
 
 function updateSummaryCards() {
     if (allTransactions.length === 0) {
