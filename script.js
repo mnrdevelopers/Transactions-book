@@ -296,40 +296,20 @@ function updateCurrentTime() {
         });
     });
     
-    const urlParams = new URLSearchParams(window.location.search);
-    const editSiNo = urlParams.get('edit');
+    const dayMonthPart = document.getElementById("day-month-part").textContent;
+    const sequenceNo = document.getElementById("sequence-no").value.padStart(3, '0');
     
-    if (editSiNo) {
-        // For edits, use the original transaction data
-        const transaction = JSON.parse(localStorage.getItem('editTransaction'));
-        return {
-            storeName: "RK Fashions",
-            date: transaction.date,
-            siNo: transaction.siNo, // Use original SI No
-            customerName: document.getElementById("customer-name").value,
-            items: items,
-            paymentMode: document.getElementById("payment-mode").value,
-            totalAmount: document.getElementById("total-amount").value,
-            totalProfit: document.getElementById("total-profit").value,
-            action: "update" // Flag this as an update
-        };
-    } else {
-        // For new transactions, generate new SI No
-        const dayMonthPart = document.getElementById("day-month-part").textContent;
-        const sequenceNo = document.getElementById("sequence-no").value.padStart(3, '0');
-        
-        return {
-            storeName: "RK Fashions",
-            date: document.getElementById("date").textContent,
-            siNo: `${dayMonthPart}-${sequenceNo}`,
-            customerName: document.getElementById("customer-name").value,
-            items: items,
-            paymentMode: document.getElementById("payment-mode").value,
-            totalAmount: document.getElementById("total-amount").value,
-            totalProfit: document.getElementById("total-profit").value
-        };
-    }
-  }
+    return {
+        storeName: "RK Fashions",
+        date: document.getElementById("date").textContent,
+        siNo: `${dayMonthPart}-${sequenceNo}`,
+        customerName: document.getElementById("customer-name").value,
+        items: items,
+        paymentMode: document.getElementById("payment-mode").value,
+        totalAmount: document.getElementById("total-amount").value,
+        totalProfit: document.getElementById("total-profit").value
+    };
+}
     
    function displayBillPreview(data) {
     // Update template date as well
