@@ -469,7 +469,7 @@
     <script src="script.js"></script>
 
         <script>
-// Modify the edit transaction section
+// Handle edit mode when page loads
 document.addEventListener("DOMContentLoaded", function() {
     const urlParams = new URLSearchParams(window.location.search);
     const editSiNo = urlParams.get('edit');
@@ -497,19 +497,38 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById("customer-name").value = transaction.customerName;
             document.getElementById("payment-mode").value = transaction.paymentMode;
             
-          // Clear existing items first
-    document.getElementById("items-container").innerHTML = "";
-    
-    // Add items only once
-    transaction.items.forEach(item => {
-        addItem();
-        const items = document.querySelectorAll("#items-container .item-row");
-        const lastItem = items[items.length - 1];
-        lastItem.querySelector(".item-name").value = item.itemName;
-        lastItem.querySelector(".quantity").value = item.quantity;
-        lastItem.querySelector(".purchase-price").value = item.purchasePrice;
-        lastItem.querySelector(".sale-price").value = item.salePrice;
-    });
+            // Clear existing items first
+            document.getElementById("items-container").innerHTML = "";
+            
+            // Add items directly (don't use addItem() function)
+            transaction.items.forEach(item => {
+                const itemsContainer = document.getElementById("items-container");
+                const newItem = document.createElement("div");
+                newItem.className = "item-row";
+                newItem.innerHTML = `
+                    <label>Item Name:</label>
+                    <input type="text" class="item-name" value="${item.itemName}" required>
+                    
+                    <label>Quantity:</label>
+                    <input type="number" class="quantity" min="1" value="${item.quantity}" required>
+                    
+                    <label>Purchase Price (₹):</label>
+                    <input type="number" class="purchase-price" min="0" step="0.01" value="${item.purchasePrice}" required>
+                    
+                    <label>Sale Price (₹):</label>
+                    <input type="number" class="sale-price" min="0" step="0.01" value="${item.salePrice}" required>
+                    
+                    <button type="button" class="remove-item">Remove</button>
+                `;
+                
+                itemsContainer.appendChild(newItem);
+                
+                // Add remove event
+                newItem.querySelector(".remove-item").addEventListener("click", function() {
+                    newItem.remove();
+                    calculateTotals();
+                });
+            });
             
             // Update totals
             calculateTotals();
@@ -517,12 +536,9 @@ document.addEventListener("DOMContentLoaded", function() {
             // Change submit button text
             document.querySelector("#transaction-form [type='submit']").textContent = "Update Bill";
             
-            // Disable date and SI No editing
+            // Disable sequence number editing
             document.getElementById("sequence-no").readOnly = true;
         }
-    } else {
-        // For new transactions, use current date
-        updateCurrentDate();
     }
 });
 </script>
