@@ -432,7 +432,7 @@ function viewTransactionDetails(e) {
     elements.viewModal.style.display = "block";
 }
 
-// Add new function to handle edit
+// Update the editTransaction function in transactions.js
 function editTransaction(e) {
     const siNo = e.target.getAttribute("data-si-no");
     const transaction = allTransactions.find(t => t.siNo === siNo);
@@ -444,6 +444,11 @@ function editTransaction(e) {
     editForm.className = "edit-form";
     editForm.innerHTML = `
         <h3>Edit Transaction ${siNo}</h3>
+        
+        <div class="form-group">
+            <label>Date:</label>
+            <input type="date" id="edit-date" value="${transaction.date.toISOString().split('T')[0]}">
+        </div>
         
         <div class="form-group">
             <label>Customer Name:</label>
@@ -463,11 +468,11 @@ function editTransaction(e) {
         <div id="edit-items-container">
             ${transaction.items.map((item, index) => `
                 <div class="edit-item-row" data-index="${index}">
-                    <input type="text" class="edit-item-name" value="${item.itemName}">
-                    <input type="number" class="edit-item-qty" value="${item.quantity}">
-                    <input type="number" class="edit-item-purchase" value="${item.purchasePrice}">
-                    <input type="number" class="edit-item-sale" value="${item.salePrice}">
-                    <button class="remove-edit-item">Remove</button>
+                    <input type="text" class="edit-item-name" value="${item.itemName}" required>
+                    <input type="number" class="edit-item-qty" value="${item.quantity}" min="1" required>
+                    <input type="number" class="edit-item-purchase" value="${item.purchasePrice}" min="0" step="0.01" required>
+                    <input type="number" class="edit-item-sale" value="${item.salePrice}" min="0" step="0.01" required>
+                    <button type="button" class="remove-edit-item">Remove</button>
                 </div>
             `).join('')}
         </div>
@@ -488,48 +493,52 @@ function editTransaction(e) {
     // Add event listeners
     document.getElementById("add-edit-item").addEventListener("click", addEditItem);
     document.getElementById("cancel-edit").addEventListener("click", closeModal);
-    document.getElementById("save-edit").addEventListener("click", () => saveEditedTransaction(siNo));
+    document.getElementById("save-edit").addEventListener("click", () => saveEditedTransaction(siNo, transaction));
     
     document.querySelectorAll(".remove-edit-item").forEach(btn => {
         btn.addEventListener("click", function() {
-            this.parentElement.remove();
+            if (document.querySelectorAll(".edit-item-row").length > 1) {
+                this.parentElement.remove();
+            } else {
+                alert("At least one item is required");
+            }
         });
     });
 }
 
-// Add function to add items in edit mode
-function addEditItem() {
-    const container = document.getElementById("edit-items-container");
-    const newItem = document.createElement("div");
-    newItem.className = "edit-item-row";
-    newItem.innerHTML = `
-        <input type="text" class="edit-item-name" placeholder="Item name">
-        <input type="number" class="edit-item-qty" placeholder="Qty" value="1">
-        <input type="number" class="edit-item-purchase" placeholder="Purchase price">
-        <input type="number" class="edit-item-sale" placeholder="Sale price">
-        <button class="remove-edit-item">Remove</button>
-    `;
-    container.appendChild(newItem);
-    
-    newItem.querySelector(".remove-edit-item").addEventListener("click", function() {
-        newItem.remove();
-    });
-}
-
-// Add function to save edited transaction
-function saveEditedTransaction(siNo) {
+// Update the saveEditedTransaction function
+function saveEditedTransaction(siNo, originalTransaction) {
+    const date = document.getElementById("edit-date").value;
     const customerName = document.getElementById("edit-customer-name").value;
     const paymentMode = document.getElementById("edit-payment-mode").value;
     
     const items = [];
+    let isValid = true;
+    
     document.querySelectorAll(".edit-item-row").forEach(row => {
-        items.push({
-            itemName: row.querySelector(".edit-item-name").value,
-            quantity: parseFloat(row.querySelector(".edit-item-qty").value) || 0,
-            purchasePrice: parseFloat(row.querySelector(".edit-item-purchase").value) || 0,
-            salePrice: parseFloat(row.querySelector(".edit-item-sale").value) || 0
-        });
+        const itemName = row.querySelector(".edit-item-name").value;
+        const quantity = parseFloat(row.querySelector(".edit-item-qty").value);
+        const purchasePrice = parseFloat(row.querySelector(".edit-item-purchase").value);
+        const salePrice = parseFloat(row.querySelector(".edit-item-sale").value);
+        
+        if (!itemName || isNaN(quantity) || isNaN(purchasePrice) || isNaN(salePrice)) {
+            row.style.border = "1px solid red";
+            isValid = false;
+        } else {
+            row.style.border = "";
+            items.push({
+                itemName: itemName,
+                quantity: quantity,
+                purchasePrice: purchasePrice,
+                salePrice: salePrice
+            });
+        }
     });
+    
+    if (!isValid) {
+        alert("Please fill all item fields correctly");
+        return;
+    }
     
     if (!customerName) {
         alert("Please enter customer name");
@@ -545,10 +554,11 @@ function saveEditedTransaction(siNo) {
     const totalAmount = items.reduce((sum, item) => sum + (item.quantity * item.salePrice), 0);
     const totalProfit = items.reduce((sum, item) => sum + (item.quantity * (item.salePrice - item.purchasePrice)), 0);
     
-    // Prepare data for update
+    // Prepare data for update - preserve original date if not changed
     const updateData = {
         action: "update",
         siNo: siNo,
+        date: date || originalTransaction.date.toISOString().split('T')[0],
         customerName: customerName,
         paymentMode: paymentMode,
         items: items,
@@ -576,6 +586,25 @@ function saveEditedTransaction(siNo) {
     .catch(error => {
         console.error("Error updating transaction:", error);
         alert("Failed to update transaction. Please try again.");
+    });
+}
+
+// Add function to add items in edit mode
+function addEditItem() {
+    const container = document.getElementById("edit-items-container");
+    const newItem = document.createElement("div");
+    newItem.className = "edit-item-row";
+    newItem.innerHTML = `
+        <input type="text" class="edit-item-name" placeholder="Item name">
+        <input type="number" class="edit-item-qty" placeholder="Qty" value="1">
+        <input type="number" class="edit-item-purchase" placeholder="Purchase price">
+        <input type="number" class="edit-item-sale" placeholder="Sale price">
+        <button class="remove-edit-item">Remove</button>
+    `;
+    container.appendChild(newItem);
+    
+    newItem.querySelector(".remove-edit-item").addEventListener("click", function() {
+        newItem.remove();
     });
 }
 
