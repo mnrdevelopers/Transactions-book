@@ -469,7 +469,7 @@
     <script src="script.js"></script>
 
         <script>
-// Check if we're in edit mode
+// Modify the edit transaction section
 document.addEventListener("DOMContentLoaded", function() {
     const urlParams = new URLSearchParams(window.location.search);
     const editSiNo = urlParams.get('edit');
@@ -477,8 +477,23 @@ document.addEventListener("DOMContentLoaded", function() {
     if (editSiNo) {
         const transaction = JSON.parse(localStorage.getItem('editTransaction'));
         if (transaction) {
-            // Populate form with transaction data
-            document.getElementById("sequence-no").value = transaction.siNo.split('-')[1];
+            // Extract date parts from the original transaction
+            const originalDate = new Date(transaction.date);
+            const formattedDate = originalDate.toISOString().split('T')[0];
+            const day = String(originalDate.getDate()).padStart(2, '0');
+            const month = String(originalDate.getMonth() + 1).padStart(2, '0');
+            const dateKey = `${day}${month}`;
+            
+            // Extract SI No parts
+            const siNoParts = transaction.siNo.split('-');
+            
+            // Set the original values
+            document.getElementById("date").textContent = formattedDate;
+            document.getElementById("day-month-part").textContent = dateKey;
+            document.getElementById("sequence-no").value = siNoParts[1];
+            document.getElementById("template-date").textContent = formattedDate;
+            
+            // Populate other fields
             document.getElementById("customer-name").value = transaction.customerName;
             document.getElementById("payment-mode").value = transaction.paymentMode;
             
@@ -500,7 +515,13 @@ document.addEventListener("DOMContentLoaded", function() {
             
             // Change submit button text
             document.querySelector("#transaction-form [type='submit']").textContent = "Update Bill";
+            
+            // Disable date and SI No editing
+            document.getElementById("sequence-no").readOnly = true;
         }
+    } else {
+        // For new transactions, use current date
+        updateCurrentDate();
     }
 });
 </script>
