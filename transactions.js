@@ -6,6 +6,7 @@ let allTransactions = [];
 let filteredTransactions = [];
 
 // DOM Elements
+const API_URL = 'https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec';
 const elements = {
     todaySales: document.getElementById("today-sales"),
     todayProfit: document.getElementById("today-profit"),
@@ -53,9 +54,8 @@ function setupEventListeners() {
     elements.prevBtn.addEventListener("click", goToPrevPage);
     elements.nextBtn.addEventListener("click", goToNextPage);
     document.querySelector(".close").addEventListener("click", closeModal);
-}
 
- // Modal controls
+    // Modal controls
     elements.cancelEditBtn?.addEventListener("click", closeEditModal);
     elements.editForm?.addEventListener("submit", updateTransaction);
     document.querySelector('.close')?.addEventListener("click", closeEditModal);
@@ -67,6 +67,7 @@ function setupEventListeners() {
     document.getElementById("close-success-modal")?.addEventListener("click", function() {
         document.getElementById("success-modal").style.display = "none";
     });
+}
 
 function updateSummaryCards() {
     if (allTransactions.length === 0) {
@@ -309,10 +310,12 @@ function renderTransactions() {
             <td>₹${transaction.totalAmount.toFixed(2)}</td>
             <td>₹${transaction.totalProfit.toFixed(2)}</td>
             <td>${transaction.paymentMode}</td>
-            <td class="actions">
-                <button class="view-btn" data-si-no="${transaction.siNo}">View</button>
-            </td>
-        `;
+           <td class="actions">
+            <button class="view-btn" data-si-no="${transaction.siNo}"><i class="fas fa-eye"></i></button>
+            <button class="edit-btn" data-si-no="${transaction.siNo}"><i class="fas fa-edit"></i></button>
+            <button class="delete-btn" data-si-no="${transaction.siNo}"><i class="fas fa-trash"></i></button>
+        </td>
+    `;
         elements.transactionsBody.appendChild(row);
     });
     
@@ -465,17 +468,6 @@ function closeModal() {
     elements.viewModal.style.display = "none";
 }
 
-function showLoading() {
-    elements.transactionsBody.innerHTML = `
-        <tr>
-            <td colspan="8" class="loading-spinner">
-                <div class="spinner"></div>
-                Loading transactions...
-            </td>
-        </tr>
-    `;
-}
-
 function showError(message) {
     elements.transactionsBody.innerHTML = `
         <tr>
@@ -625,12 +617,14 @@ async function updateTransaction(e) {
             })
         });
         
-        if (response.ok) {
+        const data = await response.json();
+        
+        if (data.status === "success") {
             showSuccessMessage('Transaction updated successfully!');
             closeEditModal();
             loadTransactions();
         } else {
-            throw new Error('Failed to update transaction');
+            throw new Error(data.message || 'Failed to update transaction');
         }
     } catch (error) {
         console.error('Error updating transaction:', error);
@@ -651,18 +645,16 @@ async function deleteTransaction(e) {
     showLoading();
     
     try {
-        const response = await fetch(`${API_URL}?action=delete&siNo=${encodeURIComponent(siNo)}`, {
-            method: 'GET',
-            mode: 'no-cors'
-        });
+        const response = await fetch(`${API_URL}?action=delete&siNo=${encodeURIComponent(siNo)}`);
+        const data = await response.json();
         
-        if (response.ok) {
+        if (data.status === "success") {
             showSuccessMessage('Transaction deleted successfully!');
             // Remove from local data and refresh
             allTransactions = allTransactions.filter(t => t.siNo !== siNo);
             filterTransactions();
         } else {
-            throw new Error('Failed to delete transaction');
+            throw new Error(data.message || 'Failed to delete transaction');
         }
     } catch (error) {
         console.error('Error deleting transaction:', error);
@@ -677,15 +669,7 @@ function closeEditModal() {
     elements.editModal.style.display = 'none';
 }
 
-// Update the renderTransactions function to include edit and delete buttons
-function renderTransactions() {
-    // ... existing render code ...
-    
+
     // Inside the transaction row HTML, update the actions column:
     html += `
-        <td class="actions">
-            <button class="view-btn" data-si-no="${transaction.siNo}"><i class="fas fa-eye"></i></button>
-            <button class="edit-btn" data-si-no="${transaction.siNo}"><i class="fas fa-edit"></i></button>
-            <button class="delete-btn" data-si-no="${transaction.siNo}"><i class="fas fa-trash"></i></button>
-        </td>
-    `;
+       
