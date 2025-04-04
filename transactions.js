@@ -122,29 +122,23 @@ async function loadTransactions() {
     try {
         showLoading();
         
-        const scriptUrl = "https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec";
-        const response = await fetch(scriptUrl);
+        const response = await fetch(API_URL);
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const data = await response.json();
-        console.log("Received data:", data); // Debugging
+        const result = await response.json();
         
-        // More robust data validation
-        if (!data || typeof data !== 'object') {
-            throw new Error("Invalid data format received from server");
-        }
-
-        // Check if data is in expected format (array or object with data property)
-        const transactionsData = Array.isArray(data) ? data : data.data;
+        // Handle both direct array and wrapped response
+        const transactionsData = result.data || result;
+        
         if (!transactionsData || !Array.isArray(transactionsData)) {
             throw new Error("Transaction data is not in expected format");
         }
 
-        allTransactions = processSheetData(transactionsData);
-        console.log("Processed transactions:", allTransactions); // Debugging
+        allTransactions = transactionsData; // Use directly since backend now formats properly
+        console.log("Loaded transactions:", allTransactions);
 
         updateSummaryCards();
         updateDateFilter();
@@ -155,71 +149,6 @@ async function loadTransactions() {
     } finally {
         hideLoading();
     }
-}
-
-function processSheetData(sheetData) {
-    // Check if sheetData is valid
-    if (!sheetData || !Array.isArray(sheetData)) {
-        console.error("Invalid sheet data received:", sheetData);
-        return [];
-    }
-
-    const transactionsMap = new Map();
-    
-    // Skip header row if it exists (check if first row contains header labels)
-    const startRow = sheetData.length > 0 && sheetData[0].length > 2 && 
-                    sheetData[0][0] === "Store Name" && 
-                    sheetData[0][1] === "Date" && 
-                    sheetData[0][2] === "SI No" ? 1 : 0;
-    
-    for (let i = startRow; i < sheetData.length; i++) {
-        const row = sheetData[i];
-        
-        // Skip empty or invalid rows
-        if (!row || !Array.isArray(row) || row.length < 11) {
-            console.warn("Skipping invalid row:", row);
-            continue;
-        }
-
-        const siNo = String(row[2] || "").trim();
-        if (!siNo) {
-            console.warn("Skipping row with empty SI No:", row);
-            continue;
-        }
-
-        const date = parseDate(row[1]);
-        
-        if (!transactionsMap.has(siNo)) {
-            transactionsMap.set(siNo, {
-                storeName: String(row[0] || ""),
-                date: date,
-                dateString: formatDateForDisplay(date),
-                siNo: siNo,
-                customerName: String(row[3] || ""),
-                items: [],
-                paymentMode: String(row[8] || ""),
-                totalAmount: parseFloat(row[9]) || 0,
-                totalProfit: parseFloat(row[10]) || 0
-            });
-        }
-        
-        // Add item to transaction only if we have required fields
-        if (row[4] && row[5] && row[7]) { // itemName, quantity, salePrice
-            transactionsMap.get(siNo).items.push({
-                itemName: String(row[4] || ""),
-                quantity: parseFloat(row[5]) || 0,
-                purchasePrice: parseFloat(row[6]) || 0,
-                salePrice: parseFloat(row[7]) || 0,
-                itemTotal: (parseFloat(row[5]) || 0) * (parseFloat(row[7]) || 0)
-            });
-        }
-    }
-    
-    // Convert to array and sort by date (newest first)
-    const transactions = Array.from(transactionsMap.values());
-    transactions.sort((a, b) => b.date - a.date);
-    
-    return transactions;
 }
 
 // Update the parseDate function to be more robust
