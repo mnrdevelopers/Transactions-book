@@ -511,7 +511,6 @@ function editTransaction(e) {
             }
         });
     });
-}
 
 // Update the saveEditedTransaction function
 function saveEditedTransaction(siNo, originalTransaction) {
