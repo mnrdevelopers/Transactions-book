@@ -11,6 +11,10 @@ const elements = {
     todayProfit: document.getElementById("today-profit"),
     todayTransactions: document.getElementById("today-transactions"),
     dailyAverage: document.getElementById("daily-average"),
+    summaryRangeFilter: document.getElementById("summary-range-filter"),
+    customDateStart: document.getElementById("custom-date-start"),
+    customDateEnd: document.getElementById("custom-date-end"),
+    customDateApply: document.getElementById("custom-date-apply")
     searchInput: document.getElementById("search-input"),
     searchBtn: document.getElementById("search-btn"),
     dateFilter: document.getElementById("date-filter"),
@@ -50,6 +54,8 @@ function setupEventListeners() {
     elements.prevBtn.addEventListener("click", goToPrevPage);
     elements.nextBtn.addEventListener("click", goToNextPage);
     document.querySelector(".close").addEventListener("click", closeModal);
+    elements.summaryRangeFilter.addEventListener("change", updateSummaryCards);
+    elements.customDateApply.addEventListener("click", updateSummaryCards);
 }
 
 function updateSummaryCards() {
@@ -62,41 +68,67 @@ function updateSummaryCards() {
         return;
     }
 
+    const range = elements.summaryRangeFilter.value;
+    let startDate, endDate;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    // Get today's date in the same format used in the table
-    const todayString = formatDateForDisplay(today);
-    
-    // Filter today's transactions - compare dates as Date objects
-    const todayData = allTransactions.filter(t => {
+
+    switch (range) {
+        case 'today':
+            startDate = new Date(today);
+            endDate = new Date(today);
+            endDate.setHours(23, 59, 59, 999);
+            break;
+        case 'yesterday':
+            startDate = new Date(today);
+            startDate.setDate(startDate.getDate() - 1);
+            endDate = new Date(startDate);
+            endDate.setHours(23, 59, 59, 999);
+            break;
+        case 'week':
+            startDate = new Date(today);
+            startDate.setDate(startDate.getDate() - 6); // Last 7 days including today
+            endDate = new Date(today);
+            endDate.setHours(23, 59, 59, 999);
+            break;
+        case 'month':
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            endDate = new Date(today);
+            endDate.setHours(23, 59, 59, 999);
+            break;
+        case 'custom':
+            startDate = new Date(elements.customDateStart.value);
+            endDate = new Date(elements.customDateEnd.value);
+            if (isNaN(startDate.getTime()) startDate = new Date(today);
+            if (isNaN(endDate.getTime())) endDate = new Date(today);
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 999);
+            break;
+        default:
+            startDate = new Date(today);
+            endDate = new Date(today);
+            endDate.setHours(23, 59, 59, 999);
+    }
+
+    // Filter transactions for the selected date range
+    const filteredData = allTransactions.filter(t => {
         const transDate = new Date(t.date);
-        transDate.setHours(0, 0, 0, 0);
-        return transDate.getTime() === today.getTime();
+        return transDate >= startDate && transDate <= endDate;
     });
 
-    // Calculate today's totals
-    const todaySales = todayData.reduce((sum, t) => sum + parseFloat(t.totalAmount || 0), 0);
-    const todayProfit = todayData.reduce((sum, t) => sum + parseFloat(t.totalProfit || 0), 0);
-    const todayTransactionCount = todayData.length;
+    // Calculate totals
+    const totalSales = filteredData.reduce((sum, t) => sum + parseFloat(t.totalAmount || 0), 0);
+    const totalProfit = filteredData.reduce((sum, t) => sum + parseFloat(t.totalProfit || 0), 0);
+    const transactionCount = filteredData.length;
 
-    // Update today's cards
-    elements.todaySales.textContent = `₹${todaySales.toFixed(2)}`;
-    elements.todayProfit.textContent = `₹${todayProfit.toFixed(2)}`;
-    elements.todayTransactions.textContent = todayTransactionCount;
+    // Calculate daily average based on the number of days in the range
+    const daysInRange = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) || 1;
+    const dailyAvg = totalSales / daysInRange;
 
-    // Calculate 7-day average
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // Include today + 6 previous days
-    
-    const last7DaysData = allTransactions.filter(t => {
-        const transDate = new Date(t.date);
-        transDate.setHours(0, 0, 0, 0);
-        return transDate >= sevenDaysAgo && transDate <= today;
-    });
-    
-    const sevenDayTotal = last7DaysData.reduce((sum, t) => sum + parseFloat(t.totalAmount || 0), 0);
-    const dailyAvg = sevenDayTotal / 7;
+    // Update the cards
+    elements.todaySales.textContent = `₹${totalSales.toFixed(2)}`;
+    elements.todayProfit.textContent = `₹${totalProfit.toFixed(2)}`;
+    elements.todayTransactions.textContent = transactionCount;
     elements.dailyAverage.textContent = `₹${dailyAvg.toFixed(2)}`;
 }
 
