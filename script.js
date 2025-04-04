@@ -64,42 +64,17 @@ if (document.getElementById("transaction-form")) {
         return sequenceData;
     }
     
-   // Initialize form and sequence number
-let currentSequenceData = initializeSequenceNumber();
-
-// Check if we're in edit mode
-const urlParams = new URLSearchParams(window.location.search);
-const editSiNo = urlParams.get('edit');
-
-// Only add initial item if not in edit mode
-if (!editSiNo) {
+    // Initialize form and sequence number
+    let currentSequenceData = initializeSequenceNumber();
     addItem();
-}
-
-// Set up event listeners
-document.getElementById("add-item").addEventListener("click", function() {
-    addItem();
-    // Focus on the first input of the new item
-    const items = document.querySelectorAll(".item-row");
-    if (items.length > 0) {
-        items[items.length - 1].querySelector(".item-name").focus();
-    }
-});
-
-document.getElementById("items-container").addEventListener("input", function(e) {
-    if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
-        calculateTotals();
-    }
-});
-
-document.getElementById("transaction-form").addEventListener("submit", function(e) {
-    e.preventDefault();
-    handleFormSubmit(e);
-});
-
-setupPrintButton();
-setupCashPaymentModal();
-setupSuccessModal();
+    document.getElementById("add-item").addEventListener("click", addItem);
+    document.getElementById("items-container").addEventListener("input", function(e) {
+        if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
+            calculateTotals();
+        }
+    });
+    document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
+    setupPrintButton();
 
     // ======================
     // DAILY STATS FUNCTIONS
@@ -233,46 +208,33 @@ function updateCurrentTime() {
         setInterval(updateCurrentTime, 60000); // Update every minute
     }
 
- function addItem() {
-    // Check if we're in edit mode
-    const urlParams = new URLSearchParams(window.location.search);
-    const editSiNo = urlParams.get('edit');
-    
-    // Don't add empty item if we're in edit mode and there are already items
-    if (editSiNo && document.querySelectorAll(".item-row").length > 0) {
-        return;
+    function addItem() {
+        const itemsContainer = document.getElementById("items-container");
+        const newItem = document.createElement("div");
+        newItem.className = "item-row";
+        newItem.innerHTML = `
+            <label>Item Name:</label>
+            <input type="text" class="item-name" required>
+            
+            <label>Quantity:</label>
+            <input type="number" class="quantity" min="1" value="1" required>
+            
+            <label>Purchase Price (₹):</label>
+            <input type="number" class="purchase-price" min="0" step="0.01" required>
+            
+            <label>Sale Price (₹):</label>
+            <input type="number" class="sale-price" min="0" step="0.01" required>
+            
+            <button type="button" class="remove-item">Remove</button>
+        `;
+        itemsContainer.appendChild(newItem);
+        
+        // Add remove event
+        newItem.querySelector(".remove-item").addEventListener("click", function() {
+            newItem.remove();
+            calculateTotals();
+        });
     }
-
-    const itemsContainer = document.getElementById("items-container");
-    const newItem = document.createElement("div");
-    newItem.className = "item-row";
-    newItem.innerHTML = `
-        <label>Item Name:</label>
-        <input type="text" class="item-name" required>
-        
-        <label>Quantity:</label>
-        <input type="number" class="quantity" min="1" value="1" required>
-        
-        <label>Purchase Price (₹):</label>
-        <input type="number" class="purchase-price" min="0" step="0.01" required>
-        
-        <label>Sale Price (₹):</label>
-        <input type="number" class="sale-price" min="0" step="0.01" required>
-        
-        <button type="button" class="remove-item">Remove</button>
-    `;
-    
-    itemsContainer.appendChild(newItem);
-    
-    // Add remove event
-    newItem.querySelector(".remove-item").addEventListener("click", function() {
-        newItem.remove();
-        calculateTotals();
-    });
-    
-    // Recalculate totals when new item is added
-    calculateTotals();
-}
 
     function calculateTotals() {
         let totalAmount = 0;
@@ -324,20 +286,14 @@ function updateCurrentTime() {
 
   function prepareBillData() {
     const items = [];
-    const itemRows = document.querySelectorAll(".item-row");
-    
-    itemRows.forEach(row => {
-        // Only include items that have a name (ignore empty rows)
-        const itemName = row.querySelector(".item-name").value.trim();
-        if (itemName) {
-            items.push({
-                itemName: itemName,
-                quantity: parseFloat(row.querySelector(".quantity").value) || 0,
-                purchasePrice: parseFloat(row.querySelector(".purchase-price").value) || 0,
-                salePrice: parseFloat(row.querySelector(".sale-price").value) || 0,
-                total: (parseFloat(row.querySelector(".quantity").value) * parseFloat(row.querySelector(".sale-price").value)).toFixed(2)
-            });
-        }
+    document.querySelectorAll(".item-row").forEach(row => {
+        items.push({
+            itemName: row.querySelector(".item-name").value,
+            quantity: row.querySelector(".quantity").value,
+            purchasePrice: row.querySelector(".purchase-price").value,
+            salePrice: row.querySelector(".sale-price").value,
+            total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
+        });
     });
     
     const urlParams = new URLSearchParams(window.location.search);
