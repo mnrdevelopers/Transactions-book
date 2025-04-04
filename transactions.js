@@ -433,61 +433,16 @@ function viewTransactionDetails(e) {
 }
 
 // Add new function to handle edit
-// Modify the edit transaction section
-document.addEventListener("DOMContentLoaded", function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const editSiNo = urlParams.get('edit');
+function editTransaction(e) {
+    const siNo = e.target.getAttribute("data-si-no");
+    const transaction = allTransactions.find(t => t.siNo === siNo);
     
-    if (editSiNo) {
-        const transaction = JSON.parse(localStorage.getItem('editTransaction'));
-        if (transaction) {
-            // Extract date parts from the original transaction
-            const originalDate = new Date(transaction.date);
-            const formattedDate = originalDate.toISOString().split('T')[0];
-            const day = String(originalDate.getDate()).padStart(2, '0');
-            const month = String(originalDate.getMonth() + 1).padStart(2, '0');
-            const dateKey = `${day}${month}`;
-            
-            // Extract SI No parts
-            const siNoParts = transaction.siNo.split('-');
-            
-            // Set the original values
-            document.getElementById("date").textContent = formattedDate;
-            document.getElementById("day-month-part").textContent = dateKey;
-            document.getElementById("sequence-no").value = siNoParts[1];
-            document.getElementById("template-date").textContent = formattedDate;
-            
-            // Populate other fields
-            document.getElementById("customer-name").value = transaction.customerName;
-            document.getElementById("payment-mode").value = transaction.paymentMode;
-            
-            // Clear existing items
-            document.getElementById("items-container").innerHTML = "";
-            
-            // Add items
-            transaction.items.forEach(item => {
-                addItem();
-                const lastItem = document.querySelector("#items-container .item-row:last-child");
-                lastItem.querySelector(".item-name").value = item.itemName;
-                lastItem.querySelector(".quantity").value = item.quantity;
-                lastItem.querySelector(".purchase-price").value = item.purchasePrice;
-                lastItem.querySelector(".sale-price").value = item.salePrice;
-            });
-            
-            // Update totals
-            calculateTotals();
-            
-            // Change submit button text
-            document.querySelector("#transaction-form [type='submit']").textContent = "Update Bill";
-            
-            // Disable date and SI No editing
-            document.getElementById("sequence-no").readOnly = true;
-        }
-    } else {
-        // For new transactions, use current date
-        updateCurrentDate();
-    }
-});
+    if (!transaction) return;
+    
+    // Store the transaction in localStorage and redirect to edit page
+    localStorage.setItem('editTransaction', JSON.stringify(transaction));
+    window.location.href = 'add-transaction.html?edit=' + encodeURIComponent(siNo);
+}
 
 // Add new function to handle delete
 function deleteTransaction(e) {
