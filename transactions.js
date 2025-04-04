@@ -67,7 +67,6 @@ function setupEventListeners() {
     document.getElementById("close-success-modal")?.addEventListener("click", function() {
         document.getElementById("success-modal").style.display = "none";
     });
-}
 
 function updateSummaryCards() {
     if (allTransactions.length === 0) {
