@@ -294,10 +294,11 @@ function renderTransactions() {
             <td>₹${transaction.totalProfit.toFixed(2)}</td>
             <td>${transaction.paymentMode}</td>
             <td class="actions">
-                <button class="view-btn" data-si-no="${transaction.siNo}">View</button>
-                <button class="edit-btn" data-si-no="${transaction.siNo}">Edit</button>
-                <button class="delete-btn" data-si-no="${transaction.siNo}">Delete</button>
-            </td>
+               <td class="actions">
+    <button class="view-btn" data-si-no="${transaction.siNo}"><i class="fas fa-eye"></i></button>
+    <button class="edit-btn" data-si-no="${transaction.siNo}"><i class="fas fa-edit"></i></button>
+    <button class="delete-btn" data-si-no="${transaction.siNo}"><i class="fas fa-trash"></i></button>
+</td>
         `;
         elements.transactionsBody.appendChild(row);
     });
@@ -366,9 +367,11 @@ function setupRowEventListeners() {
     document.querySelectorAll(".view-btn").forEach(btn => {
         btn.addEventListener("click", viewTransactionDetails);
     });
+    
     document.querySelectorAll(".edit-btn").forEach(btn => {
         btn.addEventListener("click", editTransaction);
     });
+    
     document.querySelectorAll(".delete-btn").forEach(btn => {
         btn.addEventListener("click", deleteTransaction);
     });
@@ -439,31 +442,19 @@ function editTransaction(e) {
     
     if (!transaction) return;
     
-    // Store the transaction in localStorage for the edit page
-    localStorage.setItem('editTransaction', JSON.stringify(transaction));
-    
-    // Redirect to add-transaction.html with edit parameter
-    window.location.href = `add-transaction.html?edit=${encodeURIComponent(siNo)}`;
-}
-    
     // Create edit form
     const editForm = document.createElement("div");
     editForm.className = "edit-form";
     editForm.innerHTML = `
-        <h3>Edit Transaction ${siNo}</h3>
+        <h2><i class="fas fa-edit"></i> Edit Transaction ${siNo}</h2>
         
         <div class="form-group">
-            <label>Date:</label>
-            <input type="date" id="edit-date" value="${transaction.date.toISOString().split('T')[0]}">
+            <label for="edit-customer-name">Customer Name:</label>
+            <input type="text" id="edit-customer-name" value="${transaction.customerName}" required>
         </div>
         
         <div class="form-group">
-            <label>Customer Name:</label>
-            <input type="text" id="edit-customer-name" value="${transaction.customerName}">
-        </div>
-        
-        <div class="form-group">
-            <label>Payment Mode:</label>
+            <label for="edit-payment-mode">Payment Mode:</label>
             <select id="edit-payment-mode">
                 <option value="Cash" ${transaction.paymentMode === 'Cash' ? 'selected' : ''}>Cash</option>
                 <option value="Card" ${transaction.paymentMode === 'Card' ? 'selected' : ''}>Card</option>
@@ -471,24 +462,24 @@ function editTransaction(e) {
             </select>
         </div>
         
-        <h4>Items:</h4>
+        <h3>Items:</h3>
         <div id="edit-items-container">
             ${transaction.items.map((item, index) => `
                 <div class="edit-item-row" data-index="${index}">
-                    <input type="text" class="edit-item-name" value="${item.itemName}" required>
-                    <input type="number" class="edit-item-qty" value="${item.quantity}" min="1" required>
-                    <input type="number" class="edit-item-purchase" value="${item.purchasePrice}" min="0" step="0.01" required>
-                    <input type="number" class="edit-item-sale" value="${item.salePrice}" min="0" step="0.01" required>
-                    <button type="button" class="remove-edit-item">Remove</button>
+                    <input type="text" class="edit-item-name" value="${item.itemName}" placeholder="Item name" required>
+                    <input type="number" class="edit-item-qty" value="${item.quantity}" min="1" placeholder="Qty" required>
+                    <input type="number" class="edit-item-purchase" value="${item.purchasePrice}" min="0" step="0.01" placeholder="Purchase price" required>
+                    <input type="number" class="edit-item-sale" value="${item.salePrice}" min="0" step="0.01" placeholder="Sale price" required>
+                    <button type="button" class="remove-edit-item"><i class="fas fa-times"></i></button>
                 </div>
             `).join('')}
         </div>
         
-        <button type="button" id="add-edit-item">Add Item</button>
+        <button type="button" id="add-edit-item" class="btn-secondary"><i class="fas fa-plus"></i> Add Item</button>
         
         <div class="form-actions">
-            <button type="button" id="cancel-edit">Cancel</button>
-            <button type="button" id="save-edit">Save Changes</button>
+            <button type="button" id="cancel-edit" class="btn-cancel">Cancel</button>
+            <button type="button" id="save-edit" class="btn-primary">Save Changes</button>
         </div>
     `;
     
@@ -500,34 +491,114 @@ function editTransaction(e) {
     // Add event listeners
     document.getElementById("add-edit-item").addEventListener("click", addEditItem);
     document.getElementById("cancel-edit").addEventListener("click", closeModal);
-    document.getElementById("save-edit").addEventListener("click", () => saveEditedTransaction(siNo, transaction));
+    document.getElementById("save-edit").addEventListener("click", () => saveEditedTransaction(siNo));
     
     document.querySelectorAll(".remove-edit-item").forEach(btn => {
         btn.addEventListener("click", function() {
-            if (document.querySelectorAll(".edit-item-row").length > 1) {
-                this.parentElement.remove();
-            } else {
-                alert("At least one item is required");
-            }
+            this.parentElement.remove();
         });
     });
+}
 
-// Update the saveEditedTransaction function
-function saveEditedTransaction(siNo, originalTransaction) {
-    const date = document.getElementById("edit-date").value;
-    const customerName = document.getElementById("edit-customer-name").value;
+// Add new function to handle edit
+function editTransaction(e) {
+    const siNo = e.target.getAttribute("data-si-no");
+    const transaction = allTransactions.find(t => t.siNo === siNo);
+    
+    if (!transaction) return;
+    
+    // Create edit form
+    const editForm = document.createElement("div");
+    editForm.className = "edit-form";
+    editForm.innerHTML = `
+        <h2><i class="fas fa-edit"></i> Edit Transaction ${siNo}</h2>
+        
+        <div class="form-group">
+            <label for="edit-customer-name">Customer Name:</label>
+            <input type="text" id="edit-customer-name" value="${transaction.customerName}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="edit-payment-mode">Payment Mode:</label>
+            <select id="edit-payment-mode">
+                <option value="Cash" ${transaction.paymentMode === 'Cash' ? 'selected' : ''}>Cash</option>
+                <option value="Card" ${transaction.paymentMode === 'Card' ? 'selected' : ''}>Card</option>
+                <option value="UPI" ${transaction.paymentMode === 'UPI' ? 'selected' : ''}>UPI</option>
+            </select>
+        </div>
+        
+        <h3>Items:</h3>
+        <div id="edit-items-container">
+            ${transaction.items.map((item, index) => `
+                <div class="edit-item-row" data-index="${index}">
+                    <input type="text" class="edit-item-name" value="${item.itemName}" placeholder="Item name" required>
+                    <input type="number" class="edit-item-qty" value="${item.quantity}" min="1" placeholder="Qty" required>
+                    <input type="number" class="edit-item-purchase" value="${item.purchasePrice}" min="0" step="0.01" placeholder="Purchase price" required>
+                    <input type="number" class="edit-item-sale" value="${item.salePrice}" min="0" step="0.01" placeholder="Sale price" required>
+                    <button type="button" class="remove-edit-item"><i class="fas fa-times"></i></button>
+                </div>
+            `).join('')}
+        </div>
+        
+        <button type="button" id="add-edit-item" class="btn-secondary"><i class="fas fa-plus"></i> Add Item</button>
+        
+        <div class="form-actions">
+            <button type="button" id="cancel-edit" class="btn-cancel">Cancel</button>
+            <button type="button" id="save-edit" class="btn-primary">Save Changes</button>
+        </div>
+    `;
+    
+    // Show in modal
+    elements.transactionDetails.innerHTML = "";
+    elements.transactionDetails.appendChild(editForm);
+    elements.viewModal.style.display = "block";
+    
+    // Add event listeners
+    document.getElementById("add-edit-item").addEventListener("click", addEditItem);
+    document.getElementById("cancel-edit").addEventListener("click", closeModal);
+    document.getElementById("save-edit").addEventListener("click", () => saveEditedTransaction(siNo));
+    
+    document.querySelectorAll(".remove-edit-item").forEach(btn => {
+        btn.addEventListener("click", function() {
+            this.parentElement.remove();
+        });
+    });
+}
+
+// Add function to add items in edit mode
+function addEditItem() {
+    const container = document.getElementById("edit-items-container");
+    const newItem = document.createElement("div");
+    newItem.className = "edit-item-row";
+    newItem.innerHTML = `
+        <input type="text" class="edit-item-name" placeholder="Item name" required>
+        <input type="number" class="edit-item-qty" value="1" min="1" placeholder="Qty" required>
+        <input type="number" class="edit-item-purchase" min="0" step="0.01" placeholder="Purchase price" required>
+        <input type="number" class="edit-item-sale" min="0" step="0.01" placeholder="Sale price" required>
+        <button type="button" class="remove-edit-item"><i class="fas fa-times"></i></button>
+    `;
+    container.appendChild(newItem);
+    
+    newItem.querySelector(".remove-edit-item").addEventListener("click", function() {
+        newItem.remove();
+    });
+}
+
+// Add function to save edited transaction
+function saveEditedTransaction(siNo) {
+    const customerName = document.getElementById("edit-customer-name").value.trim();
     const paymentMode = document.getElementById("edit-payment-mode").value;
     
     const items = [];
     let isValid = true;
     
     document.querySelectorAll(".edit-item-row").forEach(row => {
-        const itemName = row.querySelector(".edit-item-name").value;
-        const quantity = parseFloat(row.querySelector(".edit-item-qty").value);
-        const purchasePrice = parseFloat(row.querySelector(".edit-item-purchase").value);
-        const salePrice = parseFloat(row.querySelector(".edit-item-sale").value);
+        const itemName = row.querySelector(".edit-item-name").value.trim();
+        const quantity = parseFloat(row.querySelector(".edit-item-qty").value) || 0;
+        const purchasePrice = parseFloat(row.querySelector(".edit-item-purchase").value) || 0;
+        const salePrice = parseFloat(row.querySelector(".edit-item-sale").value) || 0;
         
-        if (!itemName || isNaN(quantity) || isNaN(purchasePrice) || isNaN(salePrice)) {
+        if (!itemName || quantity <= 0 || purchasePrice < 0 || salePrice < 0) {
             row.style.border = "1px solid red";
             isValid = false;
         } else {
@@ -541,13 +612,14 @@ function saveEditedTransaction(siNo, originalTransaction) {
         }
     });
     
-    if (!isValid) {
-        alert("Please fill all item fields correctly");
-        return;
-    }
-    
     if (!customerName) {
         alert("Please enter customer name");
+        document.getElementById("edit-customer-name").style.border = "1px solid red";
+        isValid = false;
+    }
+    
+    if (!isValid) {
+        alert("Please check all item fields");
         return;
     }
     
@@ -564,13 +636,11 @@ function saveEditedTransaction(siNo, originalTransaction) {
     const updateData = {
         action: "update",
         siNo: siNo,
-        date: date || originalTransaction.date.toISOString().split('T')[0],
         customerName: customerName,
         paymentMode: paymentMode,
         items: items,
         totalAmount: totalAmount,
-        totalProfit: totalProfit,
-        storeName: "RK Fashions" // Ensure store name is consistent
+        totalProfit: totalProfit
     };
     
     // Show loading
@@ -589,6 +659,7 @@ function saveEditedTransaction(siNo, originalTransaction) {
         // Reload transactions
         loadTransactions();
         closeModal();
+        alert("Transaction updated successfully!");
     })
     .catch(error => {
         console.error("Error updating transaction:", error);
@@ -596,28 +667,8 @@ function saveEditedTransaction(siNo, originalTransaction) {
     });
 }
 
-// Add function to add items in edit mode
-function addEditItem() {
-    const container = document.getElementById("edit-items-container");
-    const newItem = document.createElement("div");
-    newItem.className = "edit-item-row";
-    newItem.innerHTML = `
-        <input type="text" class="edit-item-name" placeholder="Item name" required>
-        <input type="number" class="edit-item-qty" placeholder="Qty" value="1" min="1" required>
-        <input type="number" class="edit-item-purchase" placeholder="Purchase price" min="0" step="0.01" required>
-        <input type="number" class="edit-item-sale" placeholder="Sale price" min="0" step="0.01" required>
-        <button type="button" class="remove-edit-item">Remove</button>
-    `;
-    container.appendChild(newItem);
-    
-    newItem.querySelector(".remove-edit-item").addEventListener("click", function() {
-        if (document.querySelectorAll(".edit-item-row").length > 1) {
-            newItem.remove();
-        } else {
-            alert("At least one item is required");
-        }
-    });
-}
+
+
 
 // Add new function to handle delete
 function deleteTransaction(e) {
