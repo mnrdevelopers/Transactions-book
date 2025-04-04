@@ -668,8 +668,3 @@ async function deleteTransaction(e) {
 function closeEditModal() {
     elements.editModal.style.display = 'none';
 }
-
-
-    // Inside the transaction row HTML, update the actions column:
-    html += `
-       
