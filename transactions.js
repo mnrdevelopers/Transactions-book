@@ -80,42 +80,44 @@ function updateSummaryCards() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    switch (range) {
-        case 'today':
-            startDate = new Date(today);
-            endDate = new Date(today);
-            endDate.setHours(23, 59, 59, 999);
-            break;
-        case 'yesterday':
-            startDate = new Date(today);
-            startDate.setDate(startDate.getDate() - 1);
-            endDate = new Date(startDate);
-            endDate.setHours(23, 59, 59, 999);
-            break;
-        case 'week':
-            startDate = new Date(today);
-            startDate.setDate(startDate.getDate() - 6); // Last 7 days including today
-            endDate = new Date(today);
-            endDate.setHours(23, 59, 59, 999);
-            break;
-        case 'month':
-            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-            endDate = new Date(today);
-            endDate.setHours(23, 59, 59, 999);
-            break;
-        case 'custom':
-            startDate = new Date(elements.customDateStart.value);
-            endDate = new Date(elements.customDateEnd.value);
-            if (isNaN(startDate.getTime()) startDate = new Date(today);
-            if (isNaN(endDate.getTime())) endDate = new Date(today);
-            startDate.setHours(0, 0, 0, 0);
-            endDate.setHours(23, 59, 59, 999);
-            break;
-        default:
-            startDate = new Date(today);
-            endDate = new Date(today);
-            endDate.setHours(23, 59, 59, 999);
-    }
+  switch (range) {
+    case 'today':
+        startDate = new Date(today);
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+    case 'yesterday':
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 1);
+        endDate = new Date(startDate);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+    case 'week':
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 6); // Last 7 days including today
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+    case 'month':
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+    case 'custom':
+        startDate = elements.customDateStart?.value ? new Date(elements.customDateStart.value) : new Date(today);
+        endDate = elements.customDateEnd?.value ? new Date(elements.customDateEnd.value) : new Date(today);
+        
+        if (isNaN(startDate.getTime())) startDate = new Date(today);
+        if (isNaN(endDate.getTime())) endDate = new Date(today);
+        
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+    default:
+        startDate = new Date(today);
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999);
+}
 
     // Filter transactions for the selected date range
     const filteredData = allTransactions.filter(t => {
