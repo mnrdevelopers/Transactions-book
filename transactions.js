@@ -20,6 +20,9 @@ const elements = {
     nextBtn: document.getElementById("next-btn"),
     pageInfo: document.getElementById("page-info"),
     viewModal: document.getElementById("view-modal"),
+    editModal: document.getElementById("edit-modal"),
+    editForm: document.getElementById("edit-form"),
+    cancelEditBtn: document.getElementById("cancel-edit"),
     transactionDetails: document.getElementById("transaction-details")
 };
 
@@ -50,6 +53,20 @@ function setupEventListeners() {
     elements.prevBtn.addEventListener("click", goToPrevPage);
     elements.nextBtn.addEventListener("click", goToNextPage);
     document.querySelector(".close").addEventListener("click", closeModal);
+}
+
+ // Modal controls
+    elements.cancelEditBtn?.addEventListener("click", closeEditModal);
+    elements.editForm?.addEventListener("submit", updateTransaction);
+    document.querySelector('.close')?.addEventListener("click", closeEditModal);
+    window.addEventListener("click", function(event) {
+        if (event.target === elements.editModal) {
+            closeEditModal();
+        }
+    });
+    document.getElementById("close-success-modal")?.addEventListener("click", function() {
+        document.getElementById("success-modal").style.display = "none";
+    });
 }
 
 function updateSummaryCards() {
@@ -364,6 +381,13 @@ function setupRowEventListeners() {
     document.querySelectorAll(".view-btn").forEach(btn => {
         btn.addEventListener("click", viewTransactionDetails);
     });
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+        btn.addEventListener("click", editTransaction);
+    });
+    
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", deleteTransaction);
+    });
 }
 
 function viewTransactionDetails(e) {
@@ -463,3 +487,206 @@ function showError(message) {
         </tr>
     `;
 }
+
+function showLoading() {
+    document.getElementById('loading-overlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loading-overlay').style.display = 'none';
+}
+
+function showSuccessMessage(message = 'Operation completed successfully!') {
+    document.getElementById('success-message').textContent = message;
+    document.getElementById('success-modal').style.display = 'flex';
+    
+    // Auto-close after 3 seconds
+    setTimeout(() => {
+        document.getElementById('success-modal').style.display = 'none';
+    }, 3000);
+}
+
+async function editTransaction(e) {
+    const siNo = e.currentTarget.getAttribute("data-si-no");
+    const transaction = allTransactions.find(t => t.siNo === siNo);
+    
+    if (!transaction) return;
+    
+    showLoading();
+    
+    try {
+        // Create edit form
+        elements.editForm.innerHTML = `
+            <input type="hidden" id="edit-si-no" value="${transaction.siNo}">
+            <div class="form-group">
+                <label for="edit-customer-name">Customer Name</label>
+                <input type="text" id="edit-customer-name" value="${transaction.customerName}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-payment-mode">Payment Mode</label>
+                <select id="edit-payment-mode" required>
+                    <option value="Cash" ${transaction.paymentMode === 'Cash' ? 'selected' : ''}>Cash</option>
+                    <option value="Card" ${transaction.paymentMode === 'Card' ? 'selected' : ''}>Card</option>
+                    <option value="UPI" ${transaction.paymentMode === 'UPI' ? 'selected' : ''}>UPI</option>
+                </select>
+            </div>
+            
+            <h3>Items:</h3>
+            <div id="edit-items-container">
+                ${transaction.items.map((item, index) => `
+                    <div class="edit-item-row" data-index="${index}">
+                        <input type="text" class="edit-item-name" value="${item.itemName}" placeholder="Item name" required>
+                        <input type="number" class="edit-item-qty" value="${item.quantity}" min="1" placeholder="Qty" required>
+                        <input type="number" class="edit-item-purchase" value="${item.purchasePrice}" min="0" step="0.01" placeholder="Purchase price" required>
+                        <input type="number" class="edit-item-sale" value="${item.salePrice}" min="0" step="0.01" placeholder="Sale price" required>
+                        <button type="button" class="remove-edit-item"><i class="fas fa-times"></i></button>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <button type="button" id="add-edit-item" class="btn-secondary"><i class="fas fa-plus"></i> Add Item</button>
+        `;
+        
+        // Add event listeners for edit form
+        document.getElementById("add-edit-item").addEventListener("click", addEditItem);
+        document.querySelectorAll(".remove-edit-item").forEach(btn => {
+            btn.addEventListener("click", function() {
+                this.parentElement.remove();
+            });
+        });
+        
+        // Show modal
+        elements.editModal.style.display = 'block';
+    } catch (error) {
+        console.error('Error opening edit modal:', error);
+        alert('Failed to load transaction for editing. Please try again.');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Add function to add items in edit mode
+function addEditItem() {
+    const container = document.getElementById("edit-items-container");
+    const newItem = document.createElement("div");
+    newItem.className = "edit-item-row";
+    newItem.innerHTML = `
+        <input type="text" class="edit-item-name" placeholder="Item name" required>
+        <input type="number" class="edit-item-qty" value="1" min="1" placeholder="Qty" required>
+        <input type="number" class="edit-item-purchase" min="0" step="0.01" placeholder="Purchase price" required>
+        <input type="number" class="edit-item-sale" min="0" step="0.01" placeholder="Sale price" required>
+        <button type="button" class="remove-edit-item"><i class="fas fa-times"></i></button>
+    `;
+    container.appendChild(newItem);
+    
+    newItem.querySelector(".remove-edit-item").addEventListener("click", function() {
+        newItem.remove();
+    });
+}
+
+// Add function to update transaction
+async function updateTransaction(e) {
+    e.preventDefault();
+    showLoading();
+    
+    const siNo = document.getElementById('edit-si-no').value;
+    const customerName = document.getElementById('edit-customer-name').value;
+    const paymentMode = document.getElementById('edit-payment-mode').value;
+    
+    // Collect items
+    const items = [];
+    document.querySelectorAll('.edit-item-row').forEach(row => {
+        items.push({
+            itemName: row.querySelector('.edit-item-name').value,
+            quantity: parseFloat(row.querySelector('.edit-item-qty').value),
+            purchasePrice: parseFloat(row.querySelector('.edit-item-purchase').value),
+            salePrice: parseFloat(row.querySelector('.edit-item-sale').value)
+        });
+    });
+    
+    // Calculate totals
+    const totalAmount = items.reduce((sum, item) => sum + (item.quantity * item.salePrice), 0);
+    const totalProfit = items.reduce((sum, item) => sum + (item.quantity * (item.salePrice - item.purchasePrice)), 0);
+    
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'update',
+                siNo: siNo,
+                customerName: customerName,
+                paymentMode: paymentMode,
+                items: items,
+                totalAmount: totalAmount,
+                totalProfit: totalProfit
+            })
+        });
+        
+        if (response.ok) {
+            showSuccessMessage('Transaction updated successfully!');
+            closeEditModal();
+            loadTransactions();
+        } else {
+            throw new Error('Failed to update transaction');
+        }
+    } catch (error) {
+        console.error('Error updating transaction:', error);
+        alert('Failed to update transaction. Please try again.');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Add function to delete transaction
+async function deleteTransaction(e) {
+    const siNo = e.currentTarget.getAttribute("data-si-no");
+    
+    if (!confirm(`Are you sure you want to delete transaction ${siNo}? This cannot be undone.`)) {
+        return;
+    }
+    
+    showLoading();
+    
+    try {
+        const response = await fetch(`${API_URL}?action=delete&siNo=${encodeURIComponent(siNo)}`, {
+            method: 'GET',
+            mode: 'no-cors'
+        });
+        
+        if (response.ok) {
+            showSuccessMessage('Transaction deleted successfully!');
+            // Remove from local data and refresh
+            allTransactions = allTransactions.filter(t => t.siNo !== siNo);
+            filterTransactions();
+        } else {
+            throw new Error('Failed to delete transaction');
+        }
+    } catch (error) {
+        console.error('Error deleting transaction:', error);
+        alert('Failed to delete transaction. Please try again.');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Add function to close edit modal
+function closeEditModal() {
+    elements.editModal.style.display = 'none';
+}
+
+// Update the renderTransactions function to include edit and delete buttons
+function renderTransactions() {
+    // ... existing render code ...
+    
+    // Inside the transaction row HTML, update the actions column:
+    html += `
+        <td class="actions">
+            <button class="view-btn" data-si-no="${transaction.siNo}"><i class="fas fa-eye"></i></button>
+            <button class="edit-btn" data-si-no="${transaction.siNo}"><i class="fas fa-edit"></i></button>
+            <button class="delete-btn" data-si-no="${transaction.siNo}"><i class="fas fa-trash"></i></button>
+        </td>
+    `;
