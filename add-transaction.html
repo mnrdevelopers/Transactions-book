@@ -497,18 +497,19 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById("customer-name").value = transaction.customerName;
             document.getElementById("payment-mode").value = transaction.paymentMode;
             
-            // Clear existing items
-            document.getElementById("items-container").innerHTML = "";
-            
-            // Add items
-            transaction.items.forEach(item => {
-                addItem();
-                const lastItem = document.querySelector("#items-container .item-row:last-child");
-                lastItem.querySelector(".item-name").value = item.itemName;
-                lastItem.querySelector(".quantity").value = item.quantity;
-                lastItem.querySelector(".purchase-price").value = item.purchasePrice;
-                lastItem.querySelector(".sale-price").value = item.salePrice;
-            });
+          // Clear existing items first
+    document.getElementById("items-container").innerHTML = "";
+    
+    // Add items only once
+    transaction.items.forEach(item => {
+        addItem();
+        const items = document.querySelectorAll("#items-container .item-row");
+        const lastItem = items[items.length - 1];
+        lastItem.querySelector(".item-name").value = item.itemName;
+        lastItem.querySelector(".quantity").value = item.quantity;
+        lastItem.querySelector(".purchase-price").value = item.purchasePrice;
+        lastItem.querySelector(".sale-price").value = item.salePrice;
+    });
             
             // Update totals
             calculateTotals();
