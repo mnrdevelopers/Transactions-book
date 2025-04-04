@@ -553,4 +553,5 @@ function showError(message) {
             </td>
         </tr>
     `;
+  }
 }
