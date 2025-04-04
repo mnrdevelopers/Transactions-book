@@ -595,16 +595,20 @@ function addEditItem() {
     const newItem = document.createElement("div");
     newItem.className = "edit-item-row";
     newItem.innerHTML = `
-        <input type="text" class="edit-item-name" placeholder="Item name">
-        <input type="number" class="edit-item-qty" placeholder="Qty" value="1">
-        <input type="number" class="edit-item-purchase" placeholder="Purchase price">
-        <input type="number" class="edit-item-sale" placeholder="Sale price">
-        <button class="remove-edit-item">Remove</button>
+        <input type="text" class="edit-item-name" placeholder="Item name" required>
+        <input type="number" class="edit-item-qty" placeholder="Qty" value="1" min="1" required>
+        <input type="number" class="edit-item-purchase" placeholder="Purchase price" min="0" step="0.01" required>
+        <input type="number" class="edit-item-sale" placeholder="Sale price" min="0" step="0.01" required>
+        <button type="button" class="remove-edit-item">Remove</button>
     `;
     container.appendChild(newItem);
     
     newItem.querySelector(".remove-edit-item").addEventListener("click", function() {
-        newItem.remove();
+        if (document.querySelectorAll(".edit-item-row").length > 1) {
+            newItem.remove();
+        } else {
+            alert("At least one item is required");
+        }
     });
 }
 
