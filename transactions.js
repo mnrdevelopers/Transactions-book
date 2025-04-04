@@ -14,7 +14,7 @@ const elements = {
     summaryRangeFilter: document.getElementById("summary-range-filter"),
     customDateStart: document.getElementById("custom-date-start"),
     customDateEnd: document.getElementById("custom-date-end"),
-    customDateApply: document.getElementById("custom-date-apply")
+    customDateApply: document.getElementById("custom-date-apply"),
     searchInput: document.getElementById("search-input"),
     searchBtn: document.getElementById("search-btn"),
     dateFilter: document.getElementById("date-filter"),
