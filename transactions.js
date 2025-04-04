@@ -130,18 +130,22 @@ async function loadTransactions() {
         }
         
         const data = await response.json();
+        console.log("Received data:", data); // Debugging
         
-        // Check if we got valid data
-        if (!data || !Array.isArray(data)) {
+        // More robust data validation
+        if (!data || typeof data !== 'object') {
             throw new Error("Invalid data format received from server");
         }
-        
-        allTransactions = processSheetData(data);
-        
-        if (allTransactions.length === 0) {
-            console.warn("No transactions found in the data");
+
+        // Check if data is in expected format (array or object with data property)
+        const transactionsData = Array.isArray(data) ? data : data.data;
+        if (!transactionsData || !Array.isArray(transactionsData)) {
+            throw new Error("Transaction data is not in expected format");
         }
-        
+
+        allTransactions = processSheetData(transactionsData);
+        console.log("Processed transactions:", allTransactions); // Debugging
+
         updateSummaryCards();
         updateDateFilter();
         filterTransactions();
@@ -677,23 +681,16 @@ function closeModal() {
 }
 
 function showLoading() {
-    elements.transactionsBody.innerHTML = `
-        <tr>
-            <td colspan="8" class="loading-spinner">
-                <div class="spinner"></div>
-                Loading transactions...
-            </td>
-        </tr>
-    `;
+    document.getElementById('loading-overlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loading-overlay').style.display = 'none';
 }
 
 function showError(message) {
-    elements.transactionsBody.innerHTML = `
-        <tr>
-            <td colspan="8" class="error-message">
-                ${message}
-                <button onclick="loadTransactions()">Retry</button>
-            </td>
-        </tr>
-    `;
+    const errorElement = document.getElementById("error-message");
+    document.getElementById("error-text").textContent = message;
+    errorElement.style.display = "block";
+    elements.transactionsBody.innerHTML = "";
 }
