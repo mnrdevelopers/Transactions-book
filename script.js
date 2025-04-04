@@ -6,44 +6,36 @@ if (document.getElementById("transaction-form")) {
     
     // Initialize date display
     const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0];
+    const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD
     const day = String(today.getDate()).padStart(2, '0');
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const currentDateKey = `${day}${month}`;
-    
     document.getElementById("date").textContent = formattedDate;
     document.getElementById("day-month-part").textContent = currentDateKey;
-    document.getElementById("template-date").textContent = formattedDate;
 
     // Sequence number management
     function loadSequenceData() {
-    const savedData = localStorage.getItem(SEQUENCE_STORAGE_KEY);
-    const today = new Date();
-    const currentDay = String(today.getDate()).padStart(2, '0');
-    const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
-    const currentDateKey = `${currentDay}${currentMonth}`;
-    
-    // If no saved data, initialize for current date
-    if (!savedData) {
-        return {
-            date: currentDateKey,
-            lastUsedSequence: 0,
-            nextSequence: 1
-        };
-    }
-    
-    const data = JSON.parse(savedData);
-    
-    // Reset if it's a new day
-    if (data.date !== currentDateKey) {
-        return {
-            date: currentDateKey,
-            lastUsedSequence: 0,
-            nextSequence: 1
-        };
-    }
-    
-    return data;
+        const savedData = localStorage.getItem(SEQUENCE_STORAGE_KEY);
+        if (!savedData) {
+            return {
+                date: currentDateKey,
+                lastUsedSequence: 1,
+                nextSequence: 1
+            };
+        }
+        
+        const data = JSON.parse(savedData);
+        
+        // Reset if it's a new day
+        if (data.date !== currentDateKey) {
+            return {
+                date: currentDateKey,
+                lastUsedSequence: 0,
+                nextSequence: 1
+            };
+        }
+        
+        return data;
     }
 
     function saveSequenceData(data) {
@@ -156,52 +148,17 @@ if (document.getElementById("transaction-form")) {
         return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     }
     
-function updateCurrentTime() {
-    // Update time display
-    document.getElementById("current-time").textContent = 
-        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    // Get current date components
-    const today = new Date();
-    const currentDay = String(today.getDate()).padStart(2, '0');
-    const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
-    const currentYear = today.getFullYear();
-    const newFormattedDate = `${currentYear}-${currentMonth}-${currentDay}`;
-    const newCurrentDateKey = `${currentDay}${currentMonth}`;
-    
-    // Get displayed date components
-    const displayedDate = document.getElementById("date").textContent;
-    const displayedDateKey = document.getElementById("day-month-part").textContent;
-    
-    // Check if date has changed (either day or month)
-    if (displayedDate !== newFormattedDate || displayedDateKey !== newCurrentDateKey) {
-        // Update date displays
-        document.getElementById("date").textContent = newFormattedDate;
-        document.getElementById("day-month-part").textContent = newCurrentDateKey;
-        document.getElementById("template-date").textContent = newFormattedDate;
+    function updateCurrentTime() {
+        document.getElementById("current-time").textContent = 
+            new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
-        // Reset sequence number if date changed
-        const sequenceData = loadSequenceData();
-        if (sequenceData.date !== newCurrentDateKey) {
-            const newSequenceData = {
-                date: newCurrentDateKey,
-                lastUsedSequence: 0,
-                nextSequence: 1
-            };
-            saveSequenceData(newSequenceData);
-            document.getElementById("sequence-no").value = newSequenceData.nextSequence;
-        }
-        
-        // Reset daily stats if date changed
+        // Check if day changed
+        const today = getTodayDateString();
         const savedStats = localStorage.getItem(DAILY_STATS_KEY);
-        if (savedStats) {
-            const stats = JSON.parse(savedStats);
-            if (stats.date !== newFormattedDate) {
-                resetDailyStats();
-            }
+        if (savedStats && JSON.parse(savedStats).date !== today) {
+            resetDailyStats();
         }
     }
-}
     
     function startAutoRefresh() {
         updateCurrentTime();
@@ -312,9 +269,6 @@ function updateCurrentTime() {
 }
     
    function displayBillPreview(data) {
-    // Update template date as well
-    document.getElementById("template-date").textContent = data.date;
-       
     // Hide the template
     document.getElementById("bill-template").style.display = "none";
     
@@ -596,20 +550,10 @@ function submitBill(data) {
     submitBtn.innerHTML = 'Processing...';
     submitBtn.disabled = true;
     
-    // Check if we're in edit mode
-    const urlParams = new URLSearchParams(window.location.search);
-    const editSiNo = urlParams.get('edit');
-    
-    if (editSiNo) {
-        data.action = "update"; // Flag this as an update
-    }
-    
-    // Update local stats only for new transactions
-    if (!editSiNo) {
-        const salesToAdd = data.items.length;
-        const profitToAdd = parseFloat(data.totalProfit) || 0;
-        updateLocalStats(salesToAdd, profitToAdd);
-    }
+    // Update local stats
+    const salesToAdd = data.items.length;
+    const profitToAdd = parseFloat(data.totalProfit) || 0;
+    updateLocalStats(salesToAdd, profitToAdd);
     
     return new Promise((resolve, reject) => {
         fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
@@ -627,13 +571,6 @@ function submitBill(data) {
             document.getElementById("customer-name").value = customerName;
             document.getElementById("items-container").innerHTML = "";
             addItem();
-            
-            // If we were editing, redirect back to transactions
-            if (editSiNo) {
-                localStorage.removeItem('editTransaction');
-                window.location.href = 'transactions.html';
-            }
-            
             resolve();
         })
         .catch(error => {
