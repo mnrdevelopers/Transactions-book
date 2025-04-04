@@ -557,6 +557,14 @@ function setupRowEventListeners() {
     document.querySelectorAll(".view-btn").forEach(btn => {
         btn.addEventListener("click", viewTransactionDetails);
     });
+    
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+        btn.addEventListener("click", editTransaction);
+    });
+    
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", deleteTransaction);
+    });
 }
 
 function viewTransactionDetails(e) {
