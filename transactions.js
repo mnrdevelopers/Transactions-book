@@ -4,6 +4,8 @@ let currentPage = 1;
 let totalPages = 1;
 let allTransactions = [];
 let filteredTransactions = [];
+const API_URL = 'https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec';
+
 
 // DOM Elements
 const elements = {
@@ -20,7 +22,10 @@ const elements = {
     nextBtn: document.getElementById("next-btn"),
     pageInfo: document.getElementById("page-info"),
     viewModal: document.getElementById("view-modal"),
-    transactionDetails: document.getElementById("transaction-details")
+    transactionDetails: document.getElementById("transaction-details"),
+    editModal: document.getElementById("edit-modal"),
+    editForm: document.getElementById("edit-form"),
+    cancelEditBtn: document.getElementById("cancel-edit")
 };
 
 // Initialize the page
@@ -50,6 +55,19 @@ function setupEventListeners() {
     elements.prevBtn.addEventListener("click", goToPrevPage);
     elements.nextBtn.addEventListener("click", goToNextPage);
     document.querySelector(".close").addEventListener("click", closeModal);
+
+     // Modal controls
+    elements.cancelEditBtn?.addEventListener("click", closeEditModal);
+    elements.editForm?.addEventListener("submit", updateTransaction);
+    document.querySelector('.close')?.addEventListener("click", closeEditModal);
+    window.addEventListener("click", function(event) {
+        if (event.target === elements.editModal) {
+            closeEditModal();
+        }
+    });
+    document.getElementById("close-success-modal")?.addEventListener("click", function() {
+        document.getElementById("success-modal").style.display = "none";
+    });
 }
 
 function updateSummaryCards() {
@@ -112,31 +130,64 @@ async function loadTransactions() {
         }
         
         const data = await response.json();
-        allTransactions = processSheetData(data);
+        console.log("Received data:", data); // Debugging
+        
+        // More robust data validation
+        if (!data || typeof data !== 'object') {
+            throw new Error("Invalid data format received from server");
+        }
+
+        // Check if data is in expected format (array or object with data property)
+        const transactionsData = Array.isArray(data) ? data : data.data;
+        if (!transactionsData || !Array.isArray(transactionsData)) {
+            throw new Error("Transaction data is not in expected format");
+        }
+
+        allTransactions = processSheetData(transactionsData);
+        console.log("Processed transactions:", allTransactions); // Debugging
 
         updateSummaryCards();
-        
-        // Update date filter options
         updateDateFilter();
-        
-        // Initial filter and render
         filterTransactions();
     } catch (error) {
         console.error("Error loading transactions:", error);
         showError("Failed to load transactions. Please try again.");
+    } finally {
+        hideLoading();
     }
 }
 
 function processSheetData(sheetData) {
+    // Check if sheetData is valid
+    if (!sheetData || !Array.isArray(sheetData)) {
+        console.error("Invalid sheet data received:", sheetData);
+        return [];
+    }
+
     const transactionsMap = new Map();
     
-    // Skip header row if it exists
-    const startRow = sheetData[0][0] === "Store Name" ? 1 : 0;
+    // Skip header row if it exists (check if first row contains header labels)
+    const startRow = sheetData.length > 0 && sheetData[0].length > 2 && 
+                    sheetData[0][0] === "Store Name" && 
+                    sheetData[0][1] === "Date" && 
+                    sheetData[0][2] === "SI No" ? 1 : 0;
     
     for (let i = startRow; i < sheetData.length; i++) {
         const row = sheetData[i];
-        const siNo = String(row[2] || "").trim(); // Ensure SI No is a string
-        const date = parseDate(row[1]); // Parse date properly
+        
+        // Skip empty or invalid rows
+        if (!row || !Array.isArray(row) || row.length < 11) {
+            console.warn("Skipping invalid row:", row);
+            continue;
+        }
+
+        const siNo = String(row[2] || "").trim();
+        if (!siNo) {
+            console.warn("Skipping row with empty SI No:", row);
+            continue;
+        }
+
+        const date = parseDate(row[1]);
         
         if (!transactionsMap.has(siNo)) {
             transactionsMap.set(siNo, {
@@ -152,14 +203,16 @@ function processSheetData(sheetData) {
             });
         }
         
-        // Add item to transaction
-        transactionsMap.get(siNo).items.push({
-            itemName: String(row[4] || ""),
-            quantity: parseFloat(row[5]) || 0,
-            purchasePrice: parseFloat(row[6]) || 0,
-            salePrice: parseFloat(row[7]) || 0,
-            itemTotal: (parseFloat(row[5]) || 0) * (parseFloat(row[7]) || 0)
-        });
+        // Add item to transaction only if we have required fields
+        if (row[4] && row[5] && row[7]) { // itemName, quantity, salePrice
+            transactionsMap.get(siNo).items.push({
+                itemName: String(row[4] || ""),
+                quantity: parseFloat(row[5]) || 0,
+                purchasePrice: parseFloat(row[6]) || 0,
+                salePrice: parseFloat(row[7]) || 0,
+                itemTotal: (parseFloat(row[5]) || 0) * (parseFloat(row[7]) || 0)
+            });
+        }
     }
     
     // Convert to array and sort by date (newest first)
@@ -169,9 +222,11 @@ function processSheetData(sheetData) {
     return transactions;
 }
 
-// Update the parseDate function to:
+// Update the parseDate function to be more robust
 function parseDate(dateValue) {
     if (dateValue instanceof Date) return dateValue;
+    
+    if (!dateValue) return new Date(); // Return current date if no date provided
     
     if (typeof dateValue === 'string') {
         // Try ISO format (YYYY-MM-DD)
@@ -192,7 +247,7 @@ function parseDate(dateValue) {
     }
     
     console.warn("Could not parse date:", dateValue);
-    return new Date();
+    return new Date(); // Return current date as fallback
 }
 
 function updateDateFilter() {
@@ -242,6 +297,179 @@ function filterTransactions() {
     renderTransactions();
     updateSummaryCards();
 }
+
+async function editTransaction(e) {
+    const siNo = e.currentTarget.getAttribute("data-si-no");
+    const transaction = allTransactions.find(t => t.siNo === siNo);
+    
+    if (!transaction) return;
+    
+    showLoading();
+    
+    try {
+        // Create edit form
+        elements.editForm.innerHTML = `
+            <input type="hidden" id="edit-si-no" value="${transaction.siNo}">
+            <div class="form-group">
+                <label for="edit-customer-name">Customer Name</label>
+                <input type="text" id="edit-customer-name" value="${transaction.customerName}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-payment-mode">Payment Mode</label>
+                <select id="edit-payment-mode" required>
+                    <option value="Cash" ${transaction.paymentMode === 'Cash' ? 'selected' : ''}>Cash</option>
+                    <option value="Card" ${transaction.paymentMode === 'Card' ? 'selected' : ''}>Card</option>
+                    <option value="UPI" ${transaction.paymentMode === 'UPI' ? 'selected' : ''}>UPI</option>
+                </select>
+            </div>
+            
+            <h3>Items:</h3>
+            <div id="edit-items-container">
+                ${transaction.items.map((item, index) => `
+                    <div class="edit-item-row" data-index="${index}">
+                        <input type="text" class="edit-item-name" value="${item.itemName}" placeholder="Item name" required>
+                        <input type="number" class="edit-item-qty" value="${item.quantity}" min="1" placeholder="Qty" required>
+                        <input type="number" class="edit-item-purchase" value="${item.purchasePrice}" min="0" step="0.01" placeholder="Purchase price" required>
+                        <input type="number" class="edit-item-sale" value="${item.salePrice}" min="0" step="0.01" placeholder="Sale price" required>
+                        <button type="button" class="remove-edit-item"><i class="fas fa-times"></i></button>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <button type="button" id="add-edit-item" class="btn-secondary"><i class="fas fa-plus"></i> Add Item</button>
+        `;
+        
+        // Add event listeners for edit form
+        document.getElementById("add-edit-item").addEventListener("click", addEditItem);
+        document.querySelectorAll(".remove-edit-item").forEach(btn => {
+            btn.addEventListener("click", function() {
+                this.parentElement.remove();
+            });
+        });
+        
+        // Show modal
+        elements.editModal.style.display = 'block';
+    } catch (error) {
+        console.error('Error opening edit modal:', error);
+        alert('Failed to load transaction for editing. Please try again.');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Add function to add items in edit mode
+function addEditItem() {
+    const container = document.getElementById("edit-items-container");
+    const newItem = document.createElement("div");
+    newItem.className = "edit-item-row";
+    newItem.innerHTML = `
+        <input type="text" class="edit-item-name" placeholder="Item name" required>
+        <input type="number" class="edit-item-qty" value="1" min="1" placeholder="Qty" required>
+        <input type="number" class="edit-item-purchase" min="0" step="0.01" placeholder="Purchase price" required>
+        <input type="number" class="edit-item-sale" min="0" step="0.01" placeholder="Sale price" required>
+        <button type="button" class="remove-edit-item"><i class="fas fa-times"></i></button>
+    `;
+    container.appendChild(newItem);
+    
+    newItem.querySelector(".remove-edit-item").addEventListener("click", function() {
+        newItem.remove();
+    });
+}
+
+// Add function to update transaction
+async function updateTransaction(e) {
+    e.preventDefault();
+    showLoading();
+    
+    const siNo = document.getElementById('edit-si-no').value;
+    const customerName = document.getElementById('edit-customer-name').value;
+    const paymentMode = document.getElementById('edit-payment-mode').value;
+    
+    // Collect items
+    const items = [];
+    document.querySelectorAll('.edit-item-row').forEach(row => {
+        items.push({
+            itemName: row.querySelector('.edit-item-name').value,
+            quantity: parseFloat(row.querySelector('.edit-item-qty').value),
+            purchasePrice: parseFloat(row.querySelector('.edit-item-purchase').value),
+            salePrice: parseFloat(row.querySelector('.edit-item-sale').value)
+        });
+    });
+    
+    // Calculate totals
+    const totalAmount = items.reduce((sum, item) => sum + (item.quantity * item.salePrice), 0);
+    const totalProfit = items.reduce((sum, item) => sum + (item.quantity * (item.salePrice - item.purchasePrice)), 0);
+    
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'update',
+                siNo: siNo,
+                customerName: customerName,
+                paymentMode: paymentMode,
+                items: items,
+                totalAmount: totalAmount,
+                totalProfit: totalProfit
+            })
+        });
+        
+        if (response.ok) {
+            showSuccessMessage('Transaction updated successfully!');
+            closeEditModal();
+            loadTransactions();
+        } else {
+            throw new Error('Failed to update transaction');
+        }
+    } catch (error) {
+        console.error('Error updating transaction:', error);
+        alert('Failed to update transaction. Please try again.');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Add function to delete transaction
+async function deleteTransaction(e) {
+    const siNo = e.currentTarget.getAttribute("data-si-no");
+    
+    if (!confirm(`Are you sure you want to delete transaction ${siNo}? This cannot be undone.`)) {
+        return;
+    }
+    
+    showLoading();
+    
+    try {
+        const response = await fetch(`${API_URL}?action=delete&siNo=${encodeURIComponent(siNo)}`, {
+            method: 'GET',
+            mode: 'no-cors'
+        });
+        
+        if (response.ok) {
+            showSuccessMessage('Transaction deleted successfully!');
+            // Remove from local data and refresh
+            allTransactions = allTransactions.filter(t => t.siNo !== siNo);
+            filterTransactions();
+        } else {
+            throw new Error('Failed to delete transaction');
+        }
+    } catch (error) {
+        console.error('Error deleting transaction:', error);
+        alert('Failed to delete transaction. Please try again.');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Add function to close edit modal
+function closeEditModal() {
+    elements.editModal.style.display = 'none';
+}
+
 
 function renderTransactions() {
     const startIdx = (currentPage - 1) * PAGE_SIZE;
@@ -294,7 +522,9 @@ function renderTransactions() {
             <td>₹${transaction.totalProfit.toFixed(2)}</td>
             <td>${transaction.paymentMode}</td>
             <td class="actions">
-                <button class="view-btn" data-si-no="${transaction.siNo}">View</button>
+            <button class="view-btn" data-si-no="${transaction.siNo}"><i class="fas fa-eye"></i></button>
+            <button class="edit-btn" data-si-no="${transaction.siNo}"><i class="fas fa-edit"></i></button>
+            <button class="delete-btn" data-si-no="${transaction.siNo}"><i class="fas fa-trash"></i></button> 
             </td>
         `;
         elements.transactionsBody.appendChild(row);
@@ -363,6 +593,14 @@ function updatePagination() {
 function setupRowEventListeners() {
     document.querySelectorAll(".view-btn").forEach(btn => {
         btn.addEventListener("click", viewTransactionDetails);
+    });
+    
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+        btn.addEventListener("click", editTransaction);
+    });
+    
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", deleteTransaction);
     });
 }
 
@@ -443,23 +681,16 @@ function closeModal() {
 }
 
 function showLoading() {
-    elements.transactionsBody.innerHTML = `
-        <tr>
-            <td colspan="8" class="loading-spinner">
-                <div class="spinner"></div>
-                Loading transactions...
-            </td>
-        </tr>
-    `;
+    document.getElementById('loading-overlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loading-overlay').style.display = 'none';
 }
 
 function showError(message) {
-    elements.transactionsBody.innerHTML = `
-        <tr>
-            <td colspan="8" class="error-message">
-                ${message}
-                <button onclick="loadTransactions()">Retry</button>
-            </td>
-        </tr>
-    `;
+    const errorElement = document.getElementById("error-message");
+    document.getElementById("error-text").textContent = message;
+    errorElement.style.display = "block";
+    elements.transactionsBody.innerHTML = "";
 }
