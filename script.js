@@ -233,8 +233,12 @@ function updateCurrentTime() {
         setInterval(updateCurrentTime, 60000); // Update every minute
     }
 
-  function addItem() {
-    // Don't add empty item if we're in edit mode
+ function addItem() {
+    // Check if we're in edit mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const editSiNo = urlParams.get('edit');
+    
+    // Don't add empty item if we're in edit mode and there are already items
     if (editSiNo && document.querySelectorAll(".item-row").length > 0) {
         return;
     }
