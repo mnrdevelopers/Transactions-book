@@ -175,15 +175,6 @@ if (document.getElementById("transaction-form")) {
             return false;
         }
 
-    const transactionDate = new Date(document.getElementById("transaction-date").value);
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    
-    if (transactionDate > today) {
-        alert("Transaction date cannot be in the future");
-        return false;
-    }
-        
         // Check at least one item exists
         if (document.querySelectorAll(".item-row").length === 0) {
             alert("Please add at least one item");
