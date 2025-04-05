@@ -8,6 +8,49 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+.summary-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin: 20px 0;
+    align-items: flex-end;
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-group label {
+    font-size: 14px;
+    color: #555;
+}
+
+.filter-group select, .filter-group input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.filter-btn:hover {
+    background-color: #45a049;
+}
+        
         .toast {
     position: fixed;
     bottom: 20px;
@@ -163,6 +206,35 @@
         <p class="amount" id="daily-average">₹0.00</p>
         <p class="change">7-day average sales</p>
     </div>
+</div>
+        <!-- Add this after the summary-cards div -->
+<div class="summary-filters">
+    <div class="filter-group">
+        <label for="summary-date-range">Date Range:</label>
+        <select id="summary-date-range">
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="this_week">This Week</option>
+            <option value="last_week">Last Week</option>
+            <option value="this_month">This Month</option>
+            <option value="last_month">Last Month</option>
+            <option value="custom">Custom Date</option>
+        </select>
+    </div>
+    <div class="filter-group" id="custom-date-group" style="display:none;">
+        <label for="custom-date">Select Date:</label>
+        <input type="date" id="custom-date">
+    </div>
+    <div class="filter-group">
+        <label for="summary-payment-mode">Payment Mode:</label>
+        <select id="summary-payment-mode">
+            <option value="all">All Payments</option>
+            <option value="Cash">Cash</option>
+            <option value="Card">Card</option>
+            <option value="UPI">UPI</option>
+        </select>
+    </div>
+    <button id="apply-summary-filter" class="filter-btn">Apply Filter</button>
 </div>
 
         <div class="controls">
