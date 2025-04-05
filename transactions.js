@@ -442,6 +442,9 @@ function editTransaction(e) {
     // Store the transaction data in localStorage
     localStorage.setItem('editTransactionData', JSON.stringify(transaction));
     
+    // Add a flag to indicate this is an edit
+    localStorage.setItem('isEditMode', 'true');
+    
     // Redirect to add-transaction page with edit mode
     window.location.href = 'add-transaction.html?edit=' + encodeURIComponent(siNo);
 }
