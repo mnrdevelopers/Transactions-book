@@ -155,15 +155,14 @@ function updateSummaryCards() {
 }
 
 async function loadTransactions() {
+    const originalContent = elements.transactionsBody.innerHTML;
+    showLoading(elements.transactionsBody);
+    
     try {
-        showLoading();
-        
         const scriptUrl = "https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec";
         const response = await fetch(scriptUrl);
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         const data = await response.json();
         allTransactions = processSheetData(data);
@@ -174,6 +173,8 @@ async function loadTransactions() {
     } catch (error) {
         console.error("Error loading transactions:", error);
         showError("Failed to load transactions. Please try again.");
+    } finally {
+        hideLoading(elements.transactionsBody, originalContent);
     }
 }
 
@@ -601,9 +602,10 @@ function removeEditItem(e) {
 async function saveEditedTransaction(e) {
     e.preventDefault();
     
-    const siNo = e.target.closest('.edit-btn')?.getAttribute('data-si-no');
-    const transaction = allTransactions.find(t => t.siNo === siNo);
-    if (!transaction) return;
+    const originalContent = elements.editFormContainer.innerHTML;
+    showLoading(elements.editFormContainer);
+    
+    try {
     
     // Collect edited data
     const editedData = {
@@ -653,8 +655,7 @@ async function saveEditedTransaction(e) {
         console.error("Error updating transaction:", error);
         alert("Failed to update transaction. Please try again.");
     } finally {
-        // Hide loading indicator
-        filterTransactions();
+        hideLoading(elements.editFormContainer, originalContent);
     }
 }
 
@@ -670,8 +671,8 @@ function deleteTransaction(e) {
 }
 
 async function confirmDelete() {
-    const siNo = elements.deleteModal.getAttribute('data-si-no');
-    if (!siNo) return;
+    const originalContent = elements.transactionsBody.innerHTML;
+    showLoading(elements.transactionsBody);
     
     try {
         // Show loading indicator
@@ -685,12 +686,11 @@ async function confirmDelete() {
         // Reload transactions after successful deletion
         await loadTransactions();
         elements.deleteModal.style.display = 'none';
-    } catch (error) {
+      } catch (error) {
         console.error("Error deleting transaction:", error);
         alert("Failed to delete transaction. Please try again.");
     } finally {
-        // Hide loading indicator
-        filterTransactions();
+        hideLoading(elements.transactionsBody, originalContent);
     }
 }
 
@@ -712,32 +712,24 @@ function closeModal() {
     elements.viewModal.style.display = "none";
 }
 
-function showLoading() {
-    const loadingOverlay = document.createElement('div');
-    loadingOverlay.id = 'loading-overlay';
-    loadingOverlay.style.position = 'fixed';
-    loadingOverlay.style.top = '0';
-    loadingOverlay.style.left = '0';
-    loadingOverlay.style.width = '100%';
-    loadingOverlay.style.height = '100%';
-    loadingOverlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
-    loadingOverlay.style.display = 'flex';
-    loadingOverlay.style.justifyContent = 'center';
-    loadingOverlay.style.alignItems = 'center';
-    loadingOverlay.style.zIndex = '1000';
-    
-    loadingOverlay.innerHTML = `
-        <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
+// Remove the existing showLoading() function and replace with:
+function showLoading(container) {
+    const loadingHTML = `
+        <div class="loading-spinner">
             <div class="spinner"></div>
-            <p>Processing...</p>
+            <p>Loading...</p>
         </div>
     `;
     
-    document.body.appendChild(loadingOverlay);
-    
-    return () => {
-        document.body.removeChild(loadingOverlay);
-    };
+    if (container) {
+        container.innerHTML = loadingHTML;
+    }
+}
+
+function hideLoading(container, originalContent) {
+    if (container && originalContent) {
+        container.innerHTML = originalContent;
+    }
 }
 
 function showError(message) {
