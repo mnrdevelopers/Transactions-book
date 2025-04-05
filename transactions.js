@@ -294,8 +294,8 @@ function renderTransactions() {
             <td>₹${transaction.totalProfit.toFixed(2)}</td>
             <td>${transaction.paymentMode}</td>
             <td class="actions">
-               <button class="view-btn" data-si-no="${transaction.siNo}" title="View"><i class="fas fa-eye"></i></button>
-               <button class="delete-btn" data-si-no="${transaction.siNo}" title="Delete"><i class="fas fa-trash-alt"></i></button>
+              <button class="view-btn" data-si-no="${transaction.siNo}">View</button>
+             <button class="delete-btn" data-si-no="${transaction.siNo}">Delete</button>
             </td>
         `;
         elements.transactionsBody.appendChild(row);
