@@ -1,7 +1,7 @@
 {
-    "name": "RK FASHIONS BILL APP",
+    "name": "MNR BILL APP",
     "short_name": "BillBOOK",
-    "start_url": "https://mnrdevelopers.github.io/Transactions-book/",
+    "start_url": "https://mnrdevelopers.github.io/mnr-bill-book/",
     "display": "standalone",
     "icons": [
         {
