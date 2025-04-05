@@ -1,586 +1,542 @@
-// Transaction page specific code
-if (document.getElementById("transaction-form")) {
-    // Constants
-    const DAILY_STATS_KEY = 'rkFashionsDailyStats';
-    const SEQUENCE_STORAGE_KEY = 'rkFashionsBillSequenceData';
-    
-    // Initialize date display
-    const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const currentDateKey = `${day}${month}`;
-    document.getElementById("date").textContent = formattedDate;
-    document.getElementById("day-month-part").textContent = currentDateKey;
-
-    // Sequence number management
-    function loadSequenceData() {
-        const savedData = localStorage.getItem(SEQUENCE_STORAGE_KEY);
-        if (!savedData) {
-            return {
-                date: currentDateKey,
-                lastUsedSequence: 1,
-                nextSequence: 1
-            };
-        }
+ // Transaction page specific code
+        // Constants
+        const DAILY_STATS_KEY = 'rkFashionsDailyStats';
+        const TRANSACTION_COUNTER_KEY = 'rkFashionsTransactionCounter';
         
-        const data = JSON.parse(savedData);
-        
-        // Reset if it's a new day
-        if (data.date !== currentDateKey) {
-            return {
-                date: currentDateKey,
-                lastUsedSequence: 0,
-                nextSequence: 1
-            };
-        }
-        
-        return data;
-    }
+        // Initialize date display
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD
+        document.getElementById("transaction-date").value = formattedDate;
 
-    function saveSequenceData(data) {
-        localStorage.setItem(SEQUENCE_STORAGE_KEY, JSON.stringify(data));
-    }
-
-    function initializeSequenceNumber() {
-        const sequenceData = loadSequenceData();
-        document.getElementById("sequence-no").value = sequenceData.nextSequence;
-        return sequenceData;
-    }
-
-    function incrementSequenceNumber() {
-        const sequenceData = loadSequenceData();
-        sequenceData.lastUsedSequence = sequenceData.nextSequence;
-        sequenceData.nextSequence = sequenceData.nextSequence + 1;
-        saveSequenceData(sequenceData);
-        return sequenceData;
-    }
-    
-    // Initialize form and sequence number
-    let currentSequenceData = initializeSequenceNumber();
-    addItem();
-    document.getElementById("add-item").addEventListener("click", addItem);
-    document.getElementById("items-container").addEventListener("input", function(e) {
-        if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
-            calculateTotals();
-        }
-    });
-    document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
-    setupPrintButton();
-
-    // ======================
-    // DAILY STATS FUNCTIONS
-    // ======================
-    
-    // Initialize stats
-    initDailyStats();
-    startAutoRefresh();
-    
-    function initDailyStats() {
-        const today = getTodayDateString();
-        const savedStats = localStorage.getItem(DAILY_STATS_KEY);
-        
-        if (savedStats) {
-            const stats = JSON.parse(savedStats);
-            if (stats.date === today) {
-                updateStatsUI(stats.salesCount, stats.totalProfit);
-                return;
+        // Transaction counter management
+        function getNextTransactionNumber() {
+            let counter = localStorage.getItem(TRANSACTION_COUNTER_KEY);
+            if (!counter) {
+                counter = 1;
+            } else {
+                counter = parseInt(counter) + 1;
             }
+            localStorage.setItem(TRANSACTION_COUNTER_KEY, counter.toString());
+            return counter;
         }
-        resetDailyStats();
-    }
-    
-    function resetDailyStats() {
-        const newStats = {
-            date: getTodayDateString(),
-            salesCount: 0,
-            totalProfit: 0,
-            lastUpdated: new Date().getTime()
-        };
-        localStorage.setItem(DAILY_STATS_KEY, JSON.stringify(newStats));
-        updateStatsUI(0, 0);
-    }
-    
-    function updateStatsUI(count, profit) {
-        document.getElementById("today-sales-count").textContent = count;
-        document.getElementById("today-profit-total").textContent = `₹${profit.toFixed(2)}`;
-        document.getElementById("last-updated-time").textContent = new Date().toLocaleTimeString();
-        
-        // Visual feedback
-        const statCards = document.querySelectorAll('.stat-card');
-        statCards.forEach(card => {
-            card.classList.toggle('has-data', count > 0);
+
+        function initializeBillNumber() {
+            const nextNumber = getNextTransactionNumber();
+            document.getElementById("bill-no").value = `RK-${nextNumber.toString().padStart(4, '0')}`;
+        }
+
+        // Initialize form and bill number
+        initializeBillNumber();
+        addItem();
+        document.getElementById("add-item").addEventListener("click", addItem);
+        document.getElementById("items-container").addEventListener("input", function(e) {
+            if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
+                calculateTotals();
+            }
         });
-    }
-    
-    function updateLocalStats(additionalSales, additionalProfit) {
-        const today = getTodayDateString();
-        const savedStats = localStorage.getItem(DAILY_STATS_KEY);
+        document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
+        setupPrintButton();
+
+        // ======================
+        // DAILY STATS FUNCTIONS
+        // ======================
         
-        let currentStats = savedStats ? JSON.parse(savedStats) : {
-            date: today,
-            salesCount: 0,
-            totalProfit: 0
-        };
+        // Initialize stats
+        initDailyStats();
+        startAutoRefresh();
         
-        // Reset if day changed
-        if (currentStats.date !== today) {
-            currentStats = {
+        function initDailyStats() {
+            const today = getTodayDateString();
+            const savedStats = localStorage.getItem(DAILY_STATS_KEY);
+            
+            if (savedStats) {
+                const stats = JSON.parse(savedStats);
+                if (stats.date === today) {
+                    updateStatsUI(stats.salesCount, stats.totalProfit);
+                    return;
+                }
+            }
+            resetDailyStats();
+        }
+        
+        function resetDailyStats() {
+            const newStats = {
+                date: getTodayDateString(),
+                salesCount: 0,
+                totalProfit: 0,
+                lastUpdated: new Date().getTime()
+            };
+            localStorage.setItem(DAILY_STATS_KEY, JSON.stringify(newStats));
+            updateStatsUI(0, 0);
+        }
+        
+        function updateStatsUI(count, profit) {
+            document.getElementById("today-sales-count").textContent = count;
+            document.getElementById("today-profit-total").textContent = `₹${profit.toFixed(2)}`;
+            document.getElementById("last-updated-time").textContent = new Date().toLocaleTimeString();
+            
+            // Visual feedback
+            const statCards = document.querySelectorAll('.stat-card');
+            statCards.forEach(card => {
+                card.classList.toggle('has-data', count > 0);
+            });
+        }
+        
+        function updateLocalStats(additionalSales, additionalProfit) {
+            const today = getTodayDateString();
+            const savedStats = localStorage.getItem(DAILY_STATS_KEY);
+            
+            let currentStats = savedStats ? JSON.parse(savedStats) : {
                 date: today,
                 salesCount: 0,
                 totalProfit: 0
             };
-        }
-        
-        const newStats = {
-            date: today,
-            salesCount: currentStats.salesCount + additionalSales,
-            totalProfit: parseFloat((currentStats.totalProfit + additionalProfit).toFixed(2)),
-            lastUpdated: new Date().getTime()
-        };
-        
-        localStorage.setItem(DAILY_STATS_KEY, JSON.stringify(newStats));
-        updateStatsUI(newStats.salesCount, newStats.totalProfit);
-    }
-    
-    function getTodayDateString() {
-        const today = new Date();
-        return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    }
-    
-    function updateCurrentTime() {
-        document.getElementById("current-time").textContent = 
-            new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        // Check if day changed
-        const today = getTodayDateString();
-        const savedStats = localStorage.getItem(DAILY_STATS_KEY);
-        if (savedStats && JSON.parse(savedStats).date !== today) {
-            resetDailyStats();
-        }
-    }
-    
-    function startAutoRefresh() {
-        updateCurrentTime();
-        setInterval(updateCurrentTime, 60000); // Update every minute
-    }
-
-    function addItem() {
-        const itemsContainer = document.getElementById("items-container");
-        const newItem = document.createElement("div");
-        newItem.className = "item-row";
-        newItem.innerHTML = `
-            <label>Item Name:</label>
-            <input type="text" class="item-name" required>
             
-            <label>Quantity:</label>
-            <input type="number" class="quantity" min="1" value="1" required>
-            
-            <label>Purchase Price (₹):</label>
-            <input type="number" class="purchase-price" min="0" step="0.01" required>
-            
-            <label>Sale Price (₹):</label>
-            <input type="number" class="sale-price" min="0" step="0.01" required>
-            
-            <button type="button" class="remove-item">Remove</button>
-        `;
-        itemsContainer.appendChild(newItem);
-        
-        // Add remove event
-        newItem.querySelector(".remove-item").addEventListener("click", function() {
-            newItem.remove();
-            calculateTotals();
-        });
-    }
-
-    function calculateTotals() {
-        let totalAmount = 0;
-        let totalProfit = 0;
-        
-        document.querySelectorAll(".item-row").forEach(row => {
-            const qty = parseFloat(row.querySelector(".quantity").value) || 0;
-            const sale = parseFloat(row.querySelector(".sale-price").value) || 0;
-            const purchase = parseFloat(row.querySelector(".purchase-price").value) || 0;
-            
-            totalAmount += qty * sale;
-            totalProfit += qty * (sale - purchase);
-        });
-        
-        document.getElementById("total-amount").value = totalAmount.toFixed(2);
-        document.getElementById("total-profit").value = totalProfit.toFixed(2);
-    }
-
-    function validateForm() {
-        // Check customer name
-        if (!document.getElementById("customer-name").value.trim()) {
-            alert("Please enter customer name");
-            return false;
-        }
-        
-        // Check at least one item exists
-        if (document.querySelectorAll(".item-row").length === 0) {
-            alert("Please add at least one item");
-            return false;
-        }
-        
-        // Validate all items
-        let valid = true;
-        document.querySelectorAll(".item-row").forEach(row => {
-            const qty = row.querySelector(".quantity").value;
-            const sale = row.querySelector(".sale-price").value;
-            
-            if (!qty || !sale || isNaN(qty) || isNaN(sale)) {
-                row.style.border = "1px solid red";
-                valid = false;
-            } else {
-                row.style.border = "";
+            // Reset if day changed
+            if (currentStats.date !== today) {
+                currentStats = {
+                    date: today,
+                    salesCount: 0,
+                    totalProfit: 0
+                };
             }
-        });
-        
-        if (!valid) alert("Please check all item fields");
-        return valid;
-    }
-
-  function prepareBillData() {
-    const items = [];
-    document.querySelectorAll(".item-row").forEach(row => {
-        items.push({
-            itemName: row.querySelector(".item-name").value,
-            quantity: row.querySelector(".quantity").value,
-            purchasePrice: row.querySelector(".purchase-price").value,
-            salePrice: row.querySelector(".sale-price").value,
-            total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
-        });
-    });
-    
-    const dayMonthPart = document.getElementById("day-month-part").textContent;
-    const sequenceNo = document.getElementById("sequence-no").value.padStart(3, '0');
-    
-    return {
-        storeName: "RK Fashions",
-        date: document.getElementById("date").textContent,
-        siNo: `${dayMonthPart}-${sequenceNo}`,
-        customerName: document.getElementById("customer-name").value,
-        items: items,
-        paymentMode: document.getElementById("payment-mode").value,
-        totalAmount: document.getElementById("total-amount").value,
-        totalProfit: document.getElementById("total-profit").value
-    };
-}
-    
-   function displayBillPreview(data) {
-    // Hide the template
-    document.getElementById("bill-template").style.display = "none";
-    
-    // Show the preview container
-    document.getElementById("bill-preview").style.display = "block";
-    document.getElementById("bill-details").style.display = "block";
-    
-    // Show the dynamic bill container
-    const preview = document.getElementById("bill-details");
-    preview.style.display = "block";
-
-    // Force-show UPI row if needed
-    const upiRow = document.getElementById("upi-qr-row");
-    upiRow.style.display = data.paymentMode === "UPI" ? "table-row" : "none";
-    
-    // Build the bill with smaller font sizes for thermal printer
-    preview.innerHTML = `
-        <div class="bill-header">
-            <h3>${data.storeName}</h3>
-            <p class="store-info-bill">Gram Panchayath Complex, Dichpally Busstand - 503174</p>
-            <p class="store-contact-bill">Mobile: +91 7893433457, +91 7842694544</p>
             
-            <div class="bill-meta">
-                <p><strong>Date:</strong> ${data.date}</p>
-                <p><strong>Bill No:</strong> ${data.siNo}</p>
-                <p><strong>Customer:</strong> ${data.customerName}</p>
-            </div>
-        </div>
+            const newStats = {
+                date: today,
+                salesCount: currentStats.salesCount + additionalSales,
+                totalProfit: parseFloat((currentStats.totalProfit + additionalProfit).toFixed(2)),
+                lastUpdated: new Date().getTime()
+            };
+            
+            localStorage.setItem(DAILY_STATS_KEY, JSON.stringify(newStats));
+            updateStatsUI(newStats.salesCount, newStats.totalProfit);
+        }
         
-        <table class="bill-items">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${data.items.map(item => `
-                    <tr>
-                        <td>${item.itemName}</td>
-                        <td>${item.quantity}</td>
-                        <td>₹${item.salePrice}</td>
-                        <td>₹${item.total}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="3"><strong>Total Amount</strong></td>
-                    <td><strong>₹${data.totalAmount}</strong></td>
-                </tr>
-                <tr>
-                    <td colspan="3"><strong>Payment Mode</strong></td>
-                    <td><strong>${data.paymentMode}</strong></td>
-                </tr>
-                ${data.paymentMode === "Cash" ? `
-                <tr>
-                    <td colspan="3"><strong>Amount Received</strong></td>
-                    <td><strong>₹${document.getElementById('amount-received').value || data.totalAmount}</strong></td>
-                </tr>
-                <tr>
-                    <td colspan="3"><strong>Change Given</strong></td>
-                    <td><strong>₹${document.getElementById('change-amount').value || '0.00'}</strong></td>
-                </tr>
-                ` : ''}
-                ${data.paymentMode === "UPI" ? `
-                <tr id="upi-qr-row">
-                    <td colspan="4" style="text-align:center; padding:8px 0;">
-                        <div style="margin: 0 auto; width: fit-content;">
-                            <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
-                            <img src="upi-qr.png" alt="UPI QR Code" style="width:120px; height:120px;">
-                            <p style="font-size:10px; margin-top:3px;">UPI ID: maniteja1098@oksbi</p>
-                        </div>
-                    </td>
-                </tr>
-                ` : ''}
-            </tfoot>
-        </table>
+        function getTodayDateString() {
+            const today = new Date();
+            return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        }
         
-        <div class="bill-footer">
-            <p>Thank you for your purchase!</p>
-        </div>
-    `;
+        function updateCurrentTime() {
+            document.getElementById("current-time").textContent = 
+                new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            // Check if day changed
+            const today = getTodayDateString();
+            const savedStats = localStorage.getItem(DAILY_STATS_KEY);
+            if (savedStats && JSON.parse(savedStats).date !== today) {
+                resetDailyStats();
+            }
+        }
+        
+        function startAutoRefresh() {
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 60000); // Update every minute
+        }
 
-    // Scroll to the bill preview
-    document.getElementById("bill-preview").scrollIntoView({ behavior: 'smooth' });
-}
-    
-    function setupPrintButton() {
-        const printBtn = document.getElementById("print-bill");
-        if (printBtn) {
-            printBtn.addEventListener("click", function() {
-                window.print();
+        function addItem() {
+            const itemsContainer = document.getElementById("items-container");
+            const newItem = document.createElement("div");
+            newItem.className = "item-row";
+            newItem.innerHTML = `
+                <label>Item Name:</label>
+                <input type="text" class="item-name" required>
+                
+                <label>Quantity:</label>
+                <input type="number" class="quantity" min="1" value="1" required>
+                
+                <label>Purchase Price (₹):</label>
+                <input type="number" class="purchase-price" min="0" step="0.01" required>
+                
+                <label>Sale Price (₹):</label>
+                <input type="number" class="sale-price" min="0" step="0.01" required>
+                
+                <button type="button" class="remove-item">Remove</button>
+            `;
+            itemsContainer.appendChild(newItem);
+            
+            // Add remove event
+            newItem.querySelector(".remove-item").addEventListener("click", function() {
+                newItem.remove();
+                calculateTotals();
             });
         }
-    }
 
- // Add these at the top of the script.js file
-function showCashPaymentModal(totalAmount) {
-    const modal = document.getElementById('cash-payment-modal');
-    document.getElementById('modal-total-amount').value = totalAmount;
-    document.getElementById('amount-received').value = '';
-    document.getElementById('change-amount').value = '0.00';
-    modal.style.display = 'flex';
-    
-    // Focus on amount received field
-    document.getElementById('amount-received').focus();
-}
+        function calculateTotals() {
+            let totalAmount = 0;
+            let totalProfit = 0;
+            
+            document.querySelectorAll(".item-row").forEach(row => {
+                const qty = parseFloat(row.querySelector(".quantity").value) || 0;
+                const sale = parseFloat(row.querySelector(".sale-price").value) || 0;
+                const purchase = parseFloat(row.querySelector(".purchase-price").value) || 0;
+                
+                totalAmount += qty * sale;
+                totalProfit += qty * (sale - purchase);
+            });
+            
+            document.getElementById("total-amount").value = totalAmount.toFixed(2);
+            document.getElementById("total-profit").value = totalProfit.toFixed(2);
+        }
 
-function calculateChange() {
-    const amountReceived = parseFloat(document.getElementById('amount-received').value) || 0;
-    const totalAmount = parseFloat(document.getElementById('modal-total-amount').value) || 0;
-    const change = amountReceived - totalAmount;
-    
-    document.getElementById('change-amount').value = change.toFixed(2);
-    
-    // Highlight if change is negative (customer didn't pay enough)
-    const changeField = document.getElementById('change-amount');
-    if (change < 0) {
-        changeField.style.color = 'red';
-        changeField.style.fontWeight = 'bold';
-    } else {
-        changeField.style.color = 'green';
-        changeField.style.fontWeight = 'normal';
-    }
-}
+        function validateForm() {
+            // Check customer name
+            if (!document.getElementById("customer-name").value.trim()) {
+                alert("Please enter customer name");
+                return false;
+            }
+            
+            // Check at least one item exists
+            if (document.querySelectorAll(".item-row").length === 0) {
+                alert("Please add at least one item");
+                return false;
+            }
+            
+            // Validate all items
+            let valid = true;
+            document.querySelectorAll(".item-row").forEach(row => {
+                const qty = row.querySelector(".quantity").value;
+                const sale = row.querySelector(".sale-price").value;
+                
+                if (!qty || !sale || isNaN(qty) || isNaN(sale)) {
+                    row.style.border = "1px solid red";
+                    valid = false;
+                } else {
+                    row.style.border = "";
+                }
+            });
+            
+            if (!valid) alert("Please check all item fields");
+            return valid;
+        }
 
-function setupCashPaymentModal() {
-    const modal = document.getElementById('cash-payment-modal');
-    const closeBtn = document.querySelector('#cash-payment-modal .close');
-    const cancelBtn = document.getElementById('cancel-cash-payment');
-    const confirmBtn = document.getElementById('confirm-cash-payment');
-    const amountReceived = document.getElementById('amount-received');
-    
-    // Close modal events
-    closeBtn.onclick = function() {
-        modal.style.display = 'none';
-    }
-    
-    cancelBtn.onclick = function() {
-        modal.style.display = 'none';
-    }
-    
-    // Calculate change when amount received changes
-    amountReceived.addEventListener('input', calculateChange);
-    
-    // Confirm payment
-    confirmBtn.onclick = function() {
-        const amountReceivedVal = parseFloat(amountReceived.value) || 0;
-        const totalAmount = parseFloat(document.getElementById('modal-total-amount').value) || 0;
-        
-        if (amountReceivedVal < totalAmount) {
-            if (!confirm('Customer has paid less than the total amount. Are you sure you want to proceed?')) {
-                return;
+        function prepareBillData() {
+            const items = [];
+            document.querySelectorAll(".item-row").forEach(row => {
+                items.push({
+                    itemName: row.querySelector(".item-name").value,
+                    quantity: row.querySelector(".quantity").value,
+                    purchasePrice: row.querySelector(".purchase-price").value,
+                    salePrice: row.querySelector(".sale-price").value,
+                    total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
+                });
+            });
+            
+            return {
+                storeName: "RK Fashions",
+                date: document.getElementById("transaction-date").value,
+                siNo: document.getElementById("bill-no").value,
+                customerName: document.getElementById("customer-name").value,
+                items: items,
+                paymentMode: document.getElementById("payment-mode").value,
+                totalAmount: document.getElementById("total-amount").value,
+                totalProfit: document.getElementById("total-profit").value
+            };
+        }
+            
+        function displayBillPreview(data) {
+            // Hide the template
+            document.getElementById("bill-template").style.display = "none";
+            
+            // Show the preview container
+            document.getElementById("bill-preview").style.display = "block";
+            document.getElementById("bill-details").style.display = "block";
+            
+            // Show the dynamic bill container
+            const preview = document.getElementById("bill-details");
+            preview.style.display = "block";
+
+            // Force-show UPI row if needed
+            const upiRow = document.getElementById("upi-qr-row");
+            upiRow.style.display = data.paymentMode === "UPI" ? "table-row" : "none";
+            
+            // Build the bill with smaller font sizes for thermal printer
+            preview.innerHTML = `
+                <div class="bill-header">
+                    <h3>${data.storeName}</h3>
+                    <p class="store-info-bill">Gram Panchayath Complex, Dichpally Busstand - 503174</p>
+                    <p class="store-contact-bill">Mobile: +91 7893433457, +91 7842694544</p>
+                    
+                    <div class="bill-meta">
+                        <p><strong>Date:</strong> ${data.date}</p>
+                        <p><strong>Bill No:</strong> ${data.siNo}</p>
+                        <p><strong>Customer:</strong> ${data.customerName}</p>
+                    </div>
+                </div>
+                
+                <table class="bill-items">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.items.map(item => `
+                            <tr>
+                                <td>${item.itemName}</td>
+                                <td>${item.quantity}</td>
+                                <td>₹${item.salePrice}</td>
+                                <td>₹${item.total}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3"><strong>Total Amount</strong></td>
+                            <td><strong>₹${data.totalAmount}</strong></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3"><strong>Payment Mode</strong></td>
+                            <td><strong>${data.paymentMode}</strong></td>
+                        </tr>
+                        ${data.paymentMode === "Cash" ? `
+                        <tr>
+                            <td colspan="3"><strong>Amount Received</strong></td>
+                            <td><strong>₹${document.getElementById('amount-received').value || data.totalAmount}</strong></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3"><strong>Change Given</strong></td>
+                            <td><strong>₹${document.getElementById('change-amount').value || '0.00'}</strong></td>
+                        </tr>
+                        ` : ''}
+                        ${data.paymentMode === "UPI" ? `
+                        <tr id="upi-qr-row">
+                            <td colspan="4" style="text-align:center; padding:8px 0;">
+                                <div style="margin: 0 auto; width: fit-content;">
+                                    <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
+                                    <img src="upi-qr.png" alt="UPI QR Code" style="width:120px; height:120px;">
+                                    <p style="font-size:10px; margin-top:3px;">UPI ID: maniteja1098@oksbi</p>
+                                </div>
+                            </td>
+                        </tr>
+                        ` : ''}
+                    </tfoot>
+                </table>
+                
+                <div class="bill-footer">
+                    <p>Thank you for your purchase!</p>
+                </div>
+            `;
+
+            // Scroll to the bill preview
+            document.getElementById("bill-preview").scrollIntoView({ behavior: 'smooth' });
+        }
+            
+        function setupPrintButton() {
+            const printBtn = document.getElementById("print-bill");
+            if (printBtn) {
+                printBtn.addEventListener("click", function() {
+                    window.print();
+                });
             }
         }
-        
-        modal.style.display = 'none';
-        // Continue with form submission
-        submitTransactionAfterCashPayment();
-    }
-}
 
-function setupSuccessModal() {
-    const modal = document.getElementById('success-modal');
-    const closeBtn = document.getElementById('close-success-modal');
-    
-    closeBtn.onclick = function() {
-        modal.style.display = 'none';
-    }
-}
-
-function showSuccessMessage() {
-    const modal = document.getElementById('success-modal');
-    modal.style.display = 'flex';
-    
-    // Auto-close after 3 seconds
-    setTimeout(() => {
-        modal.style.display = 'none';
-    }, 3000);
-}
-
-let pendingTransactionData = null;
-
-// Modify the handleFormSubmit function
-function handleFormSubmit(e) {
-    e.preventDefault();
-    if (!validateForm()) return;
-    
-    const sequenceNo = document.getElementById("sequence-no").value;
-    if (!sequenceNo || isNaN(sequenceNo)) {
-        alert("Please enter a valid sequence number");
-        return;
-    }
-
-    const paymentMode = document.getElementById("payment-mode").value;
-    const totalAmount = parseFloat(document.getElementById("total-amount").value) || 0;
-    
-    // Store the bill data for later submission
-    pendingTransactionData = prepareBillData();
-    
-    // Show cash payment modal if payment mode is cash
-    if (paymentMode === "Cash") {
-        showCashPaymentModal(totalAmount);
-    } else {
-        // For other payment modes, submit directly
-        submitTransaction();
-    }
-}
-
-function submitTransactionAfterCashPayment() {
-    if (!pendingTransactionData) return;
-    
-    // Show loading overlay
-    document.getElementById("loading-overlay").style.display = "flex";
-    
-    submitBill(pendingTransactionData)
-        .then(() => {
-            currentSequenceData = incrementSequenceNumber();
-            document.getElementById("sequence-no").value = currentSequenceData.nextSequence;
+        function showCashPaymentModal(totalAmount) {
+            const modal = document.getElementById('cash-payment-modal');
+            document.getElementById('modal-total-amount').value = totalAmount;
+            document.getElementById('amount-received').value = '';
+            document.getElementById('change-amount').value = '0.00';
+            modal.style.display = 'flex';
             
-            // Display the bill preview before showing success message
-            displayBillPreview(pendingTransactionData);
-            showSuccessMessage();
-        })
-        .catch(error => {
-            console.error("Submission failed:", error);
-            alert("Transaction submission failed. Please try again.");
-        })
-        .finally(() => {
-            // Hide loading overlay regardless of success/failure
-            document.getElementById("loading-overlay").style.display = "none";
-            pendingTransactionData = null;
-        });
-    
-    // Show print button
-    document.getElementById("print-bill").style.display = "block";
-}
+            // Focus on amount received field
+            document.getElementById('amount-received').focus();
+        }
 
-function submitTransaction() {
-    if (!pendingTransactionData) return;
-    
-    // Show loading overlay
-    document.getElementById("loading-overlay").style.display = "flex";
-    
-    submitBill(pendingTransactionData)
-        .then(() => {
-            currentSequenceData = incrementSequenceNumber();
-            document.getElementById("sequence-no").value = currentSequenceData.nextSequence;
+        function calculateChange() {
+            const amountReceived = parseFloat(document.getElementById('amount-received').value) || 0;
+            const totalAmount = parseFloat(document.getElementById('modal-total-amount').value) || 0;
+            const change = amountReceived - totalAmount;
             
-            // Display the bill preview before showing success message
-            displayBillPreview(pendingTransactionData);
-            showSuccessMessage();
-        })
-        .catch(error => {
-            console.error("Submission failed:", error);
-            alert("Transaction submission failed. Please try again.");
-        })
-        .finally(() => {
-            // Hide loading overlay regardless of success/failure
-            document.getElementById("loading-overlay").style.display = "none";
-            pendingTransactionData = null;
-        });
-    
-    // Show print button
-    document.getElementById("print-bill").style.display = "block";
-}
+            document.getElementById('change-amount').value = change.toFixed(2);
+            
+            // Highlight if change is negative (customer didn't pay enough)
+            const changeField = document.getElementById('change-amount');
+            if (change < 0) {
+                changeField.style.color = 'red';
+                changeField.style.fontWeight = 'bold';
+            } else {
+                changeField.style.color = 'green';
+                changeField.style.fontWeight = 'normal';
+            }
+        }
 
-// In the existing initialization code, add these:
-setupCashPaymentModal();
-setupSuccessModal();
+        function setupCashPaymentModal() {
+            const modal = document.getElementById('cash-payment-modal');
+            const closeBtn = document.querySelector('#cash-payment-modal .close');
+            const cancelBtn = document.getElementById('cancel-cash-payment');
+            const confirmBtn = document.getElementById('confirm-cash-payment');
+            const amountReceived = document.getElementById('amount-received');
+            
+            // Close modal events
+            closeBtn.onclick = function() {
+                modal.style.display = 'none';
+            }
+            
+            cancelBtn.onclick = function() {
+                modal.style.display = 'none';
+            }
+            
+            // Calculate change when amount received changes
+            amountReceived.addEventListener('input', calculateChange);
+            
+            // Confirm payment
+            confirmBtn.onclick = function() {
+                const amountReceivedVal = parseFloat(amountReceived.value) || 0;
+                const totalAmount = parseFloat(document.getElementById('modal-total-amount').value) || 0;
+                
+                if (amountReceivedVal < totalAmount) {
+                    if (!confirm('Customer has paid less than the total amount. Are you sure you want to proceed?')) {
+                        return;
+                    }
+                }
+                
+                modal.style.display = 'none';
+                // Continue with form submission
+                submitTransactionAfterCashPayment();
+            }
+        }
 
-// In the submitBill function, remove the spinner code since we're handling it globally:
-function submitBill(data) {
-    const submitBtn = document.querySelector("#transaction-form [type='submit']");
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = 'Processing...';
-    submitBtn.disabled = true;
-    
-    // Update local stats
-    const salesToAdd = data.items.length;
-    const profitToAdd = parseFloat(data.totalProfit) || 0;
-    updateLocalStats(salesToAdd, profitToAdd);
-    
-    return new Promise((resolve, reject) => {
-        fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
-            method: "POST",
-            mode: "no-cors",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        })
-        .then(() => {
-            // Reset form but keep customer name
-            const customerName = document.getElementById("customer-name").value;
-            document.getElementById("transaction-form").reset();
-            document.getElementById("customer-name").value = customerName;
-            document.getElementById("items-container").innerHTML = "";
-            addItem();
-            resolve();
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            reject(error);
-        })
-        .finally(() => {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-        });
-    });
-  }
-}
+        function setupSuccessModal() {
+            const modal = document.getElementById('success-modal');
+            const closeBtn = document.getElementById('close-success-modal');
+            
+            closeBtn.onclick = function() {
+                modal.style.display = 'none';
+            }
+        }
+
+        function showSuccessMessage() {
+            const modal = document.getElementById('success-modal');
+            modal.style.display = 'flex';
+            
+            // Auto-close after 3 seconds
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 3000);
+        }
+
+        let pendingTransactionData = null;
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            if (!validateForm()) return;
+            
+            const paymentMode = document.getElementById("payment-mode").value;
+            const totalAmount = parseFloat(document.getElementById("total-amount").value) || 0;
+            
+            // Store the bill data for later submission
+            pendingTransactionData = prepareBillData();
+            
+            // Show cash payment modal if payment mode is cash
+            if (paymentMode === "Cash") {
+                showCashPaymentModal(totalAmount);
+            } else {
+                // For other payment modes, submit directly
+                submitTransaction();
+            }
+        }
+
+        function submitTransactionAfterCashPayment() {
+            if (!pendingTransactionData) return;
+            
+            // Show loading overlay
+            document.getElementById("loading-overlay").style.display = "flex";
+            
+            submitBill(pendingTransactionData)
+                .then(() => {
+                    // Display the bill preview before showing success message
+                    displayBillPreview(pendingTransactionData);
+                    showSuccessMessage();
+                    
+                    // Generate new bill number for next transaction
+                    initializeBillNumber();
+                })
+                .catch(error => {
+                    console.error("Submission failed:", error);
+                    alert("Transaction submission failed. Please try again.");
+                })
+                .finally(() => {
+                    // Hide loading overlay regardless of success/failure
+                    document.getElementById("loading-overlay").style.display = "none";
+                    pendingTransactionData = null;
+                });
+            
+            // Show print button
+            document.getElementById("print-bill").style.display = "block";
+        }
+
+        function submitTransaction() {
+            if (!pendingTransactionData) return;
+            
+            // Show loading overlay
+            document.getElementById("loading-overlay").style.display = "flex";
+            
+            submitBill(pendingTransactionData)
+                .then(() => {
+                    // Display the bill preview before showing success message
+                    displayBillPreview(pendingTransactionData);
+                    showSuccessMessage();
+                    
+                    // Generate new bill number for next transaction
+                    initializeBillNumber();
+                })
+                .catch(error => {
+                    console.error("Submission failed:", error);
+                    alert("Transaction submission failed. Please try again.");
+                })
+                .finally(() => {
+                    // Hide loading overlay regardless of success/failure
+                    document.getElementById("loading-overlay").style.display = "none";
+                    pendingTransactionData = null;
+                });
+            
+            // Show print button
+            document.getElementById("print-bill").style.display = "block";
+        }
+
+        // Initialize modals
+        setupCashPaymentModal();
+        setupSuccessModal();
+
+        function submitBill(data) {
+            const submitBtn = document.querySelector("#transaction-form [type='submit']");
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = 'Processing...';
+            submitBtn.disabled = true;
+            
+            // Update local stats
+            const salesToAdd = data.items.length;
+            const profitToAdd = parseFloat(data.totalProfit) || 0;
+            updateLocalStats(salesToAdd, profitToAdd);
+            
+            return new Promise((resolve, reject) => {
+                fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(() => {
+                    // Reset form but keep customer name
+                    const customerName = document.getElementById("customer-name").value;
+                    document.getElementById("transaction-form").reset();
+                    document.getElementById("customer-name").value = customerName;
+                    document.getElementById("items-container").innerHTML = "";
+                    addItem();
+                    resolve();
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    reject(error);
+                })
+                .finally(() => {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                });
+            });
+        }
