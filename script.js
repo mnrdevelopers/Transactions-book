@@ -5,43 +5,18 @@ if (document.getElementById("transaction-form")) {
     const SEQUENCE_STORAGE_KEY = 'rkFashionsBillSequenceData';
     
     // Initialize date display
-    const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const currentDateKey = `${day}${month}`;
-    document.getElementById("date").textContent = formattedDate;
-    document.getElementById("day-month-part").textContent = currentDateKey;
+   const today = new Date();
+   document.getElementById("transaction-date").valueAsDate = today;
+
 
     // Sequence number management
-    function loadSequenceData() {
-        const savedData = localStorage.getItem(SEQUENCE_STORAGE_KEY);
-        if (!savedData) {
-            return {
-                date: currentDateKey,
-                lastUsedSequence: 1,
-                nextSequence: 1
-            };
-        }
-        
-        const data = JSON.parse(savedData);
-        
-        // Reset if it's a new day
-        if (data.date !== currentDateKey) {
-            return {
-                date: currentDateKey,
-                lastUsedSequence: 0,
-                nextSequence: 1
-            };
-        }
-        
-        return data;
-    }
-
-    function saveSequenceData(data) {
-        localStorage.setItem(SEQUENCE_STORAGE_KEY, JSON.stringify(data));
-    }
-
+    function generateBillNumber() {
+    // Get current timestamp and random number for uniqueness
+    const timestamp = Date.now().toString().slice(-6);
+    const randomNum = Math.floor(Math.random() * 900) + 100; // 3-digit random number
+    return `RK-${timestamp}-${randomNum}`;
+}
+      
     function initializeSequenceNumber() {
         const sequenceData = loadSequenceData();
         document.getElementById("sequence-no").value = sequenceData.nextSequence;
@@ -241,7 +216,7 @@ if (document.getElementById("transaction-form")) {
         return valid;
     }
 
-  function prepareBillData() {
+ function prepareBillData() {
     const items = [];
     document.querySelectorAll(".item-row").forEach(row => {
         items.push({
@@ -253,13 +228,10 @@ if (document.getElementById("transaction-form")) {
         });
     });
     
-    const dayMonthPart = document.getElementById("day-month-part").textContent;
-    const sequenceNo = document.getElementById("sequence-no").value.padStart(3, '0');
-    
     return {
         storeName: "RK Fashions",
-        date: document.getElementById("date").textContent,
-        siNo: `${dayMonthPart}-${sequenceNo}`,
+        date: document.getElementById("transaction-date").value,
+        siNo: document.getElementById("bill-no").value,
         customerName: document.getElementById("customer-name").value,
         items: items,
         paymentMode: document.getElementById("payment-mode").value,
@@ -460,10 +432,9 @@ function handleFormSubmit(e) {
     e.preventDefault();
     if (!validateForm()) return;
     
-    const sequenceNo = document.getElementById("sequence-no").value;
-    if (!sequenceNo || isNaN(sequenceNo)) {
-        alert("Please enter a valid sequence number");
-        return;
+    // Generate bill number if not already set
+    if (!document.getElementById("bill-no").value) {
+        document.getElementById("bill-no").value = generateBillNumber();
     }
 
     const paymentMode = document.getElementById("payment-mode").value;
@@ -472,11 +443,9 @@ function handleFormSubmit(e) {
     // Store the bill data for later submission
     pendingTransactionData = prepareBillData();
     
-    // Show cash payment modal if payment mode is cash
     if (paymentMode === "Cash") {
         showCashPaymentModal(totalAmount);
     } else {
-        // For other payment modes, submit directly
         submitTransaction();
     }
 }
@@ -564,15 +533,17 @@ function submitBill(data) {
             },
             body: JSON.stringify(data)
         })
-        .then(() => {
-            // Reset form but keep customer name
-            const customerName = document.getElementById("customer-name").value;
-            document.getElementById("transaction-form").reset();
-            document.getElementById("customer-name").value = customerName;
-            document.getElementById("items-container").innerHTML = "";
-            addItem();
-            resolve();
-        })
+       .then(() => {
+    // Reset form but keep customer name and date
+    const customerName = document.getElementById("customer-name").value;
+    document.getElementById("transaction-form").reset();
+    document.getElementById("customer-name").value = customerName;
+    document.getElementById("transaction-date").valueAsDate = new Date(); // Reset to current date
+    document.getElementById("bill-no").value = ""; // Clear bill number for next transaction
+    document.getElementById("items-container").innerHTML = "";
+    addItem();
+    resolve();
+})
         .catch(error => {
             console.error("Error:", error);
             reject(error);
