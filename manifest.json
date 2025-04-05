@@ -1,7 +1,7 @@
 {
     "name": "MNR BILL APP",
     "short_name": "BillBOOK",
-    "start_url": "https://mnrdevelopers.github.io/mnr-bill-book/",
+    "start_url": "https://mnrdevelopers.github.io/Transactions-book/",
     "display": "standalone",
     "icons": [
         {
