@@ -172,49 +172,7 @@ function updateSummaryCardsUI(totalSales, totalProfit, transactionCount, average
     elements.dailyAverage.textContent = `₹${averageSales.toFixed(2)}`;
 }
 
-function updateCardTitles(dateRange, paymentMode) {
-    const dateTitles = {
-        "today": "Today's",
-        "yesterday": "Yesterday's",
-        "this_week": "This Week's",
-        "last_week": "Last Week's",
-        "this_month": "This Month's",
-        "last_month": "Last Month's",
-        "custom": elements.customDate.value 
-            ? new Date(elements.customDate.value).toLocaleDateString('en-IN') + "'s"
-            : "Selected Date's"
-    };
-    
-    const paymentTitles = {
-        "all": "",
-        "Cash": " (Cash)",
-        "Card": " (Card)",
-        "UPI": " (UPI)"
-    };
-    
-    const dateTitle = dateTitles[dateRange] || "";
-    const paymentTitle = paymentTitles[paymentMode] || "";
-    
-    document.querySelectorAll(".summary-card h3").forEach((h3, index) => {
-        const icons = ["fa-rupee-sign", "fa-chart-line", "fa-receipt", "fa-calendar-day"];
-        const baseTitles = ["Sales", "Profit", "Transactions", "Average"];
-        
-        h3.innerHTML = `<i class="fas ${icons[index]}"></i> ${dateTitle} ${baseTitles[index]}${paymentTitle}`;
-    });
-    
-    // Update the change text
-    document.querySelectorAll(".summary-card .change").forEach((el, index) => {
-        const texts = [
-            `Total sales${paymentMode !== "all" ? ` via ${paymentMode}` : ""}`,
-            `Total profit${paymentMode !== "all" ? ` via ${paymentMode}` : ""}`,
-            `Transactions${paymentMode !== "all" ? ` via ${paymentMode}` : ""}`,
-            dateRange === "today" || dateRange === "yesterday" || dateRange === "custom" 
-                ? "Total amount" 
-                : `Daily average${paymentMode !== "all" ? ` via ${paymentMode}` : ""}`
-        ];
-        el.textContent = texts[index];
-    });
-    
+// Remove the duplicate updateCardTitles function and fix the nesting issue
 function updateSummaryCards() {
     const dateRange = elements.summaryDateRange.value;
     const paymentMode = elements.summaryPaymentMode.value;
@@ -330,6 +288,7 @@ function updateSummaryCards() {
     updateCardTitles(dateRange, paymentMode);
 }
 
+// Keep only one version of updateCardTitles (the more complete one)
 function updateCardTitles(dateRange, paymentMode) {
     const dateTitles = {
         "today": "Today's",
@@ -338,7 +297,9 @@ function updateCardTitles(dateRange, paymentMode) {
         "last_week": "Last Week's",
         "this_month": "This Month's",
         "last_month": "Last Month's",
-        "custom": "Selected Date's"
+        "custom": elements.customDate.value 
+            ? new Date(elements.customDate.value).toLocaleDateString('en-IN') + "'s"
+            : "Selected Date's"
     };
     
     const paymentTitles = {
@@ -356,6 +317,19 @@ function updateCardTitles(dateRange, paymentMode) {
         const baseTitles = ["Sales", "Profit", "Transactions", "Average"];
         
         h3.innerHTML = `<i class="fas ${icons[index]}"></i> ${dateTitle} ${baseTitles[index]}${paymentTitle}`;
+    });
+    
+    // Update the change text
+    document.querySelectorAll(".summary-card .change").forEach((el, index) => {
+        const texts = [
+            `Total sales${paymentMode !== "all" ? ` via ${paymentMode}` : ""}`,
+            `Total profit${paymentMode !== "all" ? ` via ${paymentMode}` : ""}`,
+            `Transactions${paymentMode !== "all" ? ` via ${paymentMode}` : ""}`,
+            dateRange === "today" || dateRange === "yesterday" || dateRange === "custom" 
+                ? "Total amount" 
+                : `Daily average${paymentMode !== "all" ? ` via ${paymentMode}` : ""}`
+        ];
+        el.textContent = texts[index];
     });
 }
 
