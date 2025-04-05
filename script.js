@@ -305,7 +305,7 @@ if (document.getElementById("transaction-form")) {
                         <div style="margin: 0 auto; width: fit-content;">
                             <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
                             <img src="upi-qr.png" alt="UPI QR Code" style="width:120px; height:120px;">
-                            <p style="font-size:10px; margin-top:3px;">UPI ID: maniteja1098@oksbi</p>
+                            <p style="font-size:10px; margin-top:3px;">UPI ID: 7893433457@okbizaxis</p>
                         </div>
                     </td>
                 </tr>
