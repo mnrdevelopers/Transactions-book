@@ -6,7 +6,8 @@ if (document.getElementById("transaction-form")) {
     // Initialize date display
    const today = new Date();
    document.getElementById("transaction-date").valueAsDate = today;
-
+   document.getElementById("customer-name").value = generateCustomerName(); // Add this line
+   addItem();
 
     // Sequence number management
     function generateBillNumber() {
@@ -122,6 +123,13 @@ if (document.getElementById("transaction-form")) {
         updateCurrentTime();
         setInterval(updateCurrentTime, 60000); // Update every minute
     }
+
+    function generateCustomerName() {
+    const prefixes = ["Customer"];
+    const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const randomNum = Math.floor(Math.random() * 9000) + 1000; // 4-digit random number
+    return `${randomPrefix}-${randomNum}`;
+}
 
     function addItem() {
         const itemsContainer = document.getElementById("items-container");
@@ -515,10 +523,10 @@ function submitBill(data) {
        .then(() => {
     // Reset form but keep customer name and date
     const customerName = document.getElementById("customer-name").value;
-    document.getElementById("transaction-form").reset();
-    document.getElementById("customer-name").value = customerName;
-    document.getElementById("transaction-date").valueAsDate = new Date(); // Reset to current date
-    document.getElementById("bill-no").value = ""; // Clear bill number for next transaction
+      document.getElementById("transaction-form").reset();
+    document.getElementById("customer-name").value = generateCustomerName();
+    document.getElementById("transaction-date").valueAsDate = new Date();
+    document.getElementById("bill-no").value = "";
     document.getElementById("items-container").innerHTML = "";
     addItem();
     resolve();
