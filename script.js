@@ -547,13 +547,15 @@ setupSuccessModal();
 function submitBill(data) {
     const submitBtn = document.querySelector("#transaction-form [type='submit']");
     const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = 'Processing...';
+    submitBtn.innerHTML = data.action === "update" ? 'Updating...' : 'Processing...';
     submitBtn.disabled = true;
     
-    // Update local stats
-    const salesToAdd = data.items.length;
-    const profitToAdd = parseFloat(data.totalProfit) || 0;
-    updateLocalStats(salesToAdd, profitToAdd);
+    // Update local stats only for new transactions
+    if (data.action !== "update") {
+        const salesToAdd = data.items.length;
+        const profitToAdd = parseFloat(data.totalProfit) || 0;
+        updateLocalStats(salesToAdd, profitToAdd);
+    }
     
     return new Promise((resolve, reject) => {
         fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
@@ -564,17 +566,23 @@ function submitBill(data) {
             },
             body: JSON.stringify(data)
         })
-       .then(() => {
-    // Reset form but keep customer name and date
-    const customerName = document.getElementById("customer-name").value;
-      document.getElementById("transaction-form").reset();
-    document.getElementById("customer-name").value = generateCustomerName();
-    document.getElementById("transaction-date").valueAsDate = new Date();
-    document.getElementById("bill-no").value = "";
-    document.getElementById("items-container").innerHTML = "";
-    addItem();
-    resolve();
-})
+        .then(() => {
+            // Reset form but keep customer name
+            const customerName = document.getElementById("customer-name").value;
+            document.getElementById("transaction-form").reset();
+            document.getElementById("customer-name").value = customerName;
+            document.getElementById("items-container").innerHTML = "";
+            addItem();
+            
+            // Clear edit mode if this was an update
+            if (data.action === "update") {
+                delete document.getElementById("transaction-form").dataset.originalSiNo;
+                window.history.replaceState({}, document.title, window.location.pathname);
+                localStorage.removeItem('editTransactionData');
+            }
+            
+            resolve();
+        })
         .catch(error => {
             console.error("Error:", error);
             reject(error);
