@@ -449,8 +449,11 @@ function setupSuccessModal() {
     }
 }
 
-function showSuccessMessage() {
+function showSuccessMessage(message = "Transaction completed successfully!") {
     const modal = document.getElementById('success-modal');
+    const messageElement = document.getElementById('success-message');
+    
+    messageElement.textContent = message;
     modal.style.display = 'flex';
     
     // Auto-close after 3 seconds
