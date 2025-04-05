@@ -759,4 +759,3 @@ function showError(message) {
         </tr>
     `;
   }
-}
