@@ -16,9 +16,6 @@ if (document.getElementById("transaction-form")) {
     const randomNum = Math.floor(Math.random() * 900) + 100; // 3-digit random number
     return `RK-${timestamp}-${randomNum}`;
 }
-    document.getElementById("generate-customer-name").addEventListener("click", function() {
-    document.getElementById("customer-name").value = generateCustomerName();
-});
       
     addItem();
     document.getElementById("add-item").addEventListener("click", addItem);
