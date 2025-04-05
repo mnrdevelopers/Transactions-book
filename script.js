@@ -546,7 +546,7 @@ setupSuccessModal();
 
 // In the submitBill function, remove the spinner code since we're handling it globally:
 function submitBill(data) {
-    console.log("Starting submitBill with action:", data.action); // Debug
+    console.log("Starting submitBill with action:", data.action);
     const submitBtn = document.querySelector("#transaction-form [type='submit']");
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = data.action === "update" ? 'Updating...' : 'Processing...';
@@ -557,7 +557,6 @@ function submitBill(data) {
 
     return new Promise((resolve, reject) => {
         const url = "https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec";
-        console.log("Sending data to:", url); // Debug
         
         fetch(url, {
             method: "POST",
@@ -567,31 +566,36 @@ function submitBill(data) {
             body: JSON.stringify(data)
         })
         .then(response => {
-            console.log("Received response:", response); // Debug
             if (!response.ok) {
                 throw new Error("Network response was not ok");
             }
             return response.text();
         })
         .then(text => {
-            console.log("Response text:", text); // Debug
-            // Reset form but keep customer name
-            const customerName = document.getElementById("customer-name").value;
-            document.getElementById("transaction-form").reset();
-            document.getElementById("customer-name").value = customerName;
-            document.getElementById("items-container").innerHTML = "";
-            addItem();
-            
+            // For updates, show success message and redirect
             if (data.action === "update") {
-                delete document.getElementById("transaction-form").dataset.originalSiNo;
-                window.history.replaceState({}, document.title, window.location.pathname);
-                localStorage.removeItem('editTransactionData');
+                showSuccessMessage("Bill updated successfully!");
+                
+                // Clear edit data and redirect after delay
+                setTimeout(() => {
+                    delete document.getElementById("transaction-form").dataset.originalSiNo;
+                    localStorage.removeItem('editTransactionData');
+                    localStorage.removeItem('isEditMode');
+                    window.location.href = 'transactions.html';
+                }, 2000);
+            } else {
+                // For new transactions, reset form but keep customer name
+                const customerName = document.getElementById("customer-name").value;
+                document.getElementById("transaction-form").reset();
+                document.getElementById("customer-name").value = customerName;
+                document.getElementById("items-container").innerHTML = "";
+                addItem();
             }
             
             resolve();
         })
         .catch(error => {
-            console.error("Error in submitBill:", error); // Debug
+            console.error("Error in submitBill:", error);
             reject(error);
         })
         .finally(() => {
