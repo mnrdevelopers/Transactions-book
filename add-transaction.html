@@ -267,16 +267,16 @@
     </div>
 </div>
 
-        <div class="bill-details">
-<div>
-    <label for="si-no"><strong>Bill No:</strong></label>
-    <div style="display: flex; align-items: center; gap: 5px;">
-        <span id="day-month-part" style="font-weight: bold; padding: 5px; background: #f0f0f0; border-radius: 4px;"></span>
-        <span>-</span>
-        <input type="number" id="sequence-no" min="1" style="width: 80px; padding: 5px;" placeholder="001">
+        <!-- Replace this section -->
+<div class="bill-details">
+    <div>
+        <label for="si-no"><strong>Bill No:</strong></label>
+        <input type="text" id="bill-no" disabled style="width: 120px; padding: 5px;">
     </div>
-</div>
-    <p><strong>Date:</strong> <span id="date"></span></p>
+    <div>
+        <label for="transaction-date"><strong>Date:</strong></label>
+        <input type="date" id="transaction-date" required>
+    </div>
     <div>
         <label for="customer-name"><strong>Customer Name:</strong></label>
         <input type="text" id="customer-name" required>
