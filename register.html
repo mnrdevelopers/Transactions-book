@@ -1,58 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - RK Fashions Bill Book</title>
-    <link rel="stylesheet" href="styles.css">
+  <title>RK Fashions - Register</title>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <h2>Create Your Account</h2>
-            
-            <div id="auth-error" class="auth-error" style="display: none;"></div>
-            
-            <form id="register-form">
-                <div class="form-group">
-                    <label for="register-name">Your Name</label>
-                    <input type="text" id="register-name" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="register-shop-name">Shop Name</label>
-                    <input type="text" id="register-shop-name" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="register-email">Email</label>
-                    <input type="email" id="register-email" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="register-phone">Phone Number</label>
-                    <input type="tel" id="register-phone" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="register-password">Password</label>
-                    <input type="password" id="register-password" required>
-                </div>
-                
-                <button type="submit" class="auth-btn">Register</button>
-            </form>
-            
-            <div class="auth-footer">
-                Already have an account? <a href="login.html">Login here</a>
-            </div>
-        </div>
-    </div>
+  <h1>Retailer Registration</h1>
+  <form id="registerForm">
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <input type="text" id="shopName" placeholder="Shop Name" required>
+    <input type="email" id="email" placeholder="Email (Optional)">
+    <button type="submit">Register</button>
+  </form>
 
-    <script src="auth.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            initAuth();
-        });
-    </script>
+  <script>
+    const API_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL";
+
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const shopName = document.getElementById("shopName").value;
+      const email = document.getElementById("email").value;
+
+      const response = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "register", username, password, shopName, email })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        alert("Registration successful! Please login.");
+        window.location.href = "login.html";
+      } else {
+        alert(result.message);
+      }
+    });
+  </script>
 </body>
 </html>
