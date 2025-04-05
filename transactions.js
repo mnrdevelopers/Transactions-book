@@ -155,14 +155,15 @@ function updateSummaryCards() {
 }
 
 async function loadTransactions() {
-    const originalContent = elements.transactionsBody.innerHTML;
-    showLoading(elements.transactionsBody);
-    
     try {
+        showLoading();
+        
         const scriptUrl = "https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec";
         const response = await fetch(scriptUrl);
         
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
         const data = await response.json();
         allTransactions = processSheetData(data);
@@ -173,8 +174,6 @@ async function loadTransactions() {
     } catch (error) {
         console.error("Error loading transactions:", error);
         showError("Failed to load transactions. Please try again.");
-    } finally {
-        hideLoading(elements.transactionsBody, originalContent);
     }
 }
 
@@ -602,10 +601,9 @@ function removeEditItem(e) {
 async function saveEditedTransaction(e) {
     e.preventDefault();
     
-    const originalContent = elements.editFormContainer.innerHTML;
-    showLoading(elements.editFormContainer);
-    
-    try {
+    const siNo = e.target.closest('.edit-btn')?.getAttribute('data-si-no');
+    const transaction = allTransactions.find(t => t.siNo === siNo);
+    if (!transaction) return;
     
     // Collect edited data
     const editedData = {
@@ -655,7 +653,8 @@ async function saveEditedTransaction(e) {
         console.error("Error updating transaction:", error);
         alert("Failed to update transaction. Please try again.");
     } finally {
-        hideLoading(elements.editFormContainer, originalContent);
+        // Hide loading indicator
+        filterTransactions();
     }
 }
 
@@ -671,8 +670,8 @@ function deleteTransaction(e) {
 }
 
 async function confirmDelete() {
-    const originalContent = elements.transactionsBody.innerHTML;
-    showLoading(elements.transactionsBody);
+    const siNo = elements.deleteModal.getAttribute('data-si-no');
+    if (!siNo) return;
     
     try {
         // Show loading indicator
@@ -686,11 +685,12 @@ async function confirmDelete() {
         // Reload transactions after successful deletion
         await loadTransactions();
         elements.deleteModal.style.display = 'none';
-      } catch (error) {
+    } catch (error) {
         console.error("Error deleting transaction:", error);
         alert("Failed to delete transaction. Please try again.");
     } finally {
-        hideLoading(elements.transactionsBody, originalContent);
+        // Hide loading indicator
+        filterTransactions();
     }
 }
 
@@ -712,24 +712,32 @@ function closeModal() {
     elements.viewModal.style.display = "none";
 }
 
-// Remove the existing showLoading() function and replace with:
-function showLoading(container) {
-    const loadingHTML = `
-        <div class="loading-spinner">
+function showLoading() {
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'loading-overlay';
+    loadingOverlay.style.position = 'fixed';
+    loadingOverlay.style.top = '0';
+    loadingOverlay.style.left = '0';
+    loadingOverlay.style.width = '100%';
+    loadingOverlay.style.height = '100%';
+    loadingOverlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    loadingOverlay.style.display = 'flex';
+    loadingOverlay.style.justifyContent = 'center';
+    loadingOverlay.style.alignItems = 'center';
+    loadingOverlay.style.zIndex = '1000';
+    
+    loadingOverlay.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
             <div class="spinner"></div>
-            <p>Loading...</p>
+            <p>Processing...</p>
         </div>
     `;
     
-    if (container) {
-        container.innerHTML = loadingHTML;
-    }
-}
-
-function hideLoading(container, originalContent) {
-    if (container && originalContent) {
-        container.innerHTML = originalContent;
-    }
+    document.body.appendChild(loadingOverlay);
+    
+    return () => {
+        document.body.removeChild(loadingOverlay);
+    };
 }
 
 function showError(message) {
