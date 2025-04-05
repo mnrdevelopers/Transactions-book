@@ -590,4 +590,3 @@ function submitBill(data) {
         });
     });
   }
-}
