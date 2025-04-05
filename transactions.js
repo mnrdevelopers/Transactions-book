@@ -1,3 +1,27 @@
+const EDIT_MODAL_HTML = `
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2><i class="fas fa-edit"></i> Edit Transaction</h2>
+            <div id="edit-form-container"></div>
+        </div>
+    </div>
+`;
+
+const DELETE_CONFIRM_HTML = `
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2><i class="fas fa-trash"></i> Confirm Deletion</h2>
+            <p>Are you sure you want to delete this transaction?</p>
+            <div class="form-actions">
+                <button class="cancel-btn">Cancel</button>
+                <button class="confirm-delete-btn">Delete</button>
+            </div>
+        </div>
+    </div>
+`;
+
 // Configuration
 const PAGE_SIZE = 10;
 let currentPage = 1;
@@ -20,7 +44,10 @@ const elements = {
     nextBtn: document.getElementById("next-btn"),
     pageInfo: document.getElementById("page-info"),
     viewModal: document.getElementById("view-modal"),
-    transactionDetails: document.getElementById("transaction-details")
+    transactionDetails: document.getElementById("transaction-details"),
+    editModal: null,
+    deleteModal: null,
+    editFormContainer: null
 };
 
 // Initialize the page
@@ -50,6 +77,33 @@ function setupEventListeners() {
     elements.prevBtn.addEventListener("click", goToPrevPage);
     elements.nextBtn.addEventListener("click", goToNextPage);
     document.querySelector(".close").addEventListener("click", closeModal);
+
+      // Add modals to DOM if they don't exist
+    if (!document.getElementById('edit-modal')) {
+        document.body.insertAdjacentHTML('beforeend', EDIT_MODAL_HTML);
+    }
+    if (!document.getElementById('delete-modal')) {
+        document.body.insertAdjacentHTML('beforeend', DELETE_CONFIRM_HTML);
+    }
+    
+    // Initialize modal elements
+    elements.editModal = document.getElementById('edit-modal');
+    elements.deleteModal = document.getElementById('delete-modal');
+    elements.editFormContainer = document.getElementById('edit-form-container');
+    
+    // Close buttons for new modals
+    document.querySelectorAll('#edit-modal .close, #delete-modal .close').forEach(btn => {
+        btn.addEventListener('click', () => {
+            elements.editModal.style.display = 'none';
+            elements.deleteModal.style.display = 'none';
+        });
+    });
+    
+    // Delete confirmation
+    document.querySelector('.confirm-delete-btn')?.addEventListener('click', confirmDelete);
+    document.querySelector('#delete-modal .cancel-btn')?.addEventListener('click', () => {
+        elements.deleteModal.style.display = 'none';
+    });
 }
 
 function updateSummaryCards() {
@@ -115,11 +169,7 @@ async function loadTransactions() {
         allTransactions = processSheetData(data);
 
         updateSummaryCards();
-        
-        // Update date filter options
         updateDateFilter();
-        
-        // Initial filter and render
         filterTransactions();
     } catch (error) {
         console.error("Error loading transactions:", error);
@@ -294,7 +344,9 @@ function renderTransactions() {
             <td>₹${transaction.totalProfit.toFixed(2)}</td>
             <td>${transaction.paymentMode}</td>
             <td class="actions">
-                <button class="view-btn" data-si-no="${transaction.siNo}">View</button>
+                 <button class="view-btn" data-si-no="${transaction.siNo}"><i class="fas fa-eye"></i></button>
+                 <button class="edit-btn" data-si-no="${transaction.siNo}"><i class="fas fa-edit"></i></button>
+                 <button class="delete-btn" data-si-no="${transaction.siNo}"><i class="fas fa-trash"></i></button>
             </td>
         `;
         elements.transactionsBody.appendChild(row);
@@ -360,11 +412,21 @@ function updatePagination() {
     elements.nextBtn.disabled = currentPage === totalPages || totalPages === 0;
 }
 
+// Update the setupRowEventListeners function
 function setupRowEventListeners() {
-    document.querySelectorAll(".view-btn").forEach(btn => {
-        btn.addEventListener("click", viewTransactionDetails);
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', viewTransactionDetails);
+    });
+    
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', editTransaction);
+    });
+    
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', deleteTransaction);
     });
 }
+
 
 function viewTransactionDetails(e) {
     const siNo = e.target.getAttribute("data-si-no");
@@ -424,6 +486,214 @@ function viewTransactionDetails(e) {
     elements.viewModal.style.display = "block";
 }
 
+function editTransaction(e) {
+    const siNo = e.target.closest('.edit-btn').getAttribute('data-si-no');
+    const transaction = allTransactions.find(t => t.siNo === siNo);
+    
+    if (!transaction) return;
+    
+    // Create edit form
+    elements.editFormContainer.innerHTML = `
+        <form id="edit-transaction-form">
+            <div class="form-group">
+                <label for="edit-customer-name">Customer Name</label>
+                <input type="text" id="edit-customer-name" value="${transaction.customerName}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-date">Date</label>
+                <input type="date" id="edit-date" value="${transaction.date.toISOString().split('T')[0]}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-payment-mode">Payment Mode</label>
+                <select id="edit-payment-mode" required>
+                    <option value="Cash" ${transaction.paymentMode === 'Cash' ? 'selected' : ''}>Cash</option>
+                    <option value="Card" ${transaction.paymentMode === 'Card' ? 'selected' : ''}>Card</option>
+                    <option value="UPI" ${transaction.paymentMode === 'UPI' ? 'selected' : ''}>UPI</option>
+                </select>
+            </div>
+            
+            <h3>Items</h3>
+            <div id="edit-items-container">
+                ${transaction.items.map((item, index) => `
+                    <div class="edit-item-row" data-index="${index}">
+                        <div class="form-group">
+                            <label>Item Name</label>
+                            <input type="text" class="edit-item-name" value="${item.itemName}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" class="edit-quantity" min="1" value="${item.quantity}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Purchase Price (₹)</label>
+                            <input type="number" class="edit-purchase-price" min="0" step="0.01" value="${item.purchasePrice}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Sale Price (₹)</label>
+                            <input type="number" class="edit-sale-price" min="0" step="0.01" value="${item.salePrice}" required>
+                        </div>
+                        <button type="button" class="remove-edit-item">Remove</button>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <button type="button" id="add-edit-item">Add Item</button>
+            
+            <div class="form-actions">
+                <button type="button" class="cancel-btn">Cancel</button>
+                <button type="submit" class="save-btn">Save Changes</button>
+            </div>
+        </form>
+    `;
+    
+    // Add event listeners for the edit form
+    document.getElementById('add-edit-item').addEventListener('click', addEditItem);
+    document.querySelectorAll('.remove-edit-item').forEach(btn => {
+        btn.addEventListener('click', removeEditItem);
+    });
+    document.getElementById('edit-transaction-form').addEventListener('submit', saveEditedTransaction);
+    
+    // Show modal
+    elements.editModal.style.display = 'block';
+}
+
+function addEditItem() {
+    const container = document.getElementById('edit-items-container');
+    const index = container.querySelectorAll('.edit-item-row').length;
+    
+    const newItem = document.createElement('div');
+    newItem.className = 'edit-item-row';
+    newItem.setAttribute('data-index', index);
+    newItem.innerHTML = `
+        <div class="form-group">
+            <label>Item Name</label>
+            <input type="text" class="edit-item-name" required>
+        </div>
+        <div class="form-group">
+            <label>Quantity</label>
+            <input type="number" class="edit-quantity" min="1" value="1" required>
+        </div>
+        <div class="form-group">
+            <label>Purchase Price (₹)</label>
+            <input type="number" class="edit-purchase-price" min="0" step="0.01" required>
+        </div>
+        <div class="form-group">
+            <label>Sale Price (₹)</label>
+            <input type="number" class="edit-sale-price" min="0" step="0.01" required>
+        </div>
+        <button type="button" class="remove-edit-item">Remove</button>
+    `;
+    
+    container.appendChild(newItem);
+    newItem.querySelector('.remove-edit-item').addEventListener('click', removeEditItem);
+}
+
+function removeEditItem(e) {
+    if (document.querySelectorAll('.edit-item-row').length > 1) {
+        e.target.closest('.edit-item-row').remove();
+    } else {
+        alert('A transaction must have at least one item');
+    }
+}
+
+async function saveEditedTransaction(e) {
+    e.preventDefault();
+    
+    const siNo = e.target.closest('.edit-btn')?.getAttribute('data-si-no');
+    const transaction = allTransactions.find(t => t.siNo === siNo);
+    if (!transaction) return;
+    
+    // Collect edited data
+    const editedData = {
+        action: "update",
+        siNo: siNo,
+        customerName: document.getElementById('edit-customer-name').value,
+        date: document.getElementById('edit-date').value,
+        paymentMode: document.getElementById('edit-payment-mode').value,
+        items: [],
+        storeName: "RK Fashions",
+        totalAmount: 0,
+        totalProfit: 0
+    };
+    
+    // Collect items and calculate totals
+    document.querySelectorAll('.edit-item-row').forEach(row => {
+        const item = {
+            itemName: row.querySelector('.edit-item-name').value,
+            quantity: parseFloat(row.querySelector('.edit-quantity').value),
+            purchasePrice: parseFloat(row.querySelector('.edit-purchase-price').value),
+            salePrice: parseFloat(row.querySelector('.edit-sale-price').value)
+        };
+        editedData.items.push(item);
+        editedData.totalAmount += item.quantity * item.salePrice;
+        editedData.totalProfit += item.quantity * (item.salePrice - item.purchasePrice);
+    });
+
+    try {
+        // Show loading indicator
+        showLoading();
+        
+        // Call backend to update
+        const response = await fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(editedData)
+        });
+        
+        if (!response.ok) throw new Error("Update failed");
+        
+        // Reload transactions after successful update
+        await loadTransactions();
+        elements.editModal.style.display = 'none';
+    } catch (error) {
+        console.error("Error updating transaction:", error);
+        alert("Failed to update transaction. Please try again.");
+    } finally {
+        // Hide loading indicator
+        filterTransactions();
+    }
+}
+
+function deleteTransaction(e) {
+    const siNo = e.target.closest('.delete-btn').getAttribute('data-si-no');
+    const transaction = allTransactions.find(t => t.siNo === siNo);
+    
+    if (!transaction) return;
+    
+    // Store the SI No in the modal for confirmation
+    elements.deleteModal.setAttribute('data-si-no', siNo);
+    elements.deleteModal.style.display = 'block';
+}
+
+async function confirmDelete() {
+    const siNo = elements.deleteModal.getAttribute('data-si-no');
+    if (!siNo) return;
+    
+    try {
+        // Show loading indicator
+        showLoading();
+        
+        // Call backend to delete
+        const response = await fetch(`https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=delete&siNo=${encodeURIComponent(siNo)}`);
+        
+        if (!response.ok) throw new Error("Delete failed");
+        
+        // Reload transactions after successful deletion
+        await loadTransactions();
+        elements.deleteModal.style.display = 'none';
+    } catch (error) {
+        console.error("Error deleting transaction:", error);
+        alert("Failed to delete transaction. Please try again.");
+    } finally {
+        // Hide loading indicator
+        filterTransactions();
+    }
+}
+
 function goToPrevPage() {
     if (currentPage > 1) {
         currentPage--;
@@ -443,14 +713,31 @@ function closeModal() {
 }
 
 function showLoading() {
-    elements.transactionsBody.innerHTML = `
-        <tr>
-            <td colspan="8" class="loading-spinner">
-                <div class="spinner"></div>
-                Loading transactions...
-            </td>
-        </tr>
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'loading-overlay';
+    loadingOverlay.style.position = 'fixed';
+    loadingOverlay.style.top = '0';
+    loadingOverlay.style.left = '0';
+    loadingOverlay.style.width = '100%';
+    loadingOverlay.style.height = '100%';
+    loadingOverlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    loadingOverlay.style.display = 'flex';
+    loadingOverlay.style.justifyContent = 'center';
+    loadingOverlay.style.alignItems = 'center';
+    loadingOverlay.style.zIndex = '1000';
+    
+    loadingOverlay.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
     `;
+    
+    document.body.appendChild(loadingOverlay);
+    
+    return () => {
+        document.body.removeChild(loadingOverlay);
+    };
 }
 
 function showError(message) {
