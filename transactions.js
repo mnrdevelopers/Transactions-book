@@ -295,6 +295,8 @@ function renderTransactions() {
             <td>${transaction.paymentMode}</td>
             <td class="actions">
                 <button class="view-btn" data-si-no="${transaction.siNo}">View</button>
+                <button class="edit-btn" data-si-no="${transaction.siNo}">Edit</button>
+                <button class="delete-btn" data-si-no="${transaction.siNo}">Delete</button>  
             </td>
         `;
         elements.transactionsBody.appendChild(row);
@@ -364,6 +366,13 @@ function setupRowEventListeners() {
     document.querySelectorAll(".view-btn").forEach(btn => {
         btn.addEventListener("click", viewTransactionDetails);
     });
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+        btn.addEventListener("click", editTransaction);
+    });
+    
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", deleteTransaction);
+    });
 }
 
 function viewTransactionDetails(e) {
@@ -422,6 +431,77 @@ function viewTransactionDetails(e) {
     
     // Show modal
     elements.viewModal.style.display = "block";
+}
+
+function editTransaction(e) {
+    const siNo = e.target.getAttribute("data-si-no");
+    const transaction = allTransactions.find(t => t.siNo === siNo);
+    
+    if (!transaction) return;
+    
+    // Store the transaction data in localStorage
+    localStorage.setItem('editTransactionData', JSON.stringify(transaction));
+    
+    // Redirect to add-transaction page with edit mode
+    window.location.href = 'add-transaction.html?edit=' + encodeURIComponent(siNo);
+}
+
+async function deleteTransaction(e) {
+    const siNo = e.target.getAttribute("data-si-no");
+    const row = e.target.closest('tr');
+    
+    if (!confirm(`Are you sure you want to delete transaction ${siNo}?`)) {
+        return;
+    }
+    
+    // Add deleting class for animation
+    row.classList.add('deleting');
+    
+    // Wait for animation to complete
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    try {
+        // Call backend to delete
+        const response = await fetch(
+            `https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=delete&siNo=${siNo}`,
+            { mode: 'no-cors' }
+        );
+        
+        // Remove from local data
+        allTransactions = allTransactions.filter(t => t.siNo !== siNo);
+        filteredTransactions = filteredTransactions.filter(t => t.siNo !== siNo);
+        
+        // Re-render
+        renderTransactions();
+        updateSummaryCards();
+        
+        // Show success message
+        showToast('Transaction deleted successfully');
+    } catch (error) {
+        console.error("Delete failed:", error);
+        showToast('Failed to delete transaction', 'error');
+        row.classList.remove('deleting');
+    }
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // Animation
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    // Remove after delay
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 3000);
 }
 
 function goToPrevPage() {
