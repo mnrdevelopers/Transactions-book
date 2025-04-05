@@ -3,29 +3,103 @@ if (document.getElementById("transaction-form")) {
     // Constants
     const DAILY_STATS_KEY = 'rkFashionsDailyStats';
     
-    // Initialize date display
-   const today = new Date();
-   document.getElementById("transaction-date").valueAsDate = today;
-   document.getElementById("customer-name").value = generateCustomerName(); // Add this line
+    // First, define all functions
+    function generateCustomerName() {
+        const prefixes = ["Customer"];
+        const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+        const randomNum = Math.floor(Math.random() * 9000) + 1000;
+        return `${randomPrefix}-${randomNum}`;
+    }
 
-    // Sequence number management
     function generateBillNumber() {
-    // Get current timestamp and random number for uniqueness
-    const timestamp = Date.now().toString().slice(-6);
-    const randomNum = Math.floor(Math.random() * 900) + 100; // 3-digit random number
-    return `RK-${timestamp}-${randomNum}`;
-}
-      
-    addItem();
-    document.getElementById("add-item").addEventListener("click", addItem);
-    document.getElementById("items-container").addEventListener("input", function(e) {
-        if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
+        const timestamp = Date.now().toString().slice(-6);
+        const randomNum = Math.floor(Math.random() * 900) + 100;
+        return `RK-${timestamp}-${randomNum}`;
+    }
+
+    function addItem() {
+        const itemsContainer = document.getElementById("items-container");
+        const newItem = document.createElement("div");
+        newItem.className = "item-row";
+        newItem.innerHTML = `
+            <label>Item Name:</label>
+            <input type="text" class="item-name" required>
+            
+            <label>Quantity:</label>
+            <input type="number" class="quantity" min="1" value="1" required>
+            
+            <label>Purchase Price (₹):</label>
+            <input type="number" class="purchase-price" min="0" step="0.01" required>
+            
+            <label>Sale Price (₹):</label>
+            <input type="number" class="sale-price" min="0" step="0.01" required>
+            
+            <button type="button" class="remove-item">Remove</button>
+        `;
+        itemsContainer.appendChild(newItem);
+        
+        newItem.querySelector(".remove-item").addEventListener("click", function() {
+            newItem.remove();
             calculateTotals();
+        });
+    }
+
+    // Then initialize the page
+    function initializePage() {
+        // Initialize date display
+        const today = new Date();
+        document.getElementById("transaction-date").valueAsDate = today;
+        document.getElementById("customer-name").value = generateCustomerName();
+
+        // Check for edit mode
+        if (window.location.search.includes('edit=')) {
+            const siNo = decodeURIComponent(window.location.search.split('edit=')[1]);
+            const transactionData = JSON.parse(localStorage.getItem('editTransactionData'));
+            
+            if (transactionData && transactionData.siNo === siNo) {
+                // Populate form with transaction data
+                document.getElementById('customer-name').value = transactionData.customerName;
+                document.getElementById('payment-mode').value = transactionData.paymentMode;
+                
+                // Clear existing items
+                document.getElementById('items-container').innerHTML = '';
+                
+                // Add items
+                transactionData.items.forEach(item => {
+                    addItem();
+                    const lastItem = document.querySelector('.item-row:last-child');
+                    lastItem.querySelector('.item-name').value = item.itemName;
+                    lastItem.querySelector('.quantity').value = item.quantity;
+                    lastItem.querySelector('.purchase-price').value = item.purchasePrice;
+                    lastItem.querySelector('.sale-price').value = item.salePrice;
+                });
+                
+                document.querySelector('#transaction-form [type="submit"]').textContent = 'Update Bill';
+                document.getElementById('transaction-form').dataset.originalSiNo = siNo;
+            }
+        } else {
+            // Add first item only if not in edit mode
+            addItem();
         }
-    });
-    
-    document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
-    setupPrintButton();
+        
+        // Setup event listeners
+        document.getElementById("add-item").addEventListener("click", addItem);
+        document.getElementById("items-container").addEventListener("input", function(e) {
+            if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
+                calculateTotals();
+            }
+        });
+        
+        document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
+        setupPrintButton();
+        initDailyStats();
+        startAutoRefresh();
+        setupCashPaymentModal();
+        setupSuccessModal();
+    }
+
+    // Start the application
+    document.addEventListener("DOMContentLoaded", initializePage);
 
     // ======================
     // DAILY STATS FUNCTIONS
@@ -122,79 +196,6 @@ if (document.getElementById("transaction-form")) {
     function startAutoRefresh() {
         updateCurrentTime();
         setInterval(updateCurrentTime, 60000); // Update every minute
-    }
-
-    function generateCustomerName() {
-    const prefixes = ["Customer"];
-    const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-    const randomNum = Math.floor(Math.random() * 9000) + 1000; // 4-digit random number
-    return `${randomPrefix}-${randomNum}`;
-}
-
-    // Check for edit mode on page load
-if (window.location.search.includes('edit=')) {
-    const siNo = decodeURIComponent(window.location.search.split('edit=')[1]);
-    const transactionData = JSON.parse(localStorage.getItem('editTransactionData'));
-    
-    if (transactionData && transactionData.siNo === siNo) {
-        // Populate form with transaction data
-        document.getElementById('customer-name').value = transactionData.customerName;
-        document.getElementById('payment-mode').value = transactionData.paymentMode;
-        
-        // Clear existing items
-        document.getElementById('items-container').innerHTML = '';
-        
-        // Add items
-        transactionData.items.forEach(item => {
-            addItem();
-            const lastItem = document.querySelector('.item-row:last-child');
-            lastItem.querySelector('.item-name').value = item.itemName;
-            lastItem.querySelector('.quantity').value = item.quantity;
-            lastItem.querySelector('.purchase-price').value = item.purchasePrice;
-            lastItem.querySelector('.sale-price').value = item.salePrice;
-        });
-        
-        // Set the sequence number
-        const sequenceNo = siNo.split('-')[1];
-        document.getElementById('sequence-no').value = sequenceNo;
-        
-        // Update totals
-        calculateTotals();
-        
-        // Change submit button text
-        document.querySelector('#transaction-form [type="submit"]').textContent = 'Update Bill';
-        
-        // Store the original SI No for reference
-        document.getElementById('transaction-form').dataset.originalSiNo = siNo;
-    }
-}
-
-    function addItem() {
-        const itemsContainer = document.getElementById("items-container");
-        const newItem = document.createElement("div");
-        newItem.className = "item-row";
-        newItem.innerHTML = `
-            <label>Item Name:</label>
-            <input type="text" class="item-name" required>
-            
-            <label>Quantity:</label>
-            <input type="number" class="quantity" min="1" value="1" required>
-            
-            <label>Purchase Price (₹):</label>
-            <input type="number" class="purchase-price" min="0" step="0.01" required>
-            
-            <label>Sale Price (₹):</label>
-            <input type="number" class="sale-price" min="0" step="0.01" required>
-            
-            <button type="button" class="remove-item">Remove</button>
-        `;
-        itemsContainer.appendChild(newItem);
-        
-        // Add remove event
-        newItem.querySelector(".remove-item").addEventListener("click", function() {
-            newItem.remove();
-            calculateTotals();
-        });
     }
 
     function calculateTotals() {
