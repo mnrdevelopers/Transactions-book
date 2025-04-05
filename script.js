@@ -7,7 +7,6 @@ if (document.getElementById("transaction-form")) {
    const today = new Date();
    document.getElementById("transaction-date").valueAsDate = today;
    document.getElementById("customer-name").value = generateCustomerName(); // Add this line
-   addItem();
 
     // Sequence number management
     function generateBillNumber() {
