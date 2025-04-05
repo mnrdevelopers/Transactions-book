@@ -1,8 +1,8 @@
-// Constants
-    const DAILY_STATS_KEY = 'rkFashionsDailyStats';
 // Transaction page specific code
 if (document.getElementById("transaction-form")) {
-    
+// Constants
+    const DAILY_STATS_KEY = 'rkFashionsDailyStats';
+
     // First, define all functions
     function generateCustomerName() {
         const prefixes = ["Customer"];
