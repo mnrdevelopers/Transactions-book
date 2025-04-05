@@ -295,7 +295,6 @@ function renderTransactions() {
             <td>${transaction.paymentMode}</td>
             <td class="actions">
                 <button class="view-btn" data-si-no="${transaction.siNo}">View</button>
-                <button class="edit-btn" data-si-no="${transaction.siNo}">Edit</button>
                 <button class="delete-btn" data-si-no="${transaction.siNo}">Delete</button>  
             </td>
         `;
@@ -366,9 +365,6 @@ function setupRowEventListeners() {
     document.querySelectorAll(".view-btn").forEach(btn => {
         btn.addEventListener("click", viewTransactionDetails);
     });
-    document.querySelectorAll(".edit-btn").forEach(btn => {
-        btn.addEventListener("click", editTransaction);
-    });
     
     document.querySelectorAll(".delete-btn").forEach(btn => {
         btn.addEventListener("click", deleteTransaction);
@@ -431,22 +427,6 @@ function viewTransactionDetails(e) {
     
     // Show modal
     elements.viewModal.style.display = "block";
-}
-
-function editTransaction(e) {
-    const siNo = e.target.getAttribute("data-si-no");
-    const transaction = allTransactions.find(t => t.siNo === siNo);
-    
-    if (!transaction) return;
-    
-    // Store the transaction data in localStorage
-    localStorage.setItem('editTransactionData', JSON.stringify(transaction));
-    
-    // Add a flag to indicate this is an edit
-    localStorage.setItem('isEditMode', 'true');
-    
-    // Redirect to add-transaction page with edit mode
-    window.location.href = 'add-transaction.html?edit=' + encodeURIComponent(siNo);
 }
 
 async function deleteTransaction(e) {
