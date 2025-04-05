@@ -255,14 +255,16 @@ function prepareBillData() {
             total: (parseFloat(row.querySelector(".quantity").value) * parseFloat(row.querySelector(".sale-price").value)).toFixed(2)
         });
     });
+
+    const isUpdate = document.getElementById("transaction-form").dataset.originalSiNo;
+    const billNo = isUpdate ? document.getElementById("transaction-form").dataset.originalSiNo : generateBillNumber();
     
-    const originalSiNo = document.getElementById("transaction-form").dataset.originalSiNo;
-    const isUpdate = !!originalSiNo;
+    console.log("isUpdate:", isUpdate, "billNo:", billNo); // Debug
     
     return {
         storeName: "RK Fashions",
         date: document.getElementById("date").textContent,
-        siNo: isUpdate ? originalSiNo : generateBillNumber(), // Use original for updates, generate new for creates
+        siNo: billNo, // Use existing for updates, new for creates
         customerName: document.getElementById("customer-name").value,
         items: items,
         paymentMode: document.getElementById("payment-mode").value,
@@ -462,22 +464,24 @@ let pendingTransactionData = null;
 // Modify the handleFormSubmit function
 function handleFormSubmit(e) {
     e.preventDefault();
-    if (!validateForm()) return;
+    console.log("Form submission started"); // Debug
     
-    // Generate bill number if not already set
-    if (!document.getElementById("bill-no").value) {
-        document.getElementById("bill-no").value = generateBillNumber();
+    if (!validateForm()) {
+        console.log("Validation failed"); // Debug
+        return;
     }
 
     const paymentMode = document.getElementById("payment-mode").value;
     const totalAmount = parseFloat(document.getElementById("total-amount").value) || 0;
     
-    // Store the bill data for later submission
     pendingTransactionData = prepareBillData();
+    console.log("Prepared bill data:", pendingTransactionData); // Debug
     
     if (paymentMode === "Cash") {
+        console.log("Showing cash payment modal"); // Debug
         showCashPaymentModal(totalAmount);
     } else {
+        console.log("Submitting transaction directly"); // Debug
         submitTransaction();
     }
 }
@@ -542,28 +546,35 @@ setupSuccessModal();
 
 // In the submitBill function, remove the spinner code since we're handling it globally:
 function submitBill(data) {
+    console.log("Starting submitBill with action:", data.action); // Debug
     const submitBtn = document.querySelector("#transaction-form [type='submit']");
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = data.action === "update" ? 'Updating...' : 'Processing...';
     submitBtn.disabled = true;
-    
-    // Update local stats only for new transactions
-    if (data.action !== "update") {
-        const salesToAdd = data.items.length;
-        const profitToAdd = parseFloat(data.totalProfit) || 0;
-        updateLocalStats(salesToAdd, profitToAdd);
-    }
-    
+
+    // Show loading overlay
+    document.getElementById("loading-overlay").style.display = "flex";
+
     return new Promise((resolve, reject) => {
-        fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
+        const url = "https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec";
+        console.log("Sending data to:", url); // Debug
+        
+        fetch(url, {
             method: "POST",
-            mode: "no-cors",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(data)
         })
-        .then(() => {
+        .then(response => {
+            console.log("Received response:", response); // Debug
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+            return response.text();
+        })
+        .then(text => {
+            console.log("Response text:", text); // Debug
             // Reset form but keep customer name
             const customerName = document.getElementById("customer-name").value;
             document.getElementById("transaction-form").reset();
@@ -571,7 +582,6 @@ function submitBill(data) {
             document.getElementById("items-container").innerHTML = "";
             addItem();
             
-            // Clear edit mode if this was an update
             if (data.action === "update") {
                 delete document.getElementById("transaction-form").dataset.originalSiNo;
                 window.history.replaceState({}, document.title, window.location.pathname);
@@ -581,12 +591,13 @@ function submitBill(data) {
             resolve();
         })
         .catch(error => {
-            console.error("Error:", error);
+            console.error("Error in submitBill:", error); // Debug
             reject(error);
         })
         .finally(() => {
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
+            document.getElementById("loading-overlay").style.display = "none";
         });
     });
-  }
+}
