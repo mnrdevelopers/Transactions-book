@@ -45,38 +45,36 @@ if (document.getElementById("transaction-form")) {
     }
 
     // Then initialize the page
-    function initializePage() {
-        // Initialize date display
-        const today = new Date();
-        document.getElementById("transaction-date").valueAsDate = today;
-        document.getElementById("customer-name").value = generateCustomerName();
-
-        // Check for edit mode
-        if (window.location.search.includes('edit=')) {
-            const siNo = decodeURIComponent(window.location.search.split('edit=')[1]);
-            const transactionData = JSON.parse(localStorage.getItem('editTransactionData'));
-            
-            if (transactionData && transactionData.siNo === siNo) {
-                // Populate form with transaction data
-                document.getElementById('customer-name').value = transactionData.customerName;
-                document.getElementById('payment-mode').value = transactionData.paymentMode;
-                
-                // Clear existing items
-                document.getElementById('items-container').innerHTML = '';
-                
-                // Add items
-                transactionData.items.forEach(item => {
-                    addItem();
-                    const lastItem = document.querySelector('.item-row:last-child');
-                    lastItem.querySelector('.item-name').value = item.itemName;
-                    lastItem.querySelector('.quantity').value = item.quantity;
-                    lastItem.querySelector('.purchase-price').value = item.purchasePrice;
-                    lastItem.querySelector('.sale-price').value = item.salePrice;
-                });
-                
-                document.querySelector('#transaction-form [type="submit"]').textContent = 'Update Bill';
-                document.getElementById('transaction-form').dataset.originalSiNo = siNo;
-            }
+    if (window.location.search.includes('edit=')) {
+    const siNo = decodeURIComponent(window.location.search.split('edit=')[1]);
+    const transactionData = JSON.parse(localStorage.getItem('editTransactionData'));
+    
+    if (transactionData && transactionData.siNo === siNo) {
+        // Populate form with original transaction data
+        document.getElementById('customer-name').value = transactionData.customerName;
+        document.getElementById('payment-mode').value = transactionData.paymentMode;
+        
+        // Keep the original bill number visible but disabled
+        const billNoInput = document.getElementById('bill-no');
+        billNoInput.value = transactionData.siNo;
+        billNoInput.disabled = true;
+        
+        // Clear existing items
+        document.getElementById('items-container').innerHTML = '';
+        
+        // Add items
+        transactionData.items.forEach(item => {
+            addItem();
+            const lastItem = document.querySelector('.item-row:last-child');
+            lastItem.querySelector('.item-name').value = item.itemName;
+            lastItem.querySelector('.quantity').value = item.quantity;
+            lastItem.querySelector('.purchase-price').value = item.purchasePrice;
+            lastItem.querySelector('.sale-price').value = item.salePrice;
+        });
+        
+        document.querySelector('#transaction-form [type="submit"]').textContent = 'Update Bill';
+        document.getElementById('transaction-form').dataset.originalSiNo = siNo;
+    }
         } else {
             // Add first item only if not in edit mode
             addItem();
@@ -246,7 +244,7 @@ if (document.getElementById("transaction-form")) {
         return valid;
     }
 
- function prepareBillData() {
+function prepareBillData() {
     const items = [];
     document.querySelectorAll(".item-row").forEach(row => {
         items.push({
@@ -258,24 +256,22 @@ if (document.getElementById("transaction-form")) {
         });
     });
     
-    const dayMonthPart = document.getElementById("day-month-part").textContent;
-    const sequenceNo = document.getElementById("sequence-no").value.padStart(3, '0');
     const originalSiNo = document.getElementById("transaction-form").dataset.originalSiNo;
+    const isUpdate = !!originalSiNo;
     
     return {
         storeName: "RK Fashions",
         date: document.getElementById("date").textContent,
-        siNo: originalSiNo || `${dayMonthPart}-${sequenceNo}`,
+        siNo: isUpdate ? originalSiNo : generateBillNumber(), // Use original for updates, generate new for creates
         customerName: document.getElementById("customer-name").value,
         items: items,
         paymentMode: document.getElementById("payment-mode").value,
         totalAmount: document.getElementById("total-amount").value,
         totalProfit: document.getElementById("total-profit").value,
-        action: originalSiNo ? "update" : "add"
+        action: isUpdate ? "update" : "add"
     };
 }
 
-    
    function displayBillPreview(data) {
     // Hide the template
     document.getElementById("bill-template").style.display = "none";
