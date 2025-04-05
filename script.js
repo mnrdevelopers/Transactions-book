@@ -1,41 +1,3 @@
-// Check for edit mode on page load
-if (window.location.search.includes('edit=')) {
-    const siNo = decodeURIComponent(window.location.search.split('edit=')[1]);
-    const transactionData = JSON.parse(localStorage.getItem('editTransactionData'));
-    
-    if (transactionData && transactionData.siNo === siNo) {
-        // Populate form with transaction data
-        document.getElementById('customer-name').value = transactionData.customerName;
-        document.getElementById('payment-mode').value = transactionData.paymentMode;
-        
-        // Clear existing items
-        document.getElementById('items-container').innerHTML = '';
-        
-        // Add items
-        transactionData.items.forEach(item => {
-            addItem();
-            const lastItem = document.querySelector('.item-row:last-child');
-            lastItem.querySelector('.item-name').value = item.itemName;
-            lastItem.querySelector('.quantity').value = item.quantity;
-            lastItem.querySelector('.purchase-price').value = item.purchasePrice;
-            lastItem.querySelector('.sale-price').value = item.salePrice;
-        });
-        
-        // Set the sequence number
-        const sequenceNo = siNo.split('-')[1];
-        document.getElementById('sequence-no').value = sequenceNo;
-        
-        // Update totals
-        calculateTotals();
-        
-        // Change submit button text
-        document.querySelector('#transaction-form [type="submit"]').textContent = 'Update Bill';
-        
-        // Store the original SI No for reference
-        document.getElementById('transaction-form').dataset.originalSiNo = siNo;
-    }
-}
-
 // Transaction page specific code
 if (document.getElementById("transaction-form")) {
     // Constants
@@ -167,6 +129,44 @@ if (document.getElementById("transaction-form")) {
     const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
     const randomNum = Math.floor(Math.random() * 9000) + 1000; // 4-digit random number
     return `${randomPrefix}-${randomNum}`;
+}
+
+    // Check for edit mode on page load
+if (window.location.search.includes('edit=')) {
+    const siNo = decodeURIComponent(window.location.search.split('edit=')[1]);
+    const transactionData = JSON.parse(localStorage.getItem('editTransactionData'));
+    
+    if (transactionData && transactionData.siNo === siNo) {
+        // Populate form with transaction data
+        document.getElementById('customer-name').value = transactionData.customerName;
+        document.getElementById('payment-mode').value = transactionData.paymentMode;
+        
+        // Clear existing items
+        document.getElementById('items-container').innerHTML = '';
+        
+        // Add items
+        transactionData.items.forEach(item => {
+            addItem();
+            const lastItem = document.querySelector('.item-row:last-child');
+            lastItem.querySelector('.item-name').value = item.itemName;
+            lastItem.querySelector('.quantity').value = item.quantity;
+            lastItem.querySelector('.purchase-price').value = item.purchasePrice;
+            lastItem.querySelector('.sale-price').value = item.salePrice;
+        });
+        
+        // Set the sequence number
+        const sequenceNo = siNo.split('-')[1];
+        document.getElementById('sequence-no').value = sequenceNo;
+        
+        // Update totals
+        calculateTotals();
+        
+        // Change submit button text
+        document.querySelector('#transaction-form [type="submit"]').textContent = 'Update Bill';
+        
+        // Store the original SI No for reference
+        document.getElementById('transaction-form').dataset.originalSiNo = siNo;
+    }
 }
 
     function addItem() {
