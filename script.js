@@ -1,103 +1,31 @@
 // Transaction page specific code
 if (document.getElementById("transaction-form")) {
-// Constants
+    // Constants
     const DAILY_STATS_KEY = 'rkFashionsDailyStats';
-
-    // First, define all functions
-    function generateCustomerName() {
-        const prefixes = ["Customer"];
-        const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-        const randomNum = Math.floor(Math.random() * 9000) + 1000;
-        return `${randomPrefix}-${randomNum}`;
-    }
-
-    function generateBillNumber() {
-        const timestamp = Date.now().toString().slice(-6);
-        const randomNum = Math.floor(Math.random() * 900) + 100;
-        return `RK-${timestamp}-${randomNum}`;
-    }
-
-    function addItem() {
-        const itemsContainer = document.getElementById("items-container");
-        const newItem = document.createElement("div");
-        newItem.className = "item-row";
-        newItem.innerHTML = `
-            <label>Item Name:</label>
-            <input type="text" class="item-name" required>
-            
-            <label>Quantity:</label>
-            <input type="number" class="quantity" min="1" value="1" required>
-            
-            <label>Purchase Price (₹):</label>
-            <input type="number" class="purchase-price" min="0" step="0.01" required>
-            
-            <label>Sale Price (₹):</label>
-            <input type="number" class="sale-price" min="0" step="0.01" required>
-            
-            <button type="button" class="remove-item">Remove</button>
-        `;
-        itemsContainer.appendChild(newItem);
-        
-        newItem.querySelector(".remove-item").addEventListener("click", function() {
-            newItem.remove();
-            calculateTotals();
-        });
-    }
-
-    // Then initialize the page
-    if (window.location.search.includes('edit=')) {
-    const siNo = decodeURIComponent(window.location.search.split('edit=')[1]);
-    const transactionData = JSON.parse(localStorage.getItem('editTransactionData'));
     
-    if (transactionData && transactionData.siNo === siNo) {
-        // Populate form with original transaction data
-        document.getElementById('customer-name').value = transactionData.customerName;
-        document.getElementById('payment-mode').value = transactionData.paymentMode;
-        
-        // Keep the original bill number visible but disabled
-        const billNoInput = document.getElementById('bill-no');
-        billNoInput.value = transactionData.siNo;
-        billNoInput.disabled = true;
-        
-        // Clear existing items
-        document.getElementById('items-container').innerHTML = '';
-        
-        // Add items
-        transactionData.items.forEach(item => {
-            addItem();
-            const lastItem = document.querySelector('.item-row:last-child');
-            lastItem.querySelector('.item-name').value = item.itemName;
-            lastItem.querySelector('.quantity').value = item.quantity;
-            lastItem.querySelector('.purchase-price').value = item.purchasePrice;
-            lastItem.querySelector('.sale-price').value = item.salePrice;
-        });
-        
-        document.querySelector('#transaction-form [type="submit"]').textContent = 'Update Bill';
-        document.getElementById('transaction-form').dataset.originalSiNo = siNo;
-    }
-        } else {
-            // Add first item only if not in edit mode
-            addItem();
-        }
-        
-        // Setup event listeners
-        document.getElementById("add-item").addEventListener("click", addItem);
-        document.getElementById("items-container").addEventListener("input", function(e) {
-            if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
-                calculateTotals();
-            }
-        });
-        
-        document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
-        setupPrintButton();
-        initDailyStats();
-        startAutoRefresh();
-        setupCashPaymentModal();
-        setupSuccessModal();
-    }
+    // Initialize date display
+   const today = new Date();
+   document.getElementById("transaction-date").valueAsDate = today;
+   document.getElementById("customer-name").value = generateCustomerName(); // Add this line
 
-    // Start the application
-    document.addEventListener("DOMContentLoaded", initializePage);
+    // Sequence number management
+    function generateBillNumber() {
+    // Get current timestamp and random number for uniqueness
+    const timestamp = Date.now().toString().slice(-6);
+    const randomNum = Math.floor(Math.random() * 900) + 100; // 3-digit random number
+    return `RK-${timestamp}-${randomNum}`;
+}
+      
+    addItem();
+    document.getElementById("add-item").addEventListener("click", addItem);
+    document.getElementById("items-container").addEventListener("input", function(e) {
+        if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
+            calculateTotals();
+        }
+    });
+    
+    document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
+    setupPrintButton();
 
     // ======================
     // DAILY STATS FUNCTIONS
@@ -196,6 +124,41 @@ if (document.getElementById("transaction-form")) {
         setInterval(updateCurrentTime, 60000); // Update every minute
     }
 
+    function generateCustomerName() {
+    const prefixes = ["Customer"];
+    const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const randomNum = Math.floor(Math.random() * 9000) + 1000; // 4-digit random number
+    return `${randomPrefix}-${randomNum}`;
+}
+
+    function addItem() {
+        const itemsContainer = document.getElementById("items-container");
+        const newItem = document.createElement("div");
+        newItem.className = "item-row";
+        newItem.innerHTML = `
+            <label>Item Name:</label>
+            <input type="text" class="item-name" required>
+            
+            <label>Quantity:</label>
+            <input type="number" class="quantity" min="1" value="1" required>
+            
+            <label>Purchase Price (₹):</label>
+            <input type="number" class="purchase-price" min="0" step="0.01" required>
+            
+            <label>Sale Price (₹):</label>
+            <input type="number" class="sale-price" min="0" step="0.01" required>
+            
+            <button type="button" class="remove-item">Remove</button>
+        `;
+        itemsContainer.appendChild(newItem);
+        
+        // Add remove event
+        newItem.querySelector(".remove-item").addEventListener("click", function() {
+            newItem.remove();
+            calculateTotals();
+        });
+    }
+
     function calculateTotals() {
         let totalAmount = 0;
         let totalProfit = 0;
@@ -244,39 +207,30 @@ if (document.getElementById("transaction-form")) {
         return valid;
     }
 
-function prepareBillData() {
+ function prepareBillData() {
     const items = [];
     document.querySelectorAll(".item-row").forEach(row => {
         items.push({
             itemName: row.querySelector(".item-name").value,
-            quantity: parseFloat(row.querySelector(".quantity").value) || 0,
-            purchasePrice: parseFloat(row.querySelector(".purchase-price").value) || 0,
-            salePrice: parseFloat(row.querySelector(".sale-price").value) || 0,
-            total: (parseFloat(row.querySelector(".quantity").value) * parseFloat(row.querySelector(".sale-price").value)).toFixed(2)
+            quantity: row.querySelector(".quantity").value,
+            purchasePrice: row.querySelector(".purchase-price").value,
+            salePrice: row.querySelector(".sale-price").value,
+            total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
         });
     });
-
-    const isUpdate = document.getElementById("transaction-form").dataset.originalSiNo;
-    const billNo = isUpdate ? document.getElementById("transaction-form").dataset.originalSiNo : generateBillNumber();
-    
-    // Get current date if date element doesn't exist
-    const currentDate = document.getElementById("date") 
-        ? document.getElementById("date").textContent 
-        : new Date().toLocaleDateString('en-IN');
     
     return {
         storeName: "RK Fashions",
-        date: currentDate,
-        siNo: billNo,
+        date: document.getElementById("transaction-date").value,
+        siNo: document.getElementById("bill-no").value,
         customerName: document.getElementById("customer-name").value,
         items: items,
         paymentMode: document.getElementById("payment-mode").value,
         totalAmount: document.getElementById("total-amount").value,
-        totalProfit: document.getElementById("total-profit").value,
-        action: isUpdate ? "update" : "add"
+        totalProfit: document.getElementById("total-profit").value
     };
 }
-
+    
    function displayBillPreview(data) {
     // Hide the template
     document.getElementById("bill-template").style.display = "none";
@@ -452,11 +406,8 @@ function setupSuccessModal() {
     }
 }
 
-function showSuccessMessage(message = "Transaction completed successfully!") {
+function showSuccessMessage() {
     const modal = document.getElementById('success-modal');
-    const messageElement = document.getElementById('success-message');
-    
-    messageElement.textContent = message;
     modal.style.display = 'flex';
     
     // Auto-close after 3 seconds
@@ -470,24 +421,22 @@ let pendingTransactionData = null;
 // Modify the handleFormSubmit function
 function handleFormSubmit(e) {
     e.preventDefault();
-    console.log("Form submission started"); // Debug
+    if (!validateForm()) return;
     
-    if (!validateForm()) {
-        console.log("Validation failed"); // Debug
-        return;
+    // Generate bill number if not already set
+    if (!document.getElementById("bill-no").value) {
+        document.getElementById("bill-no").value = generateBillNumber();
     }
 
     const paymentMode = document.getElementById("payment-mode").value;
     const totalAmount = parseFloat(document.getElementById("total-amount").value) || 0;
     
+    // Store the bill data for later submission
     pendingTransactionData = prepareBillData();
-    console.log("Prepared bill data:", pendingTransactionData); // Debug
     
     if (paymentMode === "Cash") {
-        console.log("Showing cash payment modal"); // Debug
         showCashPaymentModal(totalAmount);
     } else {
-        console.log("Submitting transaction directly"); // Debug
         submitTransaction();
     }
 }
@@ -552,62 +501,44 @@ setupSuccessModal();
 
 // In the submitBill function, remove the spinner code since we're handling it globally:
 function submitBill(data) {
-    console.log("Starting submitBill with action:", data.action);
     const submitBtn = document.querySelector("#transaction-form [type='submit']");
     const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = data.action === "update" ? 'Updating...' : 'Processing...';
+    submitBtn.innerHTML = 'Processing...';
     submitBtn.disabled = true;
-
-    // Show loading overlay
-    document.getElementById("loading-overlay").style.display = "flex";
-
+    
+    // Update local stats
+    const salesToAdd = data.items.length;
+    const profitToAdd = parseFloat(data.totalProfit) || 0;
+    updateLocalStats(salesToAdd, profitToAdd);
+    
     return new Promise((resolve, reject) => {
-        const url = "https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec";
-        
-        fetch(url, {
+        fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
             method: "POST",
+            mode: "no-cors",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(data)
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Network response was not ok");
-            }
-            return response.text();
-        })
-        .then(text => {
-            // For updates, show success message and redirect
-            if (data.action === "update") {
-                showSuccessMessage("Bill updated successfully!");
-                
-                // Clear edit data and redirect after delay
-                setTimeout(() => {
-                    delete document.getElementById("transaction-form").dataset.originalSiNo;
-                    localStorage.removeItem('editTransactionData');
-                    localStorage.removeItem('isEditMode');
-                    window.location.href = 'transactions.html';
-                }, 2000);
-            } else {
-                // For new transactions, reset form but keep customer name
-                const customerName = document.getElementById("customer-name").value;
-                document.getElementById("transaction-form").reset();
-                document.getElementById("customer-name").value = customerName;
-                document.getElementById("items-container").innerHTML = "";
-                addItem();
-            }
-            
-            resolve();
-        })
+       .then(() => {
+    // Reset form but keep customer name and date
+    const customerName = document.getElementById("customer-name").value;
+      document.getElementById("transaction-form").reset();
+    document.getElementById("customer-name").value = generateCustomerName();
+    document.getElementById("transaction-date").valueAsDate = new Date();
+    document.getElementById("bill-no").value = "";
+    document.getElementById("items-container").innerHTML = "";
+    addItem();
+    resolve();
+})
         .catch(error => {
-            console.error("Error in submitBill:", error);
+            console.error("Error:", error);
             reject(error);
         })
         .finally(() => {
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
-            document.getElementById("loading-overlay").style.display = "none";
         });
     });
+  }
 }
