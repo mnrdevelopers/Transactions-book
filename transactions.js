@@ -20,7 +20,12 @@ const elements = {
     nextBtn: document.getElementById("next-btn"),
     pageInfo: document.getElementById("page-info"),
     viewModal: document.getElementById("view-modal"),
-    transactionDetails: document.getElementById("transaction-details")
+    transactionDetails: document.getElementById("transaction-details"),
+    summaryDateRange: document.getElementById("summary-date-range"),
+    customDateGroup: document.getElementById("custom-date-group"),
+    customDate: document.getElementById("custom-date"),
+    summaryPaymentMode: document.getElementById("summary-payment-mode"),
+    applySummaryFilter: document.getElementById("apply-summary-filter")
 };
 
 // Initialize the page
@@ -52,52 +57,157 @@ function setupEventListeners() {
     document.querySelector(".close").addEventListener("click", closeModal);
 }
 
-function updateSummaryCards() {
-    if (allTransactions.length === 0) {
-        // Reset to zero if no transactions
-        elements.todaySales.textContent = '₹0.00';
-        elements.todayProfit.textContent = '₹0.00';
-        elements.todayTransactions.textContent = '0';
-        elements.dailyAverage.textContent = '₹0.00';
-        return;
-    }
+ elements.summaryDateRange.addEventListener("change", toggleCustomDate);
+    elements.applySummaryFilter.addEventListener("click", updateSummaryCards);
+}
 
+function toggleCustomDate() {
+    elements.customDateGroup.style.display = 
+        elements.summaryDateRange.value === "custom" ? "block" : "none";
+}
+
+function updateSummaryCards() {
+    const dateRange = elements.summaryDateRange.value;
+    const paymentMode = elements.summaryPaymentMode.value;
+    
+    let filteredData = allTransactions;
+    
+    // Filter by payment mode if not "all"
+    if (paymentMode !== "all") {
+        filteredData = filteredData.filter(t => t.paymentMode === paymentMode);
+    }
+    
+    // Filter by date range
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Get today's date in the same format used in the table
-    const todayString = formatDateForDisplay(today);
+    switch(dateRange) {
+        case "today":
+            filteredData = filteredData.filter(t => {
+                const transDate = new Date(t.date);
+                transDate.setHours(0, 0, 0, 0);
+                return transDate.getTime() === today.getTime();
+            });
+            break;
+            
+        case "yesterday":
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            filteredData = filteredData.filter(t => {
+                const transDate = new Date(t.date);
+                transDate.setHours(0, 0, 0, 0);
+                return transDate.getTime() === yesterday.getTime();
+            });
+            break;
+            
+        case "this_week":
+            const thisWeekStart = new Date(today);
+            thisWeekStart.setDate(thisWeekStart.getDate() - today.getDay()); // Start of week (Sunday)
+            filteredData = filteredData.filter(t => {
+                const transDate = new Date(t.date);
+                transDate.setHours(0, 0, 0, 0);
+                return transDate >= thisWeekStart && transDate <= today;
+            });
+            break;
+            
+        case "last_week":
+            const lastWeekStart = new Date(today);
+            lastWeekStart.setDate(lastWeekStart.getDate() - today.getDay() - 7);
+            const lastWeekEnd = new Date(lastWeekStart);
+            lastWeekEnd.setDate(lastWeekStart.getDate() + 6);
+            filteredData = filteredData.filter(t => {
+                const transDate = new Date(t.date);
+                transDate.setHours(0, 0, 0, 0);
+                return transDate >= lastWeekStart && transDate <= lastWeekEnd;
+            });
+            break;
+            
+        case "this_month":
+            const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            filteredData = filteredData.filter(t => {
+                const transDate = new Date(t.date);
+                transDate.setHours(0, 0, 0, 0);
+                return transDate >= thisMonthStart && transDate <= today;
+            });
+            break;
+            
+        case "last_month":
+            const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+            filteredData = filteredData.filter(t => {
+                const transDate = new Date(t.date);
+                transDate.setHours(0, 0, 0, 0);
+                return transDate >= lastMonthStart && transDate <= lastMonthEnd;
+            });
+            break;
+            
+        case "custom":
+            if (elements.customDate.value) {
+                const customDate = new Date(elements.customDate.value);
+                customDate.setHours(0, 0, 0, 0);
+                filteredData = filteredData.filter(t => {
+                    const transDate = new Date(t.date);
+                    transDate.setHours(0, 0, 0, 0);
+                    return transDate.getTime() === customDate.getTime();
+                });
+            }
+            break;
+    }
     
-    // Filter today's transactions - compare dates as Date objects
-    const todayData = allTransactions.filter(t => {
-        const transDate = new Date(t.date);
-        transDate.setHours(0, 0, 0, 0);
-        return transDate.getTime() === today.getTime();
+    // Calculate totals
+    const totalSales = filteredData.reduce((sum, t) => sum + parseFloat(t.totalAmount || 0), 0);
+    const totalProfit = filteredData.reduce((sum, t) => sum + parseFloat(t.totalProfit || 0), 0);
+    const transactionCount = filteredData.length;
+    
+    // Calculate average for the period (only for date ranges)
+    let averageSales = 0;
+    if (dateRange === "this_week" || dateRange === "last_week") {
+        averageSales = totalSales / 7;
+    } else if (dateRange === "this_month" || dateRange === "last_month") {
+        const daysInMonth = dateRange === "this_month" ? today.getDate() : 
+                          new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+        averageSales = totalSales / daysInMonth;
+    } else {
+        averageSales = totalSales; // For single day ranges
+    }
+    
+    // Update the cards
+    elements.todaySales.textContent = `₹${totalSales.toFixed(2)}`;
+    elements.todayProfit.textContent = `₹${totalProfit.toFixed(2)}`;
+    elements.todayTransactions.textContent = transactionCount;
+    elements.dailyAverage.textContent = `₹${averageSales.toFixed(2)}`;
+    
+    // Update card titles based on filters
+    updateCardTitles(dateRange, paymentMode);
+}
+
+function updateCardTitles(dateRange, paymentMode) {
+    const dateTitles = {
+        "today": "Today's",
+        "yesterday": "Yesterday's",
+        "this_week": "This Week's",
+        "last_week": "Last Week's",
+        "this_month": "This Month's",
+        "last_month": "Last Month's",
+        "custom": "Selected Date's"
+    };
+    
+    const paymentTitles = {
+        "all": "",
+        "Cash": " (Cash)",
+        "Card": " (Card)",
+        "UPI": " (UPI)"
+    };
+    
+    const dateTitle = dateTitles[dateRange] || "";
+    const paymentTitle = paymentTitles[paymentMode] || "";
+    
+    document.querySelectorAll(".summary-card h3").forEach((h3, index) => {
+        const icons = ["fa-rupee-sign", "fa-chart-line", "fa-receipt", "fa-calendar-day"];
+        const baseTitles = ["Sales", "Profit", "Transactions", "Average"];
+        
+        h3.innerHTML = `<i class="fas ${icons[index]}"></i> ${dateTitle} ${baseTitles[index]}${paymentTitle}`;
     });
-
-    // Calculate today's totals
-    const todaySales = todayData.reduce((sum, t) => sum + parseFloat(t.totalAmount || 0), 0);
-    const todayProfit = todayData.reduce((sum, t) => sum + parseFloat(t.totalProfit || 0), 0);
-    const todayTransactionCount = todayData.length;
-
-    // Update today's cards
-    elements.todaySales.textContent = `₹${todaySales.toFixed(2)}`;
-    elements.todayProfit.textContent = `₹${todayProfit.toFixed(2)}`;
-    elements.todayTransactions.textContent = todayTransactionCount;
-
-    // Calculate 7-day average
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // Include today + 6 previous days
-    
-    const last7DaysData = allTransactions.filter(t => {
-        const transDate = new Date(t.date);
-        transDate.setHours(0, 0, 0, 0);
-        return transDate >= sevenDaysAgo && transDate <= today;
-    });
-    
-    const sevenDayTotal = last7DaysData.reduce((sum, t) => sum + parseFloat(t.totalAmount || 0), 0);
-    const dailyAvg = sevenDayTotal / 7;
-    elements.dailyAverage.textContent = `₹${dailyAvg.toFixed(2)}`;
 }
 
 async function loadTransactions() {
