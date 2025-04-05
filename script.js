@@ -1,3 +1,41 @@
+// Check for edit mode on page load
+if (window.location.search.includes('edit=')) {
+    const siNo = decodeURIComponent(window.location.search.split('edit=')[1]);
+    const transactionData = JSON.parse(localStorage.getItem('editTransactionData'));
+    
+    if (transactionData && transactionData.siNo === siNo) {
+        // Populate form with transaction data
+        document.getElementById('customer-name').value = transactionData.customerName;
+        document.getElementById('payment-mode').value = transactionData.paymentMode;
+        
+        // Clear existing items
+        document.getElementById('items-container').innerHTML = '';
+        
+        // Add items
+        transactionData.items.forEach(item => {
+            addItem();
+            const lastItem = document.querySelector('.item-row:last-child');
+            lastItem.querySelector('.item-name').value = item.itemName;
+            lastItem.querySelector('.quantity').value = item.quantity;
+            lastItem.querySelector('.purchase-price').value = item.purchasePrice;
+            lastItem.querySelector('.sale-price').value = item.salePrice;
+        });
+        
+        // Set the sequence number
+        const sequenceNo = siNo.split('-')[1];
+        document.getElementById('sequence-no').value = sequenceNo;
+        
+        // Update totals
+        calculateTotals();
+        
+        // Change submit button text
+        document.querySelector('#transaction-form [type="submit"]').textContent = 'Update Bill';
+        
+        // Store the original SI No for reference
+        document.getElementById('transaction-form').dataset.originalSiNo = siNo;
+    }
+}
+
 // Transaction page specific code
 if (document.getElementById("transaction-form")) {
     // Constants
@@ -212,24 +250,30 @@ if (document.getElementById("transaction-form")) {
     document.querySelectorAll(".item-row").forEach(row => {
         items.push({
             itemName: row.querySelector(".item-name").value,
-            quantity: row.querySelector(".quantity").value,
-            purchasePrice: row.querySelector(".purchase-price").value,
-            salePrice: row.querySelector(".sale-price").value,
-            total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
+            quantity: parseFloat(row.querySelector(".quantity").value) || 0,
+            purchasePrice: parseFloat(row.querySelector(".purchase-price").value) || 0,
+            salePrice: parseFloat(row.querySelector(".sale-price").value) || 0,
+            total: (parseFloat(row.querySelector(".quantity").value) * parseFloat(row.querySelector(".sale-price").value)).toFixed(2)
         });
     });
     
+    const dayMonthPart = document.getElementById("day-month-part").textContent;
+    const sequenceNo = document.getElementById("sequence-no").value.padStart(3, '0');
+    const originalSiNo = document.getElementById("transaction-form").dataset.originalSiNo;
+    
     return {
         storeName: "RK Fashions",
-        date: document.getElementById("transaction-date").value,
-        siNo: document.getElementById("bill-no").value,
+        date: document.getElementById("date").textContent,
+        siNo: originalSiNo || `${dayMonthPart}-${sequenceNo}`,
         customerName: document.getElementById("customer-name").value,
         items: items,
         paymentMode: document.getElementById("payment-mode").value,
         totalAmount: document.getElementById("total-amount").value,
-        totalProfit: document.getElementById("total-profit").value
+        totalProfit: document.getElementById("total-profit").value,
+        action: originalSiNo ? "update" : "add"
     };
 }
+
     
    function displayBillPreview(data) {
     // Hide the template
