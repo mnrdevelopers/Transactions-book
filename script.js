@@ -10,7 +10,7 @@
        // Get next bill number from backend
         async function getNextBillNumber(selectedDate) {
             try {
-                const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=getNextBillNumber", {
+                const response = await fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=getNextBillNumber", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
