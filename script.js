@@ -1,84 +1,90 @@
- // Transaction page specific code
-        // Constants
-        const DAILY_STATS_KEY = 'rkFashionsDailyStats';
-        
-       // Initialize date display
-        const today = new Date();
-        const formattedDate = today.toISOString().split('T')[0];
-        document.getElementById("transaction-date").value = formattedDate;
+// Transaction page specific code
+// Constants
+const DAILY_STATS_KEY = 'rkFashionsDailyStats';
 
-       // Get next bill number from backend
-        async function getNextBillNumber(selectedDate) {
-            try {
-                const response = await fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=getNextBillNumber", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ date: selectedDate })
-                });
-                
-                const data = await response.json();
-                return data.billNo;
-            } catch (error) {
-                console.error("Error getting next bill number:", error);
-                // Fallback to local storage if backend fails
-                return generateFallbackBillNumber(selectedDate);
-            }
-        }
+// Initialize date display
+const today = new Date();
+const formattedDate = today.toISOString().split('T')[0];
+document.getElementById("transaction-date").value = formattedDate;
 
-        // Fallback method if backend is unavailable
-        function generateFallbackBillNumber(selectedDate) {
-            const dateObj = new Date(selectedDate);
-            const day = String(dateObj.getDate()).padStart(2, '0');
-            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const year = dateObj.getFullYear();
-            const datePart = `${day}${month}${year}`;
-            
-            // Get or initialize sequence data in localStorage
-            let sequenceData = localStorage.getItem('fallbackBillNumbers') || '{}';
-            sequenceData = JSON.parse(sequenceData);
-            
-            if (!sequenceData[selectedDate]) {
-                sequenceData[selectedDate] = 1;
-            } else {
-                sequenceData[selectedDate]++;
-            }
-            
-            localStorage.setItem('fallbackBillNumbers', JSON.stringify(sequenceData));
-            
-            return `RK-${datePart}-${String(sequenceData[selectedDate]).padStart(3, '0')}`;
-        }
-
-        // Update bill number when date changes
-        document.getElementById("transaction-date").addEventListener("change", async function() {
-            const selectedDate = this.value;
-            const nextBillNo = await getNextBillNumber(selectedDate);
-            document.getElementById("bill-no").value = nextBillNo;
+// Get next bill number from backend
+async function getNextBillNumber(selectedDate) {
+    try {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=getNextBillNumber", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ date: selectedDate })
         });
+        
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+        return data.billNo;
+    } catch (error) {
+        console.error("Error getting next bill number:", error);
+        // Fallback to local storage if backend fails
+        return generateFallbackBillNumber(selectedDate);
+    }
+}
 
-        // Initialize form and bill number
-        async function initializeForm() {
-            const selectedDate = document.getElementById("transaction-date").value;
-            const nextBillNo = await getNextBillNumber(selectedDate);
-            document.getElementById("bill-no").value = nextBillNo;
-            
-            addItem();
-            document.getElementById("add-item").addEventListener("click", addItem);
-            document.getElementById("items-container").addEventListener("input", function(e) {
-                if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
-                    calculateTotals();
-                }
-            });
-            document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
-            setupPrintButton();
+// Fallback method if backend is unavailable
+function generateFallbackBillNumber(selectedDate) {
+    const dateObj = new Date(selectedDate);
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const year = dateObj.getFullYear();
+    const datePart = `${day}${month}${year}`;
+    
+    // Get or initialize sequence data in localStorage
+    let sequenceData = localStorage.getItem('fallbackBillNumbers') || '{}';
+    sequenceData = JSON.parse(sequenceData);
+    
+    if (!sequenceData[selectedDate]) {
+        sequenceData[selectedDate] = 1;
+    } else {
+        sequenceData[selectedDate]++;
+    }
+    
+    localStorage.setItem('fallbackBillNumbers', JSON.stringify(sequenceData));
+    
+    return `RK-${datePart}-${String(sequenceData[selectedDate]).padStart(3, '0')}`;
+}
+
+// Update bill number when date changes
+document.getElementById("transaction-date").addEventListener("change", async function() {
+    const selectedDate = this.value;
+    const nextBillNo = await getNextBillNumber(selectedDate);
+    document.getElementById("bill-no").value = nextBillNo;
+});
+
+// Initialize form and bill number
+async function initializeForm() {
+    const selectedDate = document.getElementById("transaction-date").value;
+    const nextBillNo = await getNextBillNumber(selectedDate);
+    document.getElementById("bill-no").value = nextBillNo;
+    
+    addItem();
+    document.getElementById("add-item").addEventListener("click", addItem);
+    document.getElementById("items-container").addEventListener("input", function(e) {
+        if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
+            calculateTotals();
         }
+    });
+    document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
+    setupPrintButton();
+    
+    // Initialize modals
+    setupCashPaymentModal();
+    setupSuccessModal();
+}
 
-        initializeForm();
+document.addEventListener('DOMContentLoaded', initializeForm);
 
-        // ======================
-        // DAILY STATS FUNCTIONS
-        // ======================
+// ======================
+// DAILY STATS FUNCTIONS
+// ======================
         
         // Initialize stats
         initDailyStats();
@@ -459,82 +465,56 @@
 
         let pendingTransactionData = null;
 
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            if (!validateForm()) return;
-            
-            const paymentMode = document.getElementById("payment-mode").value;
-            const totalAmount = parseFloat(document.getElementById("total-amount").value) || 0;
-            
-            // Store the bill data for later submission
-            pendingTransactionData = prepareBillData();
-            
-            // Show cash payment modal if payment mode is cash
-            if (paymentMode === "Cash") {
-                showCashPaymentModal(totalAmount);
-            } else {
-                // For other payment modes, submit directly
-                submitTransaction();
-            }
-        }
+       function handleFormSubmit(e) {
+    e.preventDefault();
+    if (!validateForm()) return;
+    
+    const paymentMode = document.getElementById("payment-mode").value;
+    const totalAmount = parseFloat(document.getElementById("total-amount").value) || 0;
+    
+    // Store the bill data for later submission
+    pendingTransactionData = prepareBillData();
+    
+    // Show cash payment modal if payment mode is cash
+    if (paymentMode === "Cash") {
+        showCashPaymentModal(totalAmount);
+    } else {
+        // For other payment modes, submit directly
+        submitTransaction();
+    }
+}
 
-        function submitTransactionAfterCashPayment() {
-            if (!pendingTransactionData) return;
+       function submitTransaction() {
+    if (!pendingTransactionData) return;
+    
+    // Show loading overlay
+    document.getElementById("loading-overlay").style.display = "flex";
+    
+    submitBill(pendingTransactionData)
+        .then(() => {
+            // Display the bill preview before showing success message
+            displayBillPreview(pendingTransactionData);
+            showSuccessMessage();
             
-            // Show loading overlay
-            document.getElementById("loading-overlay").style.display = "flex";
-            
-            submitBill(pendingTransactionData)
-                .then(() => {
-                    // Display the bill preview before showing success message
-                    displayBillPreview(pendingTransactionData);
-                    showSuccessMessage();
-                    
-                    // Generate new bill number for next transaction
-                    initializeBillNumber();
-                })
-                .catch(error => {
-                    console.error("Submission failed:", error);
-                    alert("Transaction submission failed. Please try again.");
-                })
-                .finally(() => {
-                    // Hide loading overlay regardless of success/failure
-                    document.getElementById("loading-overlay").style.display = "none";
-                    pendingTransactionData = null;
-                });
-            
-            // Show print button
-            document.getElementById("print-bill").style.display = "block";
-        }
-
-        function submitTransaction() {
-            if (!pendingTransactionData) return;
-            
-            // Show loading overlay
-            document.getElementById("loading-overlay").style.display = "flex";
-            
-            submitBill(pendingTransactionData)
-                .then(() => {
-                    // Display the bill preview before showing success message
-                    displayBillPreview(pendingTransactionData);
-                    showSuccessMessage();
-                    
-                    // Generate new bill number for next transaction
-                    initializeBillNumber();
-                })
-                .catch(error => {
-                    console.error("Submission failed:", error);
-                    alert("Transaction submission failed. Please try again.");
-                })
-                .finally(() => {
-                    // Hide loading overlay regardless of success/failure
-                    document.getElementById("loading-overlay").style.display = "none";
-                    pendingTransactionData = null;
-                });
-            
-            // Show print button
-            document.getElementById("print-bill").style.display = "block";
-        }
+            // Generate new bill number for next transaction
+            const selectedDate = document.getElementById("transaction-date").value;
+            getNextBillNumber(selectedDate).then(nextBillNo => {
+                document.getElementById("bill-no").value = nextBillNo;
+            });
+        })
+        .catch(error => {
+            console.error("Submission failed:", error);
+            alert("Transaction submission failed. Please try again.");
+        })
+        .finally(() => {
+            // Hide loading overlay regardless of success/failure
+            document.getElementById("loading-overlay").style.display = "none";
+            pendingTransactionData = null;
+        });
+    
+    // Show print button
+    document.getElementById("print-bill").style.display = "block";
+}
 
         // Initialize modals
         setupCashPaymentModal();
