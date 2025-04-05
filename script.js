@@ -2,7 +2,6 @@
 if (document.getElementById("transaction-form")) {
     // Constants
     const DAILY_STATS_KEY = 'rkFashionsDailyStats';
-    const SEQUENCE_STORAGE_KEY = 'rkFashionsBillSequenceData';
     
     // Initialize date display
    const today = new Date();
@@ -17,22 +16,6 @@ if (document.getElementById("transaction-form")) {
     return `RK-${timestamp}-${randomNum}`;
 }
       
-    function initializeSequenceNumber() {
-        const sequenceData = loadSequenceData();
-        document.getElementById("sequence-no").value = sequenceData.nextSequence;
-        return sequenceData;
-    }
-
-    function incrementSequenceNumber() {
-        const sequenceData = loadSequenceData();
-        sequenceData.lastUsedSequence = sequenceData.nextSequence;
-        sequenceData.nextSequence = sequenceData.nextSequence + 1;
-        saveSequenceData(sequenceData);
-        return sequenceData;
-    }
-    
-    // Initialize form and sequence number
-    let currentSequenceData = initializeSequenceNumber();
     addItem();
     document.getElementById("add-item").addEventListener("click", addItem);
     document.getElementById("items-container").addEventListener("input", function(e) {
@@ -191,6 +174,15 @@ if (document.getElementById("transaction-form")) {
             alert("Please enter customer name");
             return false;
         }
+
+    const transactionDate = new Date(document.getElementById("transaction-date").value);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    if (transactionDate > today) {
+        alert("Transaction date cannot be in the future");
+        return false;
+    }
         
         // Check at least one item exists
         if (document.querySelectorAll(".item-row").length === 0) {
@@ -458,8 +450,6 @@ function submitTransactionAfterCashPayment() {
     
     submitBill(pendingTransactionData)
         .then(() => {
-            currentSequenceData = incrementSequenceNumber();
-            document.getElementById("sequence-no").value = currentSequenceData.nextSequence;
             
             // Display the bill preview before showing success message
             displayBillPreview(pendingTransactionData);
@@ -487,8 +477,6 @@ function submitTransaction() {
     
     submitBill(pendingTransactionData)
         .then(() => {
-            currentSequenceData = incrementSequenceNumber();
-            document.getElementById("sequence-no").value = currentSequenceData.nextSequence;
             
             // Display the bill preview before showing success message
             displayBillPreview(pendingTransactionData);
