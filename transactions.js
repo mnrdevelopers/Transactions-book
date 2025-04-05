@@ -725,6 +725,8 @@ function showLoading() {
     loadingOverlay.style.justifyContent = 'center';
     loadingOverlay.style.alignItems = 'center';
     loadingOverlay.style.zIndex = '1000';
+    loadingOverlay.style.display = 'none';
+    
     
     loadingOverlay.innerHTML = `
         <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
