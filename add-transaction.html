@@ -9,222 +9,221 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* Cash payment details in bill */
-        #bill-details .cash-payment-details {
-            background: #f8f8f8;
-            padding: 8px;
-            margin-top: 10px;
-            border-radius: 4px;
-            font-size: 12px;
-        }
+#bill-details .cash-payment-details {
+    background: #f8f8f8;
+    padding: 8px;
+    margin-top: 10px;
+    border-radius: 4px;
+    font-size: 12px;
+}
 
-        #bill-details .cash-payment-details p {
-            margin: 5px 0;
-        }
-        /* Cash Payment Modal Styles */
-        #cash-payment-modal .modal-content {
-            max-width: 400px;
-            padding: 25px;
-        }
+#bill-details .cash-payment-details p {
+    margin: 5px 0;
+}
+/* Cash Payment Modal Styles */
+#cash-payment-modal .modal-content {
+    max-width: 400px;
+    padding: 25px;
+}
 
-        #cash-payment-modal .form-group {
-            margin-bottom: 20px;
-        }
+#cash-payment-modal .form-group {
+    margin-bottom: 20px;
+}
 
-        #cash-payment-modal .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
+#cash-payment-modal .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
 
-        #cash-payment-modal input[type="number"],
-        #cash-payment-modal input[type="text"],
-        #cash-payment-modal input[type="date"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
+#cash-payment-modal input[type="number"],
+#cash-payment-modal input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
 
-        #cash-payment-modal .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-        }
+#cash-payment-modal .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
 
-        /* Success Modal Styles */
-        #success-modal .modal-content {
-            max-width: 400px;
-            padding: 30px;
-        }
+/* Success Modal Styles */
+#success-modal .modal-content {
+    max-width: 400px;
+    padding: 30px;
+}
 
-        #success-modal h2 {
-            color: #4CAF50;
-            margin-bottom: 10px;
-        }
+#success-modal h2 {
+    color: #4CAF50;
+    margin-bottom: 10px;
+}
 
-        #success-modal p {
-            color: #555;
-            margin-bottom: 20px;
-        }
+#success-modal p {
+    color: #555;
+    margin-bottom: 20px;
+}
 
-        /* Modal backdrop */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
+/* Modal backdrop */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
 
-        .modal-content {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            position: relative;
-        }
+.modal-content {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    position: relative;
+}
 
-        .close {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 24px;
-            cursor: pointer;
-            color: #777;
-        }
+.close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #777;
+}
 
-        .close:hover {
-            color: #333;
-        }
+.close:hover {
+    color: #333;
+}
 
-        /* Change amount styling */
-        #change-amount {
-            font-size: 18px;
-            font-weight: bold;
-        }
-                
-        /* Bill Preview Styling */
-        .bill-preview {
-            display: none; /* Hidden by default */
-            width: 58mm;
-            margin: 0 auto;
-            background: white;
-            padding: 5px;
-            box-sizing: border-box;
-        }
+/* Change amount styling */
+#change-amount {
+    font-size: 18px;
+    font-weight: bold;
+}
+        
+/* Bill Preview Styling */
+.bill-preview {
+    display: none; /* Hidden by default */
+    width: 58mm;
+    margin: 0 auto;
+    background: white;
+    padding: 5px;
+    box-sizing: border-box;
+}
 
-        .bill-header {
-            text-align: center;
-            margin-bottom: 5px;
-        }
+.bill-header {
+    text-align: center;
+    margin-bottom: 5px;
+}
 
-        .bill-header h3 {
-            margin: 0;
-            font-size: 16px;
-            color: #333;
-        }
+.bill-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+}
 
-        .store-info, .store-contact {
-            margin: 3px 0;
-            font-size: 14px;
-            color: #666;
-        }
+.store-info, .store-contact {
+    margin: 3px 0;
+    font-size: 14px;
+    color: #666;
+}
 
-        .store-info-bill, .store-contact-bill {
-            margin: 3px 0;
-            font-size: 8px;
-            color: #666;
-        }
+.store-info-bill, .store-contact-bill {
+    margin: 3px 0;
+    font-size: 8px;
+    color: #666;
+}
 
-        .bill-meta {
-            margin: 8px 0;
-            text-align: left;
-            border-top: 1px dashed #ccc;
-            border-bottom: 1px dashed #ccc;
-            padding: 5px 0;
-            font-size: 10px;
-        }
+.bill-meta {
+    margin: 8px 0;
+    text-align: left;
+    border-top: 1px dashed #ccc;
+    border-bottom: 1px dashed #ccc;
+    padding: 5px 0;
+    font-size: 10px;
+}
 
-        .bill-items {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0;
-            font-size: 10px;
-            color: black;
-        }
+.bill-items {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 10px;
+    color: black;
+}
 
-        .bill-items th {
-            background: #f5f5f5;
-            padding: 5px;
-            text-align: left;
-            font-size: 10px;
-            color: black;
-        }
+.bill-items th {
+    background: #f5f5f5;
+    padding: 5px;
+    text-align: left;
+    font-size: 10px;
+    color: black;
+}
 
-        .bill-items td {
-            padding: 5px;
-            border-bottom: 1px solid #eee;
-            font-size: 10px;
-        }
+.bill-items td {
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+    font-size: 10px;
+}
 
-        .bill-items tfoot td {
-            font-weight: bold;
-            border-top: 2px solid #ddd;
-            border-bottom: none;
-            font-size: 10px;
-        }
+.bill-items tfoot td {
+    font-weight: bold;
+    border-top: 2px solid #ddd;
+    border-bottom: none;
+    font-size: 10px;
+}
 
-        .bill-footer {
-            text-align: center;
-            margin-top: 10px;
-            font-style: italic;
-            color: #666;
-            font-size: 10px;
-        }
+.bill-footer {
+    text-align: center;
+    margin-top: 10px;
+    font-style: italic;
+    color: #666;
+    font-size: 10px;
+}
 
-        .print-btn {
-            margin-top: 15px;
-            padding: 8px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
+.print-btn {
+    margin-top: 15px;
+    padding: 8px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
 
         #upi-qr-code {
-            width: 120px !important;
-            height: 120px !important;
-            margin: 0 auto;
-        }
+    width: 120px !important;
+    height: 120px !important;
+    margin: 0 auto;
+}
 
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            .bill-preview, .bill-preview * {
-                visibility: visible;
-            }
-            .bill-preview {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 58mm;
-                margin: 0;
-                padding: 5px;
-                box-shadow: none;
-            }
-            .print-btn {
-                display: none !important;
-            }
-        }
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .bill-preview, .bill-preview * {
+        visibility: visible;
+    }
+    .bill-preview {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 58mm;
+        margin: 0;
+        padding: 5px;
+        box-shadow: none;
+    }
+    .print-btn {
+        display: none !important;
+    }
+}
     </style>
 </head>
 <body>
@@ -254,35 +253,37 @@
             </div>
         </header>
 
-        <!-- Daily Stats Section -->
-        <div class="daily-stats">
-            <div class="stat-card">
-                <h3><i class="fas fa-shopping-cart"></i> Today's Sales</h3>
-                <p class="stat-value" id="today-sales-count">0</p>
-                <p class="stat-time">Updated: <span id="last-updated-time">Just now</span></p>
-            </div>
-            <div class="stat-card">
-                <h3><i class="fas fa-rupee-sign"></i> Today's Profit</h3>
-                <p class="stat-value" id="today-profit-total">₹0.00</p>
-                <p class="stat-time">Current time: <span id="current-time"></span></p>
-            </div>
-        </div>
+      <!-- Daily Stats Section -->
+<div class="daily-stats">
+    <div class="stat-card">
+        <h3><i class="fas fa-shopping-cart"></i> Today's Sales</h3>
+        <p class="stat-value" id="today-sales-count">0</p>
+        <p class="stat-time">Updated: <span id="last-updated-time">Just now</span></p>
+    </div>
+    <div class="stat-card">
+        <h3><i class="fas fa-rupee-sign"></i> Today's Profit</h3>
+        <p class="stat-value" id="today-profit-total">₹0.00</p>
+        <p class="stat-time">Current time: <span id="current-time"></span></p>
+    </div>
+</div>
 
         <div class="bill-details">
-            <div>
-                <label for="si-no"><strong>Bill No:</strong></label>
-                <input type="text" id="bill-no" disabled style="width: 150px; padding: 5px;">
-            </div>
-            <div>
-                <label for="transaction-date"><strong>Date:</strong></label>
-                <input type="date" id="transaction-date" required>
-            </div>
-            <div>
-                <label for="customer-name"><strong>Customer Name:</strong></label>
-                <input type="text" id="customer-name" required>
-            </div>
-        </div>
+<div>
+    <label for="si-no"><strong>Bill No:</strong></label>
+    <div style="display: flex; align-items: center; gap: 5px;">
+        <span id="day-month-part" style="font-weight: bold; padding: 5px; background: #f0f0f0; border-radius: 4px;"></span>
+        <span>-</span>
+        <input type="number" id="sequence-no" min="1" style="width: 80px; padding: 5px;" placeholder="001">
+    </div>
+</div>
+    <p><strong>Date:</strong> <span id="date"></span></p>
+    <div>
+        <label for="customer-name"><strong>Customer Name:</strong></label>
+        <input type="text" id="customer-name" required>
+    </div>
+</div>
 
+        <!-- Rest of the file remains the same -->
         <!-- Transaction Form -->
         <form id="transaction-form">
             <div id="items-container">
@@ -321,114 +322,150 @@
             </button>
         </form>
 
-        <!-- Bill Preview Section -->
-        <div id="bill-preview" class="bill-preview">
-            <h2><i class="fas fa-receipt"></i> Generated Bill</h2>
+       <!-- Bill Preview Section -->
+<div id="bill-preview" class="bill-preview">
+    <h2><i class="fas fa-receipt"></i> Generated Bill</h2>
+    
+    <!-- Static Bill Template (for styling) -->
+    <div id="bill-template" class="bill-template">
+        <div class="bill-header">
+            <h3>RK Fashions</h3>
+            <p class="store-info-bill">Gram Panchayath Complex, Dichpally Busstand - 503174</p>
+            <p class="store-contact-bill">Mobile: +91 7893433457, +91 7842694544</p>
             
-            <!-- Static Bill Template (for styling) -->
-            <div id="bill-template" class="bill-template">
-                <div class="bill-header">
-                    <h3>RK Fashions</h3>
-                    <p class="store-info-bill">Gram Panchayath Complex, Dichpally Busstand - 503174</p>
-                    <p class="store-contact-bill">Mobile: +91 7893433457, +91 7842694544</p>
-                    
-                    <div class="bill-meta">
-                        <p><strong>Date:</strong> <span id="template-date"></span></p>
-                        <p><strong>Bill No:</strong> <span id="template-sino"></span></p>
-                        <p><strong>Customer:</strong> <span id="template-customer"></span></p>
-                    </div>
-                </div>
-                
-                <table class="bill-items">
-                    <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Qty</th>
-                            <th>Price</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="template-items">
-                        <!-- Items will be inserted here dynamically -->
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="3"><strong>Total Amount</strong></td>
-                            <td><strong id="template-total-amount">₹0.00</strong></td>
-                        </tr>
-                        <tr>
-                            <td colspan="3"><strong>Payment Mode</strong></td>
-                            <td><strong id="template-payment-mode">Cash</strong></td>
-                        </tr>
-                        <tr id="upi-qr-row" style="display:none;">
-                            <td colspan="4" style="text-align:center; padding:8px 0;">
-                                <div style="margin: 0 auto; width: fit-content;">
-                                    <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
-                                    <img src="upi-qr.png" alt="UPI QR Code" style="width:120px; height:120px;">
-                                    <p style="font-size:10px; margin-top:3px;">UPI ID: maniteja1098@oksbi</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
-                
-                <div class="bill-footer">
-                    <p>Thank you for your purchase!</p>
-                </div>
-            </div>
-            
-            <!-- This will be hidden initially and shown after generation -->
-            <div id="bill-details" class="bill-details" style="display:none;"></div>
-            
-            <button id="print-bill" class="print-btn" style="display:none;">
-                <i class="fas fa-print"></i> Print Bill
-            </button>
-        </div>
-        
-        <!-- Cash Payment Modal -->
-        <div id="cash-payment-modal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>Cash Payment</h2>
-                <div class="form-group">
-                    <label for="amount-received">Amount Received (₹):</label>
-                    <input type="number" id="amount-received" min="0" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label>Total Bill Amount (₹):</label>
-                    <input type="text" id="modal-total-amount" disabled>
-                </div>
-                <div class="form-group">
-                    <label>Change to Give (₹):</label>
-                    <input type="text" id="change-amount" disabled>
-                </div>
-                <div class="form-actions">
-                    <button type="button" id="cancel-cash-payment" class="cancel-btn">Cancel</button>
-                    <button type="button" id="confirm-cash-payment" class="save-btn">Confirm</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Success Message Modal -->
-        <div id="success-modal" class="modal" style="display: none;">
-            <div class="modal-content" style="text-align: center;">
-                <div style="font-size: 48px; color: #4CAF50; margin-bottom: 20px;">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <h2>Bill Submitted Successfully!</h2>
-                <p>Your transaction has been recorded.</p>
-                <button type="button" id="close-success-modal" class="save-btn" style="margin-top: 20px;">OK</button>
+            <div class="bill-meta">
+                <p><strong>Date:</strong> <span id="template-date"></span></p>
+                <p><strong>Bill No:</strong> <span id="template-sino"></span></p>
+                <p><strong>Customer:</strong> <span id="template-customer"></span></p>
             </div>
         </div>
         
-        <!-- Loading Overlay -->
-        <div id="loading-overlay" style="display: none;">
-            <div class="loading-spinner">
-                <div class="spinner"></div>
-                <p>Processing transaction...</p>
-            </div>
+        <table class="bill-items">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="template-items">
+                <!-- Items will be inserted here dynamically -->
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3"><strong>Total Amount</strong></td>
+                    <td><strong id="template-total-amount">₹0.00</strong></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>Payment Mode</strong></td>
+                    <td><strong id="template-payment-mode">Cash</strong></td>
+                </tr>
+               <tr id="upi-qr-row" style="display:none;">
+    <td colspan="4" style="text-align:center; padding:8px 0;">
+        <div style="margin: 0 auto; width: fit-content;">
+            <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
+            <img src="upi-qr.png" alt="UPI QR Code" style="width:120px; height:120px;">
+            <p style="font-size:10px; margin-top:3px;">UPI ID: maniteja1098@oksbi</p>
+        </div>
+    </td>
+</tr>
+            </tfoot>
+        </table>
+        
+        <div class="bill-footer">
+            <p>Thank you for your purchase!</p>
         </div>
     </div>
- <script src="script.js"></script>
+    
+    <!-- This will be hidden initially and shown after generation -->
+    <div id="bill-details" class="bill-details" style="display:none;"></div>
+    
+    <button id="print-bill" class="print-btn" style="display:none;">
+        <i class="fas fa-print"></i> Print Bill
+    </button>
+</div>
+        <!-- Cash Payment Modal -->
+<div id="cash-payment-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Cash Payment</h2>
+        <div class="form-group">
+            <label for="amount-received">Amount Received (₹):</label>
+            <input type="number" id="amount-received" min="0" step="0.01" required>
+        </div>
+        <div class="form-group">
+            <label>Total Bill Amount (₹):</label>
+            <input type="text" id="modal-total-amount" disabled>
+        </div>
+        <div class="form-group">
+            <label>Change to Give (₹):</label>
+            <input type="text" id="change-amount" disabled>
+        </div>
+        <div class="form-actions">
+            <button type="button" id="cancel-cash-payment" class="cancel-btn">Cancel</button>
+            <button type="button" id="confirm-cash-payment" class="save-btn">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Message Modal -->
+<div id="success-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="text-align: center;">
+        <div style="font-size: 48px; color: #4CAF50; margin-bottom: 20px;">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h2>Bill Submitted Successfully!</h2>
+        <p>Your transaction has been recorded.</p>
+        <button type="button" id="close-success-modal" class="save-btn" style="margin-top: 20px;">OK</button>
+    </div>
+</div>
+        <!-- Add this right before the closing </body> tag in add-transaction.html -->
+<div id="loading-overlay" style="display: none;">
+    <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Processing transaction...</p>
+    </div>
+</div>
+
+<style>
+    #loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .loading-spinner {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border-top: 4px solid var(--primary);
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+    <script src="script.js"></script>
 </body>
 </html>
