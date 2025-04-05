@@ -55,11 +55,9 @@ function setupEventListeners() {
     elements.prevBtn.addEventListener("click", goToPrevPage);
     elements.nextBtn.addEventListener("click", goToNextPage);
     document.querySelector(".close").addEventListener("click", closeModal);
-}
 
  elements.summaryDateRange.addEventListener("change", toggleCustomDate);
     elements.applySummaryFilter.addEventListener("click", updateSummaryCards);
-}
 
 function toggleCustomDate() {
     elements.customDateGroup.style.display = 
