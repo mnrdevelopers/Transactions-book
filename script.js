@@ -1,7 +1,7 @@
+// Constants
+    const DAILY_STATS_KEY = 'rkFashionsDailyStats';
 // Transaction page specific code
 if (document.getElementById("transaction-form")) {
-    // Constants
-    const DAILY_STATS_KEY = 'rkFashionsDailyStats';
     
     // First, define all functions
     function generateCustomerName() {
@@ -259,12 +259,15 @@ function prepareBillData() {
     const isUpdate = document.getElementById("transaction-form").dataset.originalSiNo;
     const billNo = isUpdate ? document.getElementById("transaction-form").dataset.originalSiNo : generateBillNumber();
     
-    console.log("isUpdate:", isUpdate, "billNo:", billNo); // Debug
+    // Get current date if date element doesn't exist
+    const currentDate = document.getElementById("date") 
+        ? document.getElementById("date").textContent 
+        : new Date().toLocaleDateString('en-IN');
     
     return {
         storeName: "RK Fashions",
-        date: document.getElementById("date").textContent,
-        siNo: billNo, // Use existing for updates, new for creates
+        date: currentDate,
+        siNo: billNo,
         customerName: document.getElementById("customer-name").value,
         items: items,
         paymentMode: document.getElementById("payment-mode").value,
