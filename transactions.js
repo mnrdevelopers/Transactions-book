@@ -56,14 +56,165 @@ function setupEventListeners() {
     elements.nextBtn.addEventListener("click", goToNextPage);
     document.querySelector(".close").addEventListener("click", closeModal);
 
- elements.summaryDateRange.addEventListener("change", toggleCustomDate);
-    elements.applySummaryFilter.addEventListener("click", updateSummaryCards);
+elements.summaryDateRange.addEventListener("change", toggleCustomDate);
+    elements.applySummaryFilter.addEventListener("click", applySummaryFilters);
+    elements.customDate.addEventListener("change", function() {
+        if (elements.summaryDateRange.value === "custom") {
+            applySummaryFilters();
+        }
+    });
+}
 
 function toggleCustomDate() {
     elements.customDateGroup.style.display = 
         elements.summaryDateRange.value === "custom" ? "block" : "none";
+    if (elements.summaryDateRange.value === "custom") {
+        applySummaryFilters();
+    }
 }
 
+function applySummaryFilters() {
+    const dateRange = elements.summaryDateRange.value;
+    const paymentMode = elements.summaryPaymentMode.value;
+    
+    // Get filtered data based on selections
+    const { filteredData, daysInPeriod } = filterDataByDateRange(dateRange);
+    
+    // Further filter by payment mode if needed
+    const paymentFilteredData = paymentMode !== "all" 
+        ? filteredData.filter(t => t.paymentMode === paymentMode) 
+        : filteredData;
+    
+    // Calculate metrics
+    const totalSales = paymentFilteredData.reduce((sum, t) => sum + parseFloat(t.totalAmount || 0), 0);
+    const totalProfit = paymentFilteredData.reduce((sum, t) => sum + parseFloat(t.totalProfit || 0), 0);
+    const transactionCount = paymentFilteredData.length;
+    const averageSales = daysInPeriod > 0 ? totalSales / daysInPeriod : totalSales;
+    
+    // Update UI
+    updateSummaryCardsUI(totalSales, totalProfit, transactionCount, averageSales);
+    updateCardTitles(dateRange, paymentMode);
+}
+
+function filterDataByDateRange(dateRange) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let startDate, endDate, daysInPeriod = 1;
+    
+    switch(dateRange) {
+        case "today":
+            startDate = new Date(today);
+            endDate = new Date(today);
+            break;
+            
+        case "yesterday":
+            startDate = new Date(today);
+            startDate.setDate(startDate.getDate() - 1);
+            endDate = new Date(startDate);
+            break;
+            
+        case "this_week":
+            startDate = new Date(today);
+            startDate.setDate(startDate.getDate() - today.getDay()); // Sunday
+            endDate = new Date(today);
+            daysInPeriod = 7;
+            break;
+            
+        case "last_week":
+            startDate = new Date(today);
+            startDate.setDate(startDate.getDate() - today.getDay() - 7);
+            endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 6);
+            daysInPeriod = 7;
+            break;
+            
+        case "this_month":
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            endDate = new Date(today);
+            daysInPeriod = today.getDate();
+            break;
+            
+        case "last_month":
+            startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+            daysInPeriod = endDate.getDate();
+            break;
+            
+        case "custom":
+            if (elements.customDate.value) {
+                startDate = new Date(elements.customDate.value);
+                endDate = new Date(startDate);
+                startDate.setHours(0, 0, 0, 0);
+                endDate.setHours(23, 59, 59, 999);
+            } else {
+                startDate = new Date(0); // Beginning of time
+                endDate = new Date(); // Now
+            }
+            break;
+            
+        default:
+            startDate = new Date(0); // Beginning of time
+            endDate = new Date(); // Now
+    }
+    
+    const filteredData = allTransactions.filter(t => {
+        const transDate = new Date(t.date);
+        return transDate >= startDate && transDate <= endDate;
+    });
+    
+    return { filteredData, daysInPeriod };
+}
+
+function updateSummaryCardsUI(totalSales, totalProfit, transactionCount, averageSales) {
+    elements.todaySales.textContent = `₹${totalSales.toFixed(2)}`;
+    elements.todayProfit.textContent = `₹${totalProfit.toFixed(2)}`;
+    elements.todayTransactions.textContent = transactionCount;
+    elements.dailyAverage.textContent = `₹${averageSales.toFixed(2)}`;
+}
+
+function updateCardTitles(dateRange, paymentMode) {
+    const dateTitles = {
+        "today": "Today's",
+        "yesterday": "Yesterday's",
+        "this_week": "This Week's",
+        "last_week": "Last Week's",
+        "this_month": "This Month's",
+        "last_month": "Last Month's",
+        "custom": elements.customDate.value 
+            ? new Date(elements.customDate.value).toLocaleDateString('en-IN') + "'s"
+            : "Selected Date's"
+    };
+    
+    const paymentTitles = {
+        "all": "",
+        "Cash": " (Cash)",
+        "Card": " (Card)",
+        "UPI": " (UPI)"
+    };
+    
+    const dateTitle = dateTitles[dateRange] || "";
+    const paymentTitle = paymentTitles[paymentMode] || "";
+    
+    document.querySelectorAll(".summary-card h3").forEach((h3, index) => {
+        const icons = ["fa-rupee-sign", "fa-chart-line", "fa-receipt", "fa-calendar-day"];
+        const baseTitles = ["Sales", "Profit", "Transactions", "Average"];
+        
+        h3.innerHTML = `<i class="fas ${icons[index]}"></i> ${dateTitle} ${baseTitles[index]}${paymentTitle}`;
+    });
+    
+    // Update the change text
+    document.querySelectorAll(".summary-card .change").forEach((el, index) => {
+        const texts = [
+            `Total sales${paymentMode !== "all" ? ` via ${paymentMode}` : ""}`,
+            `Total profit${paymentMode !== "all" ? ` via ${paymentMode}` : ""}`,
+            `Transactions${paymentMode !== "all" ? ` via ${paymentMode}` : ""}`,
+            dateRange === "today" || dateRange === "yesterday" || dateRange === "custom" 
+                ? "Total amount" 
+                : `Daily average${paymentMode !== "all" ? ` via ${paymentMode}` : ""}`
+        ];
+        el.textContent = texts[index];
+    });
+    
 function updateSummaryCards() {
     const dateRange = elements.summaryDateRange.value;
     const paymentMode = elements.summaryPaymentMode.value;
