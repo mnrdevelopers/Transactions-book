@@ -2,6 +2,7 @@
 if (document.getElementById("transaction-form")) {
     // Constants
     const DAILY_STATS_KEY = 'rkFashionsDailyStats';
+    const INVENTORY_KEY = 'rkFashionsInventory';
     
     // Initialize date display
    const today = new Date();
@@ -592,4 +593,6 @@ function submitBill(data) {
             submitBtn.disabled = false;
         });
     });
+   }
   }
+}
