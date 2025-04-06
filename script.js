@@ -2,7 +2,6 @@
 if (document.getElementById("transaction-form")) {
     // Constants
     const DAILY_STATS_KEY = 'rkFashionsDailyStats';
-    const INVENTORY_KEY = 'rkFashionsInventory';
     
     // Initialize date display
    const today = new Date();
@@ -132,65 +131,33 @@ if (document.getElementById("transaction-form")) {
     return `${randomPrefix}-${randomNum}`;
 }
 
-    function getAvailableItems() {
-    const inventory = JSON.parse(localStorage.getItem(INVENTORY_KEY)) || {};
-    return Object.entries(inventory).map(([name, details]) => ({
-        name,
-        category: details.category,
-        purchasePrice: details.purchasePrice,
-        availableQuantity: details.quantity
-    }));
-}
-
-function addItem() {
-    const itemsContainer = document.getElementById("items-container");
-    const availableItems = getAvailableItems();
-    
-    const newItem = document.createElement("div");
-    newItem.className = "item-row";
-    
-    // Create item name dropdown
-    let itemOptions = availableItems.map(item => 
-        `<option value="${item.name}" data-category="${item.category}" data-price="${item.purchasePrice}">${item.name} (${item.availableQuantity} available)</option>`
-    ).join('');
-    
-    newItem.innerHTML = `
-        <label>Category:</label>
-        <select class="item-category" disabled>
-            <option value="">Select item first</option>
-        </select>
+    function addItem() {
+        const itemsContainer = document.getElementById("items-container");
+        const newItem = document.createElement("div");
+        newItem.className = "item-row";
+        newItem.innerHTML = `
+            <label>Item Name:</label>
+            <input type="text" class="item-name" required>
+            
+            <label>Quantity:</label>
+            <input type="number" class="quantity" min="1" value="1" required>
+            
+            <label>Purchase Price (₹):</label>
+            <input type="number" class="purchase-price" min="0" step="0.01" required>
+            
+            <label>Sale Price (₹):</label>
+            <input type="number" class="sale-price" min="0" step="0.01" required>
+            
+            <button type="button" class="remove-item">Remove</button>
+        `;
+        itemsContainer.appendChild(newItem);
         
-        <label>Item Name:</label>
-        <select class="item-name" required>
-            <option value="">Select an item</option>
-            ${itemOptions}
-        </select>
-        
-        <label>Quantity:</label>
-        <input type="number" class="quantity" min="1" value="1" required>
-        
-        <label>Purchase Price (₹):</label>
-        <input type="number" class="purchase-price" min="0" step="0.01" required>
-        
-        <label>Sale Price (₹):</label>
-        <input type="number" class="sale-price" min="0" step="0.01" required>
-        
-        <button type="button" class="remove-item">Remove</button>
-    `;
-    
-    itemsContainer.appendChild(newItem);
-    
-    // Add event listeners
-    const itemNameSelect = newItem.querySelector(".item-name");
-    itemNameSelect.addEventListener("change", function() {
-        const selectedOption = this.options[this.selectedIndex];
-        const category = selectedOption.dataset.category;
-        const purchasePrice = selectedOption.dataset.price;
-        
-        newItem.querySelector(".item-category").value = category;
-        newItem.querySelector(".purchase-price").value = purchasePrice;
-        calculateTotals();
-    });
+        // Add remove event
+        newItem.querySelector(".remove-item").addEventListener("click", function() {
+            newItem.remove();
+            calculateTotals();
+        });
+    }
 
     function calculateTotals() {
         let totalAmount = 0;
@@ -240,26 +207,10 @@ function addItem() {
         return valid;
     }
 
-    function updateInventoryAfterSale(items) {
-    let inventory = JSON.parse(localStorage.getItem(INVENTORY_KEY)) || {};
-    
-    items.forEach(item => {
-        if (inventory[item.itemName]) {
-            inventory[item.itemName].quantity -= parseFloat(item.quantity);
-            if (inventory[item.itemName].quantity < 0) {
-                inventory[item.itemName].quantity = 0;
-            }
-        }
-    });
-    
-    localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory));
-}
-
  function prepareBillData() {
     const items = [];
     document.querySelectorAll(".item-row").forEach(row => {
         items.push({
-            category: row.querySelector(".item-category").value,
             itemName: row.querySelector(".item-name").value,
             quantity: row.querySelector(".quantity").value,
             purchasePrice: row.querySelector(".purchase-price").value,
@@ -297,7 +248,7 @@ function addItem() {
     upiRow.style.display = data.paymentMode === "UPI" ? "table-row" : "none";
     
     // Build the bill with smaller font sizes for thermal printer
-     preview.innerHTML = `
+    preview.innerHTML = `
         <div class="bill-header">
             <h3>${data.storeName}</h3>
             <p class="store-info-bill">Gram Panchayath Complex, Dichpally Busstand - 503174</p>
@@ -310,10 +261,9 @@ function addItem() {
             </div>
         </div>
         
-       <table class="bill-items">
+        <table class="bill-items">
             <thead>
                 <tr>
-                    <th>Category</th>
                     <th>Item</th>
                     <th>Qty</th>
                     <th>Price</th>
@@ -323,7 +273,6 @@ function addItem() {
             <tbody>
                 ${data.items.map(item => `
                     <tr>
-                        <td>${item.category || 'Other'}</td>
                         <td>${item.itemName}</td>
                         <td>${item.quantity}</td>
                         <td>₹${item.salePrice}</td>
@@ -333,26 +282,26 @@ function addItem() {
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="4"><strong>Total Amount</strong></td>
+                    <td colspan="3"><strong>Total Amount</strong></td>
                     <td><strong>₹${data.totalAmount}</strong></td>
                 </tr>
                 <tr>
-                    <td colspan="4"><strong>Payment Mode</strong></td>
+                    <td colspan="3"><strong>Payment Mode</strong></td>
                     <td><strong>${data.paymentMode}</strong></td>
                 </tr>
                 ${data.paymentMode === "Cash" ? `
                 <tr>
-                    <td colspan="4"><strong>Amount Received</strong></td>
+                    <td colspan="3"><strong>Amount Received</strong></td>
                     <td><strong>₹${document.getElementById('amount-received').value || data.totalAmount}</strong></td>
                 </tr>
                 <tr>
-                    <td colspan="4"><strong>Change Given</strong></td>
+                    <td colspan="3"><strong>Change Given</strong></td>
                     <td><strong>₹${document.getElementById('change-amount').value || '0.00'}</strong></td>
                 </tr>
                 ` : ''}
                 ${data.paymentMode === "UPI" ? `
                 <tr id="upi-qr-row">
-                    <td colspan="5" style="text-align:center; padding:8px 0;">
+                    <td colspan="4" style="text-align:center; padding:8px 0;">
                         <div style="margin: 0 auto; width: fit-content;">
                             <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
                             <img src="upi-qr.png" alt="UPI QR Code" style="width:120px; height:120px;">
@@ -572,8 +521,6 @@ function submitBill(data) {
             body: JSON.stringify(data)
         })
        .then(() => {
-        // Update inventory
-        updateInventoryAfterSale(data.items);
     // Reset form but keep customer name and date
     const customerName = document.getElementById("customer-name").value;
       document.getElementById("transaction-form").reset();
@@ -593,6 +540,5 @@ function submitBill(data) {
             submitBtn.disabled = false;
         });
     });
-   }
   }
 }
