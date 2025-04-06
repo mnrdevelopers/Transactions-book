@@ -3,295 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profit and Loss Dashboard</title>
+    <title>Profit & Loss Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Add these styles to your existing CSS file */
-.profit-loss-container {
-    display: grid;
-    gap: 20px;
-    padding: 20px;
-}
+        :root {
+            --primary-color: #4e73df;
+            --success-color: #1cc88a;
+            --info-color: #36b9cc;
+            --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
+            --secondary-color: #858796;
+            --light-color: #f8f9fc;
+            --dark-color: #5a5c69;
+        }
 
-.report-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 20px;
-    align-items: center;
-}
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f8f9fc;
+        }
 
-.period-selector {
-    display: flex;
-    gap: 10px;
-}
+        .card {
+            border: none;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            margin-bottom: 1.5rem;
+        }
 
-.period-btn {
-    padding: 8px 15px;
-    background: #e0e0e0;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 500;
-}
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+            padding: 1rem 1.35rem;
+            font-weight: 600;
+        }
 
-.period-btn.active {
-    background: #4a6bff;
-    color: white;
-}
+        .summary-card {
+            border-left: 0.25rem solid;
+            transition: transform 0.3s;
+        }
 
-.date-filter {
-    display: flex;
-    gap: 10px;
-    margin-left: auto;
-}
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
 
-.date-filter input {
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-}
+        .summary-card.sales {
+            border-left-color: var(--primary-color);
+        }
 
-.generate-btn {
-    padding: 8px 15px;
-    background: #4a6bff;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-}
+        .summary-card.profit {
+            border-left-color: var(--success-color);
+        }
 
-.payment-filter select {
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    min-width: 200px;
-}
+        .summary-card.expenses {
+            border-left-color: var(--danger-color);
+        }
 
-.summary-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
+        .summary-card.net {
+            border-left-color: var(--warning-color);
+        }
 
-.summary-card {
-    background: white;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    text-align: center;
-}
+        .summary-card .card-body {
+            padding: 1rem;
+        }
 
-.summary-card h3 {
-    margin-top: 0;
-    color: #555;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
+        .summary-card h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
 
-.summary-card .amount {
-    font-size: 24px;
-    font-weight: bold;
-    margin: 10px 0;
-}
+        .summary-card .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
 
-.summary-card .change {
-    font-size: 14px;
-    margin: 0;
-    color: #777;
-}
+        .summary-card .change {
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+        }
 
-.chart-container {
-    position: relative;
-    height: 300px;
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
 
-#loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    z-index: 1000;
-    color: white;
-}
+        .filter-section {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 0.35rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        }
 
-.spinner {
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top: 4px solid white;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin-bottom: 15px;
-}
+        .btn-period {
+            border-radius: 0;
+            border: 1px solid #d1d3e2;
+            background-color: white;
+            color: var(--dark-color);
+        }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+        .btn-period.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
 
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-}
+        .btn-period:first-child {
+            border-top-left-radius: 0.35rem;
+            border-bottom-left-radius: 0.35rem;
+        }
 
-.modal-content {
-    background: white;
-    border-radius: 8px;
-    padding: 25px;
-    width: 90%;
-    max-width: 400px;
-    position: relative;
-    text-align: center;
-}
+        .btn-period:last-child {
+            border-top-right-radius: 0.35rem;
+            border-bottom-right-radius: 0.35rem;
+        }
 
-.close {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    font-size: 24px;
-    cursor: pointer;
-}
+        .table-container {
+            background-color: white;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+            padding: 1rem;
+        }
 
-/* Responsive styles */
-@media (max-width: 768px) {
-    .report-controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .period-selector {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .date-filter {
-        margin-left: 0;
-        width: 100%;
-    }
-    
-    .summary-cards {
-        grid-template-columns: 1fr;
-    }
-}
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            display: none;
+        }
 
-@media (max-width: 480px) {
-    .period-btn {
-        flex: 1 1 100px;
-        padding: 10px;
-        font-size: 14px;
-    }
-    
-    .summary-card .amount {
-        font-size: 20px;
-    }
-}
+        .spinner {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge.pending {
+            background-color: #f8f4e6;
+            color: #856404;
+        }
+
+        .status-badge.completed {
+            background-color: #e6f4f8;
+            color: #0c5460;
+        }
+
+        .status-badge.cancelled {
+            background-color: #f8e6e6;
+            color: #721c24;
+        }
+
+        .status-badge.paid {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+        }
+
+        .status-badge.partial {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-chart-pie"></i> Profit & Loss Dashboard</h1>
-        </header>
-
-        <div class="card">
-            <div class="report-controls">
-                <div class="period-selector">
-                    <button class="period-btn active" data-period="daily">Daily</button>
-                    <button class="period-btn" data-period="weekly">Weekly</button>
-                    <button class="period-btn" data-period="monthly">Monthly</button>
-                    <button class="period-btn" data-period="quarterly">Quarterly</button>
-                    <button class="period-btn" data-period="yearly">Yearly</button>
+    <div class="container-fluid py-4">
+        <h1 class="h3 mb-4 text-gray-800">Profit & Loss Dashboard</h1>
+        
+        <!-- Date Range Filter -->
+        <div class="filter-section mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <label class="form-label">Date Range</label>
+                    <div class="btn-group w-100" role="group">
+                        <button type="button" class="btn btn-period active" data-period="monthly">Monthly</button>
+                        <button type="button" class="btn btn-period" data-period="quarterly">Quarterly</button>
+                        <button type="button" class="btn btn-period" data-period="yearly">Yearly</button>
+                    </div>
                 </div>
-                
-                <div class="date-filter">
-                    <input type="date" id="report-date">
-                    <button id="generate-report" class="generate-btn">Generate Report</button>
+                <div class="col-md-4">
+                    <label for="start-date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start-date">
                 </div>
-                
-                <div class="payment-filter">
-                    <select id="payment-mode">
-                        <option value="all">All Payment Modes</option>
-                        <option value="Cash">Cash</option>
-                        <option value="UPI">UPI</option>
-                        <option value="Card">Card</option>
-                    </select>
+                <div class="col-md-4">
+                    <label for="end-date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end-date">
                 </div>
             </div>
         </div>
 
-        <div class="summary-cards">
-            <div class="summary-card">
-                <h3><i class="fas fa-rupee-sign"></i> Total Sales</h3>
-                <div class="amount" id="total-sales">₹0.00</div>
-                <p class="change" id="sales-change">All payment modes</p>
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card summary-card sales h-100">
+                    <div class="card-body">
+                        <h3><i class="fas fa-rupee-sign"></i> Total Sales</h3>
+                        <div class="value" id="total-sales">₹0.00</div>
+                        <div class="change">Compared to last period</div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="summary-card">
-                <h3><i class="fas fa-shopping-cart"></i> Stock Value</h3>
-                <div class="amount" id="stock-value">₹0.00</div>
-                <p class="change" id="stock-change">Current inventory value</p>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card summary-card profit h-100">
+                    <div class="card-body">
+                        <h3><i class="fas fa-chart-line"></i> Gross Profit</h3>
+                        <div class="value" id="gross-profit">₹0.00</div>
+                        <div class="change">Compared to last period</div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="summary-card">
-                <h3><i class="fas fa-tools"></i> Maintenance Costs</h3>
-                <div class="amount" id="maintenance-costs">₹0.00</div>
-                <p class="change" id="maintenance-change">All maintenance expenses</p>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card summary-card expenses h-100">
+                    <div class="card-body">
+                        <h3><i class="fas fa-tools"></i> Total Expenses</h3>
+                        <div class="value" id="total-expenses">₹0.00</div>
+                        <div class="change">Compared to last period</div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="summary-card">
-                <h3><i class="fas fa-coins"></i> Net Profit</h3>
-                <div class="amount" id="net-profit">₹0.00</div>
-                <p class="change" id="profit-change">After all expenses</p>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card summary-card net h-100">
+                    <div class="card-body">
+                        <h3><i class="fas fa-calculator"></i> Net Profit</h3>
+                        <div class="value" id="net-profit">₹0.00</div>
+                        <div class="change">Compared to last period</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="chart-container">
-                <canvas id="profitChart"></canvas>
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <div class="col-lg-8 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">Profit & Loss Trend</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="profitLossChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">Expense Breakdown</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Breakdown -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Detailed Breakdown</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="breakdownTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Amount (₹)</th>
+                                <th>% of Total</th>
+                                <th>Comparison</th>
+                            </tr>
+                        </thead>
+                        <tbody id="breakdownBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loading-overlay">
-        <div class="spinner"></div>
-        <p>Loading data...</p>
-    </div>
-
-    <!-- Success Modal -->
-    <div id="success-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <p id="success-message"></p>
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="profit-loss.js"></script>
 </body>
 </html>
