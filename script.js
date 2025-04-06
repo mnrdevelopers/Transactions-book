@@ -131,22 +131,39 @@ if (document.getElementById("transaction-form")) {
     return `${randomPrefix}-${randomNum}`;
 }
 
+    function getAvailableItems() {
+    const inventory = JSON.parse(localStorage.getItem(INVENTORY_KEY)) || {};
+    return Object.entries(inventory).map(([name, details]) => ({
+        name,
+        category: details.category,
+        purchasePrice: details.purchasePrice,
+        availableQuantity: details.quantity
+    }));
+}
+
 function addItem() {
     const itemsContainer = document.getElementById("items-container");
+    const availableItems = getAvailableItems();
+    
     const newItem = document.createElement("div");
     newItem.className = "item-row";
+    
+    // Create item name dropdown
+    let itemOptions = availableItems.map(item => 
+        `<option value="${item.name}" data-category="${item.category}" data-price="${item.purchasePrice}">${item.name} (${item.availableQuantity} available)</option>`
+    ).join('');
+    
     newItem.innerHTML = `
         <label>Category:</label>
-        <select class="item-category">
-            <option value="Men">Men</option>
-            <option value="Women">Women</option>
-            <option value="Kids">Kids</option>
-            <option value="Accessories">Accessories</option>
-            <option value="Other">Other</option>
+        <select class="item-category" disabled>
+            <option value="">Select item first</option>
         </select>
         
         <label>Item Name:</label>
-        <input type="text" class="item-name" required>
+        <select class="item-name" required>
+            <option value="">Select an item</option>
+            ${itemOptions}
+        </select>
         
         <label>Quantity:</label>
         <input type="number" class="quantity" min="1" value="1" required>
@@ -159,14 +176,20 @@ function addItem() {
         
         <button type="button" class="remove-item">Remove</button>
     `;
+    
     itemsContainer.appendChild(newItem);
     
-    // Add remove event
-    newItem.querySelector(".remove-item").addEventListener("click", function() {
-        newItem.remove();
+    // Add event listeners
+    const itemNameSelect = newItem.querySelector(".item-name");
+    itemNameSelect.addEventListener("change", function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const category = selectedOption.dataset.category;
+        const purchasePrice = selectedOption.dataset.price;
+        
+        newItem.querySelector(".item-category").value = category;
+        newItem.querySelector(".purchase-price").value = purchasePrice;
         calculateTotals();
     });
-}
 
     function calculateTotals() {
         let totalAmount = 0;
@@ -215,6 +238,21 @@ function addItem() {
         if (!valid) alert("Please check all item fields");
         return valid;
     }
+
+    function updateInventoryAfterSale(items) {
+    let inventory = JSON.parse(localStorage.getItem(INVENTORY_KEY)) || {};
+    
+    items.forEach(item => {
+        if (inventory[item.itemName]) {
+            inventory[item.itemName].quantity -= parseFloat(item.quantity);
+            if (inventory[item.itemName].quantity < 0) {
+                inventory[item.itemName].quantity = 0;
+            }
+        }
+    });
+    
+    localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory));
+}
 
  function prepareBillData() {
     const items = [];
@@ -271,7 +309,7 @@ function addItem() {
             </div>
         </div>
         
-        <table class="bill-items">
+       <table class="bill-items">
             <thead>
                 <tr>
                     <th>Category</th>
@@ -284,7 +322,7 @@ function addItem() {
             <tbody>
                 ${data.items.map(item => `
                     <tr>
-                        <td>${item.category}</td>
+                        <td>${item.category || 'Other'}</td>
                         <td>${item.itemName}</td>
                         <td>${item.quantity}</td>
                         <td>₹${item.salePrice}</td>
@@ -533,6 +571,8 @@ function submitBill(data) {
             body: JSON.stringify(data)
         })
        .then(() => {
+        // Update inventory
+        updateInventoryAfterSale(data.items);
     // Reset form but keep customer name and date
     const customerName = document.getElementById("customer-name").value;
       document.getElementById("transaction-form").reset();
