@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = 'Bill-Book-v3';
+const CACHE_NAME = 'Bill-Book-v4';
 const ASSETS = [
   '/',
   '/index.html',
