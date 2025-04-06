@@ -1,42 +1,39 @@
-// profit-loss.js
 // Configuration
-const TRANSACTIONS_API = 'https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec';
-const PURCHASES_API = 'https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec';
-const MAINTENANCE_API = 'https://script.google.com/macros/s/AKfycbzlL_nSw4bTq_RkeRvEm42AV9D84J0HIHlG2GuDJ6N0rRy7_wsiGxeAYe1w-1Gz1A4/exec';
+const SALES_API_URL = 'https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec';
+const PURCHASES_API_URL = 'https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec';
+const MAINTENANCE_API_URL = 'https://script.google.com/macros/s/AKfycbzlL_nSw4bTq_RkeRvEm42AV9D84J0HIHlG2GuDJ6N0rRy7_wsiGxeAYe1w-1Gz1A4/exec';
 
-let currentPeriod = 'daily';
-let currentPaymentMode = 'all';
-let profitChart = null;
+let currentPeriod = 'monthly';
+let profitLossChart = null;
+let expenseChart = null;
+let allSalesData = [];
+let allPurchaseData = [];
+let allMaintenanceData = [];
 
 // DOM Elements
 const elements = {
-    periodBtns: document.querySelectorAll('.period-btn'),
-    reportDate: document.getElementById('report-date'),
-    generateReportBtn: document.getElementById('generate-report'),
-    paymentMode: document.getElementById('payment-mode'),
+    periodBtns: document.querySelectorAll('.btn-period'),
+    startDate: document.getElementById('start-date'),
+    endDate: document.getElementById('end-date'),
     totalSales: document.getElementById('total-sales'),
-    stockValue: document.getElementById('stock-value'),
-    maintenanceCosts: document.getElementById('maintenance-costs'),
+    grossProfit: document.getElementById('gross-profit'),
+    totalExpenses: document.getElementById('total-expenses'),
     netProfit: document.getElementById('net-profit'),
-    salesChange: document.getElementById('sales-change'),
-    stockChange: document.getElementById('stock-change'),
-    maintenanceChange: document.getElementById('maintenance-change'),
-    profitChange: document.getElementById('profit-change'),
-    profitChart: document.getElementById('profitChart'),
-    loadingOverlay: document.getElementById('loading-overlay'),
-    successModal: document.getElementById('success-modal'),
-    successMessage: document.getElementById('success-message'),
-    closeModal: document.querySelector('.close')
+    breakdownBody: document.getElementById('breakdownBody'),
+    loadingOverlay: document.getElementById('loading-overlay')
 };
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
-    // Set default date to today
-    const today = new Date().toISOString().split('T')[0];
-    elements.reportDate.value = today;
+    // Set default date range (current month)
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    elements.startDate.value = firstDay.toISOString().split('T')[0];
+    elements.endDate.value = today.toISOString().split('T')[0];
     
     // Load initial data
-    loadData();
+    loadAllData();
     
     // Setup event listeners
     setupEventListeners();
@@ -49,200 +46,371 @@ function setupEventListeners() {
             elements.periodBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentPeriod = this.dataset.period;
-            loadData();
+            updateDateRangeByPeriod();
+            loadAllData();
         });
     });
     
-    // Generate report button
-    elements.generateReportBtn.addEventListener('click', loadData);
-    
-    // Payment mode filter
-    elements.paymentMode.addEventListener('change', function() {
-        currentPaymentMode = this.value;
-        loadData();
-    });
-    
-    // Modal close button
-    elements.closeModal.addEventListener('click', function() {
-        elements.successModal.style.display = 'none';
-    });
+    // Date range changes
+    elements.startDate.addEventListener('change', loadAllData);
+    elements.endDate.addEventListener('change', loadAllData);
 }
 
-async function loadData() {
+function updateDateRangeByPeriod() {
+    const today = new Date();
+    let startDate, endDate = today;
+    
+    switch(currentPeriod) {
+        case 'monthly':
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            break;
+        case 'quarterly':
+            const quarter = Math.floor(today.getMonth() / 3);
+            startDate = new Date(today.getFullYear(), quarter * 3, 1);
+            break;
+        case 'yearly':
+            startDate = new Date(today.getFullYear(), 0, 1);
+            break;
+    }
+    
+    elements.startDate.value = startDate.toISOString().split('T')[0];
+    elements.endDate.value = endDate.toISOString().split('T')[0];
+}
+
+async function loadAllData() {
     showLoading();
     
     try {
-        const selectedDate = elements.reportDate.value;
-        
-        // Fetch data from all three systems in parallel
-        const [transactionsData, purchasesData, maintenanceData] = await Promise.all([
-            fetchTransactions(selectedDate),
-            fetchPurchases(),
-            fetchMaintenance(selectedDate)
+        // Load data from all three sources in parallel
+        const [salesData, purchaseData, maintenanceData] = await Promise.all([
+            fetchSalesData(),
+            fetchPurchaseData(),
+            fetchMaintenanceData()
         ]);
         
-        // Process and display data
-        processData(transactionsData, purchasesData, maintenanceData);
+        allSalesData = salesData;
+        allPurchaseData = purchaseData;
+        allMaintenanceData = maintenanceData;
         
+        // Process and display the data
+        processAndDisplayData();
     } catch (error) {
         console.error('Error loading data:', error);
-        showError('Failed to load data. Please try again.');
+        alert('Failed to load data. Please try again.');
     } finally {
         hideLoading();
     }
 }
 
-async function fetchTransactions(date) {
-    try {
-        const response = await fetch(`${TRANSACTIONS_API}?action=getTransactions&date=${date}`);
-        const data = await response.json();
-        
-        if (data.error) {
-            throw new Error(data.error);
-        }
-        
-        return data.data || [];
-    } catch (error) {
-        console.error('Error fetching transactions:', error);
-        throw error;
-    }
-}
-
-async function fetchPurchases() {
-    try {
-        const response = await fetch(`${PURCHASES_API}?action=getPurchases`);
-        const data = await response.json();
-        
-        if (data.error) {
-            throw new Error(data.error);
-        }
-        
-        return data.data || [];
-    } catch (error) {
-        console.error('Error fetching purchases:', error);
-        throw error;
-    }
-}
-
-async function fetchMaintenance(date) {
-    try {
-        const response = await fetch(`${MAINTENANCE_API}?action=getMaintenance&date=${date}`);
-        const data = await response.json();
-        
-        if (data.error) {
-            throw new Error(data.error);
-        }
-        
-        return data.data || [];
-    } catch (error) {
-        console.error('Error fetching maintenance data:', error);
-        throw error;
-    }
-}
-
-function processData(transactions, purchases, maintenance) {
-    // Filter transactions by payment mode if needed
-    const filteredTransactions = currentPaymentMode === 'all' 
-        ? transactions 
-        : transactions.filter(t => t.paymentMode === currentPaymentMode);
+async function fetchSalesData() {
+    const response = await fetch(SALES_API_URL);
+    const data = await response.json();
     
-    // Calculate totals
-    const totalSales = filteredTransactions.reduce((sum, t) => sum + (parseFloat(t.totalAmount) || 0), 0);
-    const totalProfit = filteredTransactions.reduce((sum, t) => sum + (parseFloat(t.totalProfit) || 0), 0);
+    // Process sales data similar to transactions.js
+    const transactionsMap = new Map();
+    const startRow = data[0][0] === "Store Name" ? 1 : 0;
     
-    // Calculate stock value from purchases
-    const stockItems = {};
-    purchases.forEach(purchase => {
-        purchase.items.forEach(item => {
-            if (!stockItems[item.name]) {
-                stockItems[item.name] = {
-                    quantity: 0,
-                    purchasePrice: item.price || 0
-                };
-            }
-            stockItems[item.name].quantity += parseFloat(item.quantity) || 0;
+    for (let i = startRow; i < data.length; i++) {
+        const row = data[i];
+        const siNo = String(row[2] || "").trim();
+        const date = parseDate(row[1]);
+        
+        if (!transactionsMap.has(siNo)) {
+            transactionsMap.set(siNo, {
+                date: date,
+                dateString: formatDateForDisplay(date),
+                totalAmount: parseFloat(row[9]) || 0,
+                totalProfit: parseFloat(row[10]) || 0
+            });
+        }
+    }
+    
+    return Array.from(transactionsMap.values());
+}
+
+async function fetchPurchaseData() {
+    const response = await fetch(PURCHASES_API_URL);
+    const data = await response.json();
+    
+    // Process purchase data similar to purchases.js
+    return data.map(row => ({
+        date: parseDate(row.date),
+        totalAmount: parseFloat(row.totalamount) || 0,
+        amountPaid: parseFloat(row.amountpaid) || 0,
+        status: calculatePurchaseStatus(row.paymenttype, parseFloat(row.totalamount), parseFloat(row.amountpaid))
+    }));
+}
+
+async function fetchMaintenanceData() {
+    const response = await fetch(`${MAINTENANCE_API_URL}?action=getMaintenance`);
+    const data = await response.json();
+    
+    if (data.status === 'success') {
+        return data.data.map(item => ({
+            date: new Date(item.Date),
+            amount: parseFloat(item.Amount) || 0,
+            category: item.Category,
+            status: item.Status
+        }));
+    }
+    return [];
+}
+
+function calculatePurchaseStatus(paymentType, totalAmount, amountPaid) {
+    if (paymentType === 'spot') return 'paid';
+    if (amountPaid >= totalAmount) return 'paid';
+    if (amountPaid > 0) return 'partial';
+    return 'pending';
+}
+
+function parseDate(dateValue) {
+    if (dateValue instanceof Date) return dateValue;
+    
+    if (typeof dateValue === 'string') {
+        // Try ISO format (YYYY-MM-DD)
+        let date = new Date(dateValue);
+        if (!isNaN(date.getTime())) return date;
+        
+        // Try DD/MM/YYYY format
+        const dd_mm_yyyy = dateValue.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        if (dd_mm_yyyy) {
+            return new Date(`${dd_mm_yyyy[3]}-${dd_mm_yyyy[2]}-${dd_mm_yyyy[1]}`);
+        }
+        
+        // Try YYYY-MM-DD format (alternative)
+        const yyyy_mm_dd = dateValue.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if (yyyy_mm_dd) {
+            return new Date(`${yyyy_mm_dd[1]}-${yyyy_mm_dd[2]}-${yyyy_mm_dd[3]}`);
+        }
+    }
+    
+    console.warn("Could not parse date:", dateValue);
+    return new Date();
+}
+
+function formatDateForDisplay(date) {
+    try {
+        return date.toLocaleDateString('en-IN', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit' 
         });
+    } catch {
+        return "Invalid Date";
+    }
+}
+
+function processAndDisplayData() {
+    const startDate = new Date(elements.startDate.value);
+    const endDate = new Date(elements.endDate.value);
+    endDate.setHours(23, 59, 59, 999);
+    
+    // Filter data by date range
+    const filteredSales = allSalesData.filter(t => {
+        const transDate = new Date(t.date);
+        return transDate >= startDate && transDate <= endDate;
     });
     
-    const stockValue = Object.values(stockItems).reduce((sum, item) => {
-        return sum + (item.quantity * item.purchasePrice);
-    }, 0);
+    const filteredPurchases = allPurchaseData.filter(p => {
+        const purchaseDate = new Date(p.date);
+        return purchaseDate >= startDate && purchaseDate <= endDate;
+    });
     
-    // Calculate maintenance costs
-    const maintenanceCosts = maintenance.reduce((sum, m) => sum + (parseFloat(m.Amount) || 0), 0);
+    const filteredMaintenance = allMaintenanceData.filter(m => {
+        const maintDate = new Date(m.date);
+        return maintDate >= startDate && maintDate <= endDate;
+    });
     
-    // Calculate net profit (sales profit - maintenance costs)
-    const netProfit = totalProfit - maintenanceCosts;
+    // Calculate totals
+    const totalSales = filteredSales.reduce((sum, t) => sum + t.totalAmount, 0);
+    const totalProfit = filteredSales.reduce((sum, t) => sum + t.totalProfit, 0);
+    const totalPurchases = filteredPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+    const totalMaintenance = filteredMaintenance.reduce((sum, m) => sum + m.amount, 0);
     
-    // Update UI
-    updateSummaryCards(totalSales, stockValue, maintenanceCosts, netProfit);
-    updateChart(totalSales, stockValue, maintenanceCosts, netProfit);
+    // Calculate net profit (Profit - Expenses)
+    const totalExpenses = totalPurchases + totalMaintenance;
+    const netProfit = totalProfit - totalExpenses;
+    
+    // Update summary cards
+    elements.totalSales.textContent = `₹${totalSales.toFixed(2)}`;
+    elements.grossProfit.textContent = `₹${totalProfit.toFixed(2)}`;
+    elements.totalExpenses.textContent = `₹${totalExpenses.toFixed(2)}`;
+    elements.netProfit.textContent = `₹${netProfit.toFixed(2)}`;
+    
+    // Prepare data for charts
+    prepareChartData(filteredSales, filteredPurchases, filteredMaintenance);
+    
+    // Prepare detailed breakdown
+    prepareDetailedBreakdown(filteredSales, filteredPurchases, filteredMaintenance);
 }
 
-function updateSummaryCards(sales, stock, maintenance, profit) {
-    elements.totalSales.textContent = `₹${sales.toFixed(2)}`;
-    elements.stockValue.textContent = `₹${stock.toFixed(2)}`;
-    elements.maintenanceCosts.textContent = `₹${maintenance.toFixed(2)}`;
-    elements.netProfit.textContent = `₹${profit.toFixed(2)}`;
+function prepareChartData(salesData, purchaseData, maintenanceData) {
+    // Group data by time period based on currentPeriod
+    const groupedData = groupDataByPeriod(salesData, purchaseData, maintenanceData);
     
-    // Style net profit based on value
-    if (profit < 0) {
-        elements.netProfit.style.color = '#d63031';
+    // Prepare Profit & Loss Chart
+    renderProfitLossChart(groupedData);
+    
+    // Prepare Expense Breakdown Chart
+    renderExpenseChart(purchaseData, maintenanceData);
+}
+
+function groupDataByPeriod(salesData, purchaseData, maintenanceData) {
+    const startDate = new Date(elements.startDate.value);
+    const endDate = new Date(elements.endDate.value);
+    const groups = [];
+    
+    if (currentPeriod === 'monthly') {
+        // Group by day
+        const currentDate = new Date(startDate);
+        
+        while (currentDate <= endDate) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const daySales = salesData.filter(s => 
+                s.date.toISOString().split('T')[0] === dateStr
+            ).reduce((sum, s) => sum + s.totalProfit, 0);
+            
+            const dayPurchases = purchaseData.filter(p => 
+                p.date.toISOString().split('T')[0] === dateStr
+            ).reduce((sum, p) => sum + p.totalAmount, 0);
+            
+            const dayMaintenance = maintenanceData.filter(m => 
+                m.date.toISOString().split('T')[0] === dateStr
+            ).reduce((sum, m) => sum + m.amount, 0);
+            
+            groups.push({
+                label: currentDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+                sales: daySales,
+                profit: daySales,
+                purchases: dayPurchases,
+                maintenance: dayMaintenance,
+                expenses: dayPurchases + dayMaintenance,
+                net: daySales - (dayPurchases + dayMaintenance)
+            });
+            
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+    } else if (currentPeriod === 'quarterly') {
+        // Group by week
+        const currentDate = new Date(startDate);
+        let weekStart = new Date(currentDate);
+        
+        while (currentDate <= endDate) {
+            // Check if we've reached Sunday or end date
+            if (currentDate.getDay() === 0 || currentDate >= endDate) {
+                const weekEnd = new Date(currentDate);
+                const weekLabel = `${weekStart.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - ${weekEnd.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
+                
+                const weekSales = salesData.filter(s => 
+                    s.date >= weekStart && s.date <= weekEnd
+                ).reduce((sum, s) => sum + s.totalProfit, 0);
+                
+                const weekPurchases = purchaseData.filter(p => 
+                    p.date >= weekStart && p.date <= weekEnd
+                ).reduce((sum, p) => sum + p.totalAmount, 0);
+                
+                const weekMaintenance = maintenanceData.filter(m => 
+                    m.date >= weekStart && m.date <= weekEnd
+                ).reduce((sum, m) => sum + m.amount, 0);
+                
+                groups.push({
+                    label: weekLabel,
+                    sales: weekSales,
+                    profit: weekSales,
+                    purchases: weekPurchases,
+                    maintenance: weekMaintenance,
+                    expenses: weekPurchases + weekMaintenance,
+                    net: weekSales - (weekPurchases + weekMaintenance)
+                });
+                
+                weekStart = new Date(currentDate);
+                weekStart.setDate(weekStart.getDate() + 1);
+            }
+            
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
     } else {
-        elements.netProfit.style.color = '#00b894';
+        // Group by month
+        const currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+        
+        while (currentDate <= endDate) {
+            const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            const monthLabel = currentDate.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+            
+            const monthSales = salesData.filter(s => 
+                s.date >= currentDate && s.date <= monthEnd
+            ).reduce((sum, s) => sum + s.totalProfit, 0);
+            
+            const monthPurchases = purchaseData.filter(p => 
+                p.date >= currentDate && p.date <= monthEnd
+            ).reduce((sum, p) => sum + p.totalAmount, 0);
+            
+            const monthMaintenance = maintenanceData.filter(m => 
+                m.date >= currentDate && m.date <= monthEnd
+            ).reduce((sum, m) => sum + m.amount, 0);
+            
+            groups.push({
+                label: monthLabel,
+                sales: monthSales,
+                profit: monthSales,
+                purchases: monthPurchases,
+                maintenance: monthMaintenance,
+                expenses: monthPurchases + monthMaintenance,
+                net: monthSales - (monthPurchases + monthMaintenance)
+            });
+            
+            currentDate.setMonth(currentDate.getMonth() + 1);
+        }
     }
     
-    // Update change indicators
-    elements.salesChange.textContent = currentPaymentMode === 'all' 
-        ? 'All payment modes' 
-        : `Via ${currentPaymentMode}`;
-    
-    elements.profitChange.textContent = profit < 0 ? 'Net Loss' : 'Net Profit';
+    return groups;
 }
 
-function updateChart(sales, stock, maintenance, profit) {
-    const ctx = elements.profitChart.getContext('2d');
+function renderProfitLossChart(groupedData) {
+    const ctx = document.getElementById('profitLossChart').getContext('2d');
+    const labels = groupedData.map(g => g.label);
+    const profitData = groupedData.map(g => g.profit);
+    const expenseData = groupedData.map(g => g.expenses);
+    const netData = groupedData.map(g => g.net);
     
-    // Destroy previous chart if exists
-    if (profitChart) {
-        profitChart.destroy();
+    if (profitLossChart) {
+        profitLossChart.destroy();
     }
     
-    profitChart = new Chart(ctx, {
-        type: 'bar',
+    profitLossChart = new Chart(ctx, {
+        type: 'line',
         data: {
-            labels: ['Sales', 'Stock Value', 'Maintenance', 'Net Profit/Loss'],
-            datasets: [{
-                label: 'Amount (₹)',
-                data: [sales, stock, maintenance, profit],
-                backgroundColor: [
-                    'rgba(54, 162, 235, 0.7)',
-                    'rgba(255, 206, 86, 0.7)',
-                    'rgba(255, 99, 132, 0.7)',
-                    profit >= 0 ? 'rgba(75, 192, 192, 0.7)' : 'rgba(255, 99, 132, 0.7)'
-                ],
-                borderColor: [
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    profit >= 0 ? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)'
-                ],
-                borderWidth: 1
-            }]
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Gross Profit',
+                    data: profitData,
+                    borderColor: '#1cc88a',
+                    backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                    borderWidth: 2,
+                    fill: true
+                },
+                {
+                    label: 'Total Expenses',
+                    data: expenseData,
+                    borderColor: '#e74a3b',
+                    backgroundColor: 'rgba(231, 74, 59, 0.1)',
+                    borderWidth: 2,
+                    fill: true
+                },
+                {
+                    label: 'Net Profit',
+                    data: netData,
+                    borderColor: '#f6c23e',
+                    backgroundColor: 'rgba(246, 194, 62, 0.1)',
+                    borderWidth: 2,
+                    fill: true
+                }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '₹' + value.toLocaleString('en-IN');
-                        }
-                    }
-                }
-            },
             plugins: {
                 tooltip: {
                     callbacks: {
@@ -254,9 +422,166 @@ function updateChart(sales, stock, maintenance, profit) {
                         }
                     }
                 }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString('en-IN');
+                        }
+                    }
+                }
             }
         }
     });
+}
+
+function renderExpenseChart(purchaseData, maintenanceData) {
+    const ctx = document.getElementById('expenseChart').getContext('2d');
+    
+    // Group maintenance by category
+    const maintenanceByCategory = {};
+    maintenanceData.forEach(m => {
+        if (!maintenanceByCategory[m.category]) {
+            maintenanceByCategory[m.category] = 0;
+        }
+        maintenanceByCategory[m.category] += m.amount;
+    });
+    
+    const purchaseTotal = purchaseData.reduce((sum, p) => sum + p.totalAmount, 0);
+    const maintenanceTotal = maintenanceData.reduce((sum, m) => sum + m.amount, 0);
+    
+    const labels = ['Purchases', ...Object.keys(maintenanceByCategory)];
+    const data = [purchaseTotal, ...Object.values(maintenanceByCategory)];
+    const backgroundColors = [
+        '#4e73df', // Purchases
+        '#1cc88a', // Maintenance categories
+        '#36b9cc',
+        '#f6c23e',
+        '#e74a3b',
+        '#858796'
+    ];
+    
+    if (expenseChart) {
+        expenseChart.destroy();
+    }
+    
+    expenseChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: backgroundColors,
+                hoverBackgroundColor: backgroundColors.map(c => c + 'cc'),
+                hoverBorderColor: "rgba(234, 236, 244, 1)",
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ₹${value.toFixed(2)} (${percentage}%)`;
+                        }
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'right',
+                }
+            },
+            cutout: '70%',
+        },
+    });
+}
+
+function prepareDetailedBreakdown(salesData, purchaseData, maintenanceData) {
+    const totalSales = salesData.reduce((sum, s) => sum + s.totalAmount, 0);
+    const totalProfit = salesData.reduce((sum, s) => sum + s.totalProfit, 0);
+    const totalPurchases = purchaseData.reduce((sum, p) => sum + p.totalAmount, 0);
+    const totalMaintenance = maintenanceData.reduce((sum, m) => sum + m.amount, 0);
+    const totalExpenses = totalPurchases + totalMaintenance;
+    const netProfit = totalProfit - totalExpenses;
+    
+    // Group maintenance by category
+    const maintenanceByCategory = {};
+    maintenanceData.forEach(m => {
+        if (!maintenanceByCategory[m.category]) {
+            maintenanceByCategory[m.category] = 0;
+        }
+        maintenanceByCategory[m.category] += m.amount;
+    });
+    
+    let html = '';
+    
+    // Sales section
+    html += `
+        <tr>
+            <td><strong>Total Sales</strong></td>
+            <td><strong>₹${totalSales.toFixed(2)}</strong></td>
+            <td>100%</td>
+            <td><i class="fas fa-arrow-up text-success"></i> 0%</td>
+        </tr>
+        <tr>
+            <td>Cost of Goods Sold</td>
+            <td>₹${(totalSales - totalProfit).toFixed(2)}</td>
+            <td>${((totalSales - totalProfit) / totalSales * 100).toFixed(1)}%</td>
+            <td><i class="fas fa-arrow-up text-danger"></i> 0%</td>
+        </tr>
+        <tr>
+            <td><strong>Gross Profit</strong></td>
+            <td><strong>₹${totalProfit.toFixed(2)}</strong></td>
+            <td><strong>${(totalProfit / totalSales * 100).toFixed(1)}%</strong></td>
+            <td><i class="fas fa-arrow-up text-success"></i> 0%</td>
+        </tr>
+        <tr class="table-secondary">
+            <td colspan="4"><strong>Expenses</strong></td>
+        </tr>
+        <tr>
+            <td>Inventory Purchases</td>
+            <td>₹${totalPurchases.toFixed(2)}</td>
+            <td>${(totalPurchases / totalExpenses * 100).toFixed(1)}%</td>
+            <td><i class="fas fa-arrow-up text-danger"></i> 0%</td>
+        </tr>
+    `;
+    
+    // Maintenance categories
+    for (const [category, amount] of Object.entries(maintenanceByCategory)) {
+        html += `
+            <tr>
+                <td>${category} Maintenance</td>
+                <td>₹${amount.toFixed(2)}</td>
+                <td>${(amount / totalExpenses * 100).toFixed(1)}%</td>
+                <td><i class="fas fa-arrow-up text-danger"></i> 0%</td>
+            </tr>
+        `;
+    }
+    
+    // Totals
+    html += `
+        <tr>
+            <td><strong>Total Expenses</strong></td>
+            <td><strong>₹${totalExpenses.toFixed(2)}</strong></td>
+            <td><strong>${(totalExpenses / totalSales * 100).toFixed(1)}%</strong></td>
+            <td><i class="fas fa-arrow-up text-danger"></i> 0%</td>
+        </tr>
+        <tr class="table-primary">
+            <td><strong>Net Profit</strong></td>
+            <td><strong>₹${netProfit.toFixed(2)}</strong></td>
+            <td><strong>${(netProfit / totalSales * 100).toFixed(1)}%</strong></td>
+            <td><i class="fas fa-arrow-up text-success"></i> 0%</td>
+        </tr>
+    `;
+    
+    elements.breakdownBody.innerHTML = html;
 }
 
 function showLoading() {
@@ -265,24 +590,4 @@ function showLoading() {
 
 function hideLoading() {
     elements.loadingOverlay.style.display = 'none';
-}
-
-function showError(message) {
-    elements.successMessage.textContent = message;
-    elements.successModal.style.display = 'flex';
-    
-    // Auto-close after 3 seconds
-    setTimeout(() => {
-        elements.successModal.style.display = 'none';
-    }, 3000);
-}
-
-function showSuccess(message) {
-    elements.successMessage.textContent = message;
-    elements.successModal.style.display = 'flex';
-    
-    // Auto-close after 3 seconds
-    setTimeout(() => {
-        elements.successModal.style.display = 'none';
-    }, 3000);
-}
+            }
