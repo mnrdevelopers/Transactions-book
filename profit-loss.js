@@ -6,9 +6,13 @@ let currentPeriod = 'monthly';
 let profitLossChart = null;
 let allFinancialData = [];
 let filteredFinancialData = [];
-const API_URL_SALES = 'https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec';
-const API_URL_PURCHASES = 'https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec';
-const API_URL_MAINTENANCE = 'https://script.google.com/macros/s/AKfycbzlL_nSw4bTq_RkeRvEm42AV9D84J0HIHlG2GuDJ6N0rRy7_wsiGxeAYe1w-1Gz1A4/exec';
+
+// API URLs for each system
+const API_URLS = {
+    transactions: 'https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec',
+    purchases: 'https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec',
+    maintenance: 'https://script.google.com/macros/s/AKfycbzlL_nSw4bTq_RkeRvEm42AV9D84J0HIHlG2GuDJ6N0rRy7_wsiGxeAYe1w-1Gz1A4/exec'
+};
 
 // DOM Elements
 const elements = {
@@ -91,20 +95,27 @@ function showSuccessMessage(message = 'Report generated successfully!') {
     }, 3000);
 }
 
-// Load all financial data
+// Load all financial data from separate APIs
 async function loadFinancialData() {
     showLoading();
     
     try {
-        // Load data from all sources
+        // Load data from all sources in parallel
         const [salesData, purchasesData, maintenanceData] = await Promise.all([
-            fetchSalesData(),
-            fetchPurchasesData(),
-            fetchMaintenanceData()
+            fetchDataFromAPI('transactions', 'getTransactions'),
+            fetchDataFromAPI('purchases', 'getPurchases'),
+            fetchDataFromAPI('maintenance', 'getMaintenance')
         ]);
         
         // Process and combine data
-        allFinancialData = processFinancialData(salesData, purchasesData, maintenanceData);
+        allFinancialData = [
+            ...processSalesData(salesData),
+            ...processPurchasesData(purchasesData),
+            ...processMaintenanceData(maintenanceData)
+        ];
+        
+        // Sort by date (newest first)
+        allFinancialData.sort((a, b) => b.date - a.date);
         
         // Update UI
         updateSummaryCards();
@@ -121,99 +132,121 @@ async function loadFinancialData() {
     }
 }
 
-// Fetch sales data from transactions
-async function fetchSalesData() {
+// Generic function to fetch data from any of the APIs
+async function fetchDataFromAPI(source, action) {
     try {
-        const response = await fetch(`${API_URL_SALES}?action=getTransactions`);
+        const apiUrl = API_URLS[source];
+        const response = await fetch(`${apiUrl}?action=${action}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
+        // Handle different response structures
         if (data.status === 'success') {
-            return data.data.map(t => ({
-                id: t.TransactionID || `sale-${Date.now()}`,
-                date: new Date(t.Date),
-                type: 'sale',
-                description: t.CustomerName || 'Retail Sale',
-                category: 'Sales',
-                amount: parseFloat(t.TotalAmount) || 0,
-                profit: parseFloat(t.TotalProfit) || 0,
-                paymentMode: t.PaymentMode || 'Cash'
-            }));
+            return data.data || [];
+        } else if (Array.isArray(data)) {
+            return data; // Some APIs might return array directly
+        } else if (data.error) {
+            throw new Error(data.error);
         }
+        
         return [];
     } catch (error) {
-        console.error('Error fetching sales data:', error);
-        return [];
+        console.error(`Error fetching ${source} data:`, error);
+        return []; // Return empty array to allow other data to load
     }
 }
 
-// Fetch purchases data
-async function fetchPurchasesData() {
-    try {
-        const response = await fetch(`${API_URL_PURCHASES}?action=getPurchases`);
-        const data = await response.json();
-        
-        if (data.status === 'success') {
-            return data.data.map(p => ({
-                id: p.TransactionID || `purchase-${Date.now()}`,
-                date: new Date(p.Date),
-                type: 'purchase',
-                description: p.Description || 'Inventory Purchase',
-                category: p.Category || 'Purchases',
-                amount: parseFloat(p.Amount) || 0,
-                profit: -parseFloat(p.Amount) || 0, // Purchases are negative for profit
-                paymentMode: p.PaymentMethod || 'Cash'
-            }));
-        }
-        return [];
-    } catch (error) {
-        console.error('Error fetching purchases data:', error);
-        return [];
-    }
+// Process sales/transactions data
+function processSalesData(data) {
+    return data.map(t => ({
+        id: t.TransactionID || `sale-${Date.now()}`,
+        date: parseDate(t.Date),
+        type: 'sale',
+        description: t.CustomerName || 'Retail Sale',
+        category: 'Sales',
+        amount: parseFloat(t.TotalAmount) || 0,
+        profit: parseFloat(t.TotalProfit) || 0,
+        paymentMode: t.PaymentMode || 'Cash'
+    }));
 }
 
-// Fetch maintenance data
-async function fetchMaintenanceData() {
-    try {
-        const response = await fetch(`${API_URL_MAINTENANCE}?action=getMaintenance`);
-        const data = await response.json();
-        
-        if (data.status === 'success') {
-            return data.data.map(m => ({
-                id: m.TransactionID || `maintenance-${Date.now()}`,
-                date: new Date(m.Date),
-                type: 'maintenance',
-                description: m.Description || 'Maintenance',
-                category: m.Category || 'Maintenance',
-                amount: parseFloat(m.Amount) || 0,
-                profit: -parseFloat(m.Amount) || 0, // Costs are negative for profit
-                paymentMode: m.PaymentMethod || 'Cash'
-            }));
-        }
-        return [];
-    } catch (error) {
-        console.error('Error fetching maintenance data:', error);
-        return [];
-    }
+// Process purchases data
+function processPurchasesData(data) {
+    return data.map(p => ({
+        id: p.TransactionID || `purchase-${Date.now()}`,
+        date: parseDate(p.Date),
+        type: 'purchase',
+        description: p.Description || 'Inventory Purchase',
+        category: p.Category || 'Purchases',
+        amount: -Math.abs(parseFloat(p.Amount) || 0, // Negative for expenses
+        profit: -Math.abs(parseFloat(p.Amount) || 0, // Negative for profit calculation
+        paymentMode: p.PaymentMethod || 'Cash'
+    }));
 }
 
-// Process and combine all financial data
-function processFinancialData(sales, purchases, maintenance) {
-    // Combine all data
-    const combined = [...sales, ...purchases, ...maintenance];
+// Process maintenance data
+function processMaintenanceData(data) {
+    return data.map(m => ({
+        id: m.TransactionID || `maintenance-${Date.now()}`,
+        date: parseDate(m.Date),
+        type: 'maintenance',
+        description: m.Description || 'Maintenance',
+        category: m.Category || 'Maintenance',
+        amount: -Math.abs(parseFloat(m.Amount) || 0), // Negative for expenses
+        profit: -Math.abs(parseFloat(m.Amount) || 0), // Negative for profit calculation
+        paymentMode: m.PaymentMethod || 'Cash'
+    }));
+}
+
+// Helper function to parse dates from different formats
+function parseDate(dateValue) {
+    if (dateValue instanceof Date) return dateValue;
+    if (!dateValue) return new Date(); // Default to current date if missing
     
-    // Sort by date (newest first)
-    combined.sort((a, b) => b.date - a.date);
+    // Try ISO format
+    const isoDate = new Date(dateValue);
+    if (!isNaN(isoDate.getTime())) return isoDate;
     
-    return combined;
+    // Try other common formats
+    const formats = [
+        'yyyy-MM-dd', 'MM/dd/yyyy', 'dd-MM-yyyy', 
+        'dd/MM/yyyy', 'yyyy/MM/dd'
+    ];
+    
+    for (const format of formats) {
+        const parts = format.split(/[-\/]/);
+        const dateParts = dateValue.split(/[-\/]/);
+        
+        if (dateParts.length === parts.length) {
+            const dateObj = {};
+            parts.forEach((part, i) => {
+                dateObj[part] = parseInt(dateParts[i], 10);
+            });
+            
+            if (dateObj.yyyy && dateObj.MM && dateObj.dd) {
+                return new Date(dateObj.yyyy, dateObj.MM - 1, dateObj.dd);
+            } else if (dateObj.MM && dateObj.dd && dateObj.yyyy) {
+                return new Date(dateObj.yyyy, dateObj.MM - 1, dateObj.dd);
+            } else if (dateObj.dd && dateObj.MM && dateObj.yyyy) {
+                return new Date(dateObj.yyyy, dateObj.MM - 1, dateObj.dd);
+            }
+        }
+    }
+    
+    console.warn('Could not parse date:', dateValue);
+    return new Date(); // Fallback to current date
 }
 
 // Update summary cards with financial overview
 function updateSummaryCards() {
     const today = new Date(elements.reportDate.value);
-    
-    // Filter data for the selected period
     const { startDate, endDate } = getDateRange(currentPeriod, today);
     
+    // Filter data for the selected period
     const periodData = allFinancialData.filter(t => {
         const transDate = new Date(t.date);
         return transDate >= startDate && transDate <= endDate;
@@ -222,33 +255,45 @@ function updateSummaryCards() {
     // Calculate totals
     const revenue = periodData
         .filter(t => t.type === 'sale')
-        .reduce((sum, t) => sum + t.amount, 0);
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     
     const purchases = periodData
         .filter(t => t.type === 'purchase')
-        .reduce((sum, t) => sum + t.amount, 0);
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     
     const maintenance = periodData
         .filter(t => t.type === 'maintenance')
-        .reduce((sum, t) => sum + t.amount, 0);
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     
-    const netProfit = revenue + purchases + maintenance; // Purchases and maintenance are negative
+    const totalExpenses = purchases + maintenance;
+    const netProfit = revenue - totalExpenses;
     
     // Update UI
     elements.totalRevenue.textContent = `₹${revenue.toFixed(2)}`;
-    elements.totalPurchases.textContent = `₹${Math.abs(purchases).toFixed(2)}`;
-    elements.maintenanceCosts.textContent = `₹${Math.abs(maintenance).toFixed(2)}`;
+    elements.totalPurchases.textContent = `₹${purchases.toFixed(2)}`;
+    elements.maintenanceCosts.textContent = `₹${maintenance.toFixed(2)}`;
     elements.netProfit.textContent = `₹${netProfit.toFixed(2)}`;
     
-    // Update profit change color
+    // Update styling based on values
     elements.netProfit.className = `amount ${netProfit >= 0 ? 'positive' : 'negative'}`;
     elements.profitChange.className = `change ${netProfit >= 0 ? 'positive' : 'negative'}`;
     
-    // TODO: Calculate percentage changes vs previous period
-    elements.revenueChange.textContent = '+0% vs previous period';
-    elements.purchasesChange.textContent = '+0% vs previous period';
-    elements.maintenanceChange.textContent = '+0% vs previous period';
-    elements.profitChange.textContent = `${netProfit >= 0 ? '+' : ''}0% vs previous period`;
+    // Calculate percentage changes (placeholder - would need historical data)
+    elements.revenueChange.textContent = calculateChangeText(revenue, 0);
+    elements.purchasesChange.textContent = calculateChangeText(purchases, 0);
+    elements.maintenanceChange.textContent = calculateChangeText(maintenance, 0);
+    elements.profitChange.textContent = calculateChangeText(netProfit, 0);
+}
+
+// Helper function to calculate change text (placeholder implementation)
+function calculateChangeText(currentValue, previousValue) {
+    if (previousValue === 0) return 'No previous data';
+    
+    const change = ((currentValue - previousValue) / Math.abs(previousValue)) * 100;
+    const direction = change >= 0 ? 'increase' : 'decrease';
+    const absChange = Math.abs(change).toFixed(1);
+    
+    return `${change >= 0 ? '+' : ''}${absChange}% ${direction} vs previous period`;
 }
 
 // Get date range based on period
@@ -401,7 +446,7 @@ function groupDataByPeriod(data, startDate, endDate) {
             
             const revenue = periodData
                 .filter(t => t.type === 'sale')
-                .reduce((sum, t) => sum + t.amount, 0);
+                .reduce((sum, t) => sum + Math.abs(t.amount), 0);
             
             const costs = periodData
                 .filter(t => t.type !== 'sale')
@@ -434,7 +479,7 @@ function groupDataByPeriod(data, startDate, endDate) {
             
             const revenue = periodData
                 .filter(t => t.type === 'sale')
-                .reduce((sum, t) => sum + t.amount, 0);
+                .reduce((sum, t) => sum + Math.abs(t.amount), 0);
             
             const costs = periodData
                 .filter(t => t.type !== 'sale')
@@ -466,7 +511,7 @@ function groupDataByPeriod(data, startDate, endDate) {
             
             const revenue = periodData
                 .filter(t => t.type === 'sale')
-                .reduce((sum, t) => sum + t.amount, 0);
+                .reduce((sum, t) => sum + Math.abs(t.amount), 0);
             
             const costs = periodData
                 .filter(t => t.type !== 'sale')
@@ -622,4 +667,4 @@ function updatePagination() {
     elements.pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
     elements.prevBtn.disabled = currentPage === 1;
     elements.nextBtn.disabled = currentPage === totalPages || totalPages === 0;
-}
+        }
