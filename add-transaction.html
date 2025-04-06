@@ -8,6 +8,41 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+/* Add to the styles.css file or the style section in add-transaction.html */
+.item-row select {
+    width: 90%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: white;
+}
+
+.bill-items th:nth-child(1),
+.bill-items td:nth-child(1) {
+    width: 20%;
+}
+
+.bill-items th:nth-child(2),
+.bill-items td:nth-child(2) {
+    width: 30%;
+}
+
+.bill-items th:nth-child(3),
+.bill-items td:nth-child(3) {
+    width: 15%;
+}
+
+.bill-items th:nth-child(4),
+.bill-items td:nth-child(4) {
+    width: 15%;
+}
+
+.bill-items th:nth-child(5),
+.bill-items td:nth-child(5) {
+    width: 20%;
+}
+        
         /* Cash payment details in bill */
 #bill-details .cash-payment-details {
     background: #f8f8f8;
@@ -283,7 +318,16 @@
     </div>
 </div>
 
-        <!-- Rest of the file remains the same -->
+<div>
+    <label for="item-category"><strong>Category:</strong></label>
+    <select id="item-category">
+        <option value="Men">Men</option>
+        <option value="Women">Women</option>
+        <option value="Kids">Kids</option>
+        <option value="Accessories">Accessories</option>
+        <option value="Other">Other</option>
+    </select>
+</div>
         <!-- Transaction Form -->
         <form id="transaction-form">
             <div id="items-container">
