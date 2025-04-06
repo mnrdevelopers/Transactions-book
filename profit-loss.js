@@ -6,7 +6,9 @@ let currentPeriod = 'monthly';
 let profitLossChart = null;
 let allFinancialData = [];
 let filteredFinancialData = [];
-const API_URL = 'https://script.google.com/macros/s/AKfycbzlL_nSw4bTq_RkeRvEm42AV9D84J0HIHlG2GuDJ6N0rRy7_wsiGxeAYe1w-1Gz1A4/exec';
+const API_URL_SALES = 'https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec';
+const API_URL_PURCHASES = 'https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec';
+const API_URL_MAINTENANCE = 'https://script.google.com/macros/s/AKfycbzlL_nSw4bTq_RkeRvEm42AV9D84J0HIHlG2GuDJ6N0rRy7_wsiGxeAYe1w-1Gz1A4/exec';
 
 // DOM Elements
 const elements = {
@@ -122,7 +124,7 @@ async function loadFinancialData() {
 // Fetch sales data from transactions
 async function fetchSalesData() {
     try {
-        const response = await fetch(`${API_URL}?action=getTransactions`);
+        const response = await fetch(`${API_URL_SALES}?action=getTransactions`);
         const data = await response.json();
         
         if (data.status === 'success') {
@@ -147,7 +149,7 @@ async function fetchSalesData() {
 // Fetch purchases data
 async function fetchPurchasesData() {
     try {
-        const response = await fetch(`${API_URL}?action=getPurchases`);
+        const response = await fetch(`${API_URL_PURCHASES}?action=getPurchases`);
         const data = await response.json();
         
         if (data.status === 'success') {
@@ -172,7 +174,7 @@ async function fetchPurchasesData() {
 // Fetch maintenance data
 async function fetchMaintenanceData() {
     try {
-        const response = await fetch(`${API_URL}?action=getMaintenance`);
+        const response = await fetch(`${API_URL_MAINTENANCE}?action=getMaintenance`);
         const data = await response.json();
         
         if (data.status === 'success') {
