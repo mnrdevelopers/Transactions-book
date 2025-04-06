@@ -131,33 +131,42 @@ if (document.getElementById("transaction-form")) {
     return `${randomPrefix}-${randomNum}`;
 }
 
-    function addItem() {
-        const itemsContainer = document.getElementById("items-container");
-        const newItem = document.createElement("div");
-        newItem.className = "item-row";
-        newItem.innerHTML = `
-            <label>Item Name:</label>
-            <input type="text" class="item-name" required>
-            
-            <label>Quantity:</label>
-            <input type="number" class="quantity" min="1" value="1" required>
-            
-            <label>Purchase Price (₹):</label>
-            <input type="number" class="purchase-price" min="0" step="0.01" required>
-            
-            <label>Sale Price (₹):</label>
-            <input type="number" class="sale-price" min="0" step="0.01" required>
-            
-            <button type="button" class="remove-item">Remove</button>
-        `;
-        itemsContainer.appendChild(newItem);
+function addItem() {
+    const itemsContainer = document.getElementById("items-container");
+    const newItem = document.createElement("div");
+    newItem.className = "item-row";
+    newItem.innerHTML = `
+        <label>Category:</label>
+        <select class="item-category">
+            <option value="Men">Men</option>
+            <option value="Women">Women</option>
+            <option value="Kids">Kids</option>
+            <option value="Accessories">Accessories</option>
+            <option value="Other">Other</option>
+        </select>
         
-        // Add remove event
-        newItem.querySelector(".remove-item").addEventListener("click", function() {
-            newItem.remove();
-            calculateTotals();
-        });
-    }
+        <label>Item Name:</label>
+        <input type="text" class="item-name" required>
+        
+        <label>Quantity:</label>
+        <input type="number" class="quantity" min="1" value="1" required>
+        
+        <label>Purchase Price (₹):</label>
+        <input type="number" class="purchase-price" min="0" step="0.01" required>
+        
+        <label>Sale Price (₹):</label>
+        <input type="number" class="sale-price" min="0" step="0.01" required>
+        
+        <button type="button" class="remove-item">Remove</button>
+    `;
+    itemsContainer.appendChild(newItem);
+    
+    // Add remove event
+    newItem.querySelector(".remove-item").addEventListener("click", function() {
+        newItem.remove();
+        calculateTotals();
+    });
+}
 
     function calculateTotals() {
         let totalAmount = 0;
@@ -211,6 +220,7 @@ if (document.getElementById("transaction-form")) {
     const items = [];
     document.querySelectorAll(".item-row").forEach(row => {
         items.push({
+            category: row.querySelector(".item-category").value,
             itemName: row.querySelector(".item-name").value,
             quantity: row.querySelector(".quantity").value,
             purchasePrice: row.querySelector(".purchase-price").value,
@@ -248,7 +258,7 @@ if (document.getElementById("transaction-form")) {
     upiRow.style.display = data.paymentMode === "UPI" ? "table-row" : "none";
     
     // Build the bill with smaller font sizes for thermal printer
-    preview.innerHTML = `
+     preview.innerHTML = `
         <div class="bill-header">
             <h3>${data.storeName}</h3>
             <p class="store-info-bill">Gram Panchayath Complex, Dichpally Busstand - 503174</p>
@@ -264,6 +274,7 @@ if (document.getElementById("transaction-form")) {
         <table class="bill-items">
             <thead>
                 <tr>
+                    <th>Category</th>
                     <th>Item</th>
                     <th>Qty</th>
                     <th>Price</th>
@@ -273,6 +284,7 @@ if (document.getElementById("transaction-form")) {
             <tbody>
                 ${data.items.map(item => `
                     <tr>
+                        <td>${item.category}</td>
                         <td>${item.itemName}</td>
                         <td>${item.quantity}</td>
                         <td>₹${item.salePrice}</td>
@@ -282,26 +294,26 @@ if (document.getElementById("transaction-form")) {
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="3"><strong>Total Amount</strong></td>
+                    <td colspan="4"><strong>Total Amount</strong></td>
                     <td><strong>₹${data.totalAmount}</strong></td>
                 </tr>
                 <tr>
-                    <td colspan="3"><strong>Payment Mode</strong></td>
+                    <td colspan="4"><strong>Payment Mode</strong></td>
                     <td><strong>${data.paymentMode}</strong></td>
                 </tr>
                 ${data.paymentMode === "Cash" ? `
                 <tr>
-                    <td colspan="3"><strong>Amount Received</strong></td>
+                    <td colspan="4"><strong>Amount Received</strong></td>
                     <td><strong>₹${document.getElementById('amount-received').value || data.totalAmount}</strong></td>
                 </tr>
                 <tr>
-                    <td colspan="3"><strong>Change Given</strong></td>
+                    <td colspan="4"><strong>Change Given</strong></td>
                     <td><strong>₹${document.getElementById('change-amount').value || '0.00'}</strong></td>
                 </tr>
                 ` : ''}
                 ${data.paymentMode === "UPI" ? `
                 <tr id="upi-qr-row">
-                    <td colspan="4" style="text-align:center; padding:8px 0;">
+                    <td colspan="5" style="text-align:center; padding:8px 0;">
                         <div style="margin: 0 auto; width: fit-content;">
                             <h4 style="font-size:12px; margin:5px 0;">Scan to Pay via UPI</h4>
                             <img src="upi-qr.png" alt="UPI QR Code" style="width:120px; height:120px;">
