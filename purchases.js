@@ -8,8 +8,6 @@ let purchaseChart = null;
 let currentPeriod = 'monthly';
 let currentPurchaseId = null;
 
-const INVENTORY_KEY = 'rkFashionsInventory';
-
 // DOM Elements
 const elements = {
     // Summary cards
@@ -412,23 +410,6 @@ function renderChart() {
     });
 }
 
-function updateInventory(purchaseData) {
-    let inventory = JSON.parse(localStorage.getItem(INVENTORY_KEY)) || {};
-    
-    purchaseData.items.forEach(item => {
-        if (!inventory[item.name]) {
-            inventory[item.name] = {
-                quantity: 0,
-                purchasePrice: item.price,
-                category: item.category || 'Other' // Add category if available
-            };
-        }
-        inventory[item.name].quantity += parseFloat(item.quantity);
-    });
-    
-    localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory));
-}
-
 function groupPurchasesByPeriod() {
     const groups = [];
     const now = new Date();
@@ -776,16 +757,6 @@ function addPurchaseItem(itemData = {}) {
     itemRow.id = itemId;
     itemRow.innerHTML = `
         <div class="form-group">
-            <label for="${itemId}-category">Category</label>
-            <select id="${itemId}-category" class="item-category">
-                <option value="Men" ${itemData.category === 'Men' ? 'selected' : ''}>Men</option>
-                <option value="Women" ${itemData.category === 'Women' ? 'selected' : ''}>Women</option>
-                <option value="Kids" ${itemData.category === 'Kids' ? 'selected' : ''}>Kids</option>
-                <option value="Accessories" ${itemData.category === 'Accessories' ? 'selected' : ''}>Accessories</option>
-                <option value="Other" ${itemData.category === 'Other' ? 'selected' : ''}>Other</option>
-            </select>
-        </div>
-        <div class="form-group">
             <label for="${itemId}-name">Item Name</label>
             <input type="text" id="${itemId}-name" class="item-name" value="${itemData.name || ''}" required>
         </div>
@@ -868,11 +839,10 @@ async function handlePurchaseSubmit(e) {
     elements.savePurchase.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     
     // Prepare items data
-   const items = [];
+    const items = [];
     document.querySelectorAll('.item-row').forEach(row => {
         items.push({
             name: row.querySelector('.item-name').value,
-            category: row.querySelector('.item-category').value,
             quantity: parseFloat(row.querySelector('.item-quantity').value),
             price: parseFloat(row.querySelector('.item-price').value)
         });
@@ -1029,8 +999,6 @@ function savePurchase(purchaseData) {
         body: JSON.stringify(purchaseData)
     })
     .then(() => {
-        // Update inventory
-        updateInventory(purchaseData);
         // Update local data
         if (isNew) {
             allPurchases.push(purchaseData);
