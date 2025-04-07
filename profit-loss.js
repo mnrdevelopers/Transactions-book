@@ -20,9 +20,7 @@ const elements = {
     totalExpenses: document.getElementById('total-expenses'),
     netProfit: document.getElementById('net-profit'),
     breakdownBody: document.getElementById('breakdownBody'),
-    loadingOverlay: document.getElementById('loading-overlay'),
-    exportExcel: document.getElementById('export-excel'),
-    exportPdf: document.getElementById('export-pdf')
+    loadingOverlay: document.getElementById('loading-overlay')
 };
 
 // Initialize the page
@@ -56,10 +54,6 @@ function setupEventListeners() {
     // Date range changes
     elements.startDate.addEventListener('change', loadAllData);
     elements.endDate.addEventListener('change', loadAllData);
-
-     // Export buttons
-    elements.exportExcel.addEventListener('click', exportToExcel);
-    elements.exportPdf.addEventListener('click', exportToPDF);
 }
 
 function updateDateRangeByPeriod() {
@@ -242,53 +236,12 @@ function processAndDisplayData() {
     elements.grossProfit.textContent = `₹${totalProfit.toFixed(2)}`;
     elements.totalExpenses.textContent = `₹${totalExpenses.toFixed(2)}`;
     elements.netProfit.textContent = `₹${netProfit.toFixed(2)}`;
-
-    allData = {
-        summary: {
-            totalSales,
-            totalProfit,
-            totalPurchases,
-            totalMaintenance,
-            totalExpenses: totalPurchases + totalMaintenance,
-            netProfit: totalProfit - (totalPurchases + totalMaintenance)
-        },
-        breakdown: prepareBreakdownData(filteredSales, filteredPurchases, filteredMaintenance),
-        transactions: filteredSales // or prepare more detailed transaction data
-    };
     
     // Prepare data for charts
     prepareChartData(filteredSales, filteredPurchases, filteredMaintenance);
     
     // Prepare detailed breakdown
     prepareDetailedBreakdown(filteredSales, filteredPurchases, filteredMaintenance);
-}
-
-function prepareBreakdownData(salesData, purchaseData, maintenanceData) {
-    const totalSales = salesData.reduce((sum, s) => sum + s.totalAmount, 0);
-    const totalProfit = salesData.reduce((sum, s) => sum + s.totalProfit, 0);
-    const totalPurchases = purchaseData.reduce((sum, p) => sum + p.totalAmount, 0);
-    const totalMaintenance = maintenanceData.reduce((sum, m) => sum + m.amount, 0);
-    const totalExpenses = totalPurchases + totalMaintenance;
-    
-    // Group maintenance by category
-    const maintenanceByCategory = {};
-    maintenanceData.forEach(m => {
-        if (!maintenanceByCategory[m.category]) {
-            maintenanceByCategory[m.category] = 0;
-        }
-        maintenanceByCategory[m.category] += m.amount;
-    });
-    
-    const breakdown = [];
-
-     breakdown.push({
-        category: 'Total Sales',
-        amount: totalSales,
-        percentage: 100,
-        comparison: 0
-    });
-
-     return breakdown;
 }
 
 function prepareChartData(salesData, purchaseData, maintenanceData) {
@@ -638,242 +591,3 @@ function showLoading() {
 function hideLoading() {
     elements.loadingOverlay.style.display = 'none';
             }
-
-function exportToExcel() {
-    showLoading();
-    
-    try {
-        // Prepare the data
-        const startDate = elements.startDate.value;
-        const endDate = elements.endDate.value;
-        const workbook = XLSX.utils.book_new();
-        
-        // Create Summary sheet
-        const summaryData = [
-            ["Profit & Loss Report", "", "", ""],
-            [`Period: ${startDate} to ${endDate}`, "", "", ""],
-            ["Generated on:", new Date().toLocaleDateString(), "", ""],
-            ["", "", "", ""],
-            ["Summary", "", "", ""],
-            ["Metric", "Amount (₹)", "Percentage", "Comparison"],
-            ["Total Sales", allData.summary.totalSales, "100%", "0%"],
-            ["Gross Profit", allData.summary.totalProfit, 
-             (allData.summary.totalProfit/allData.summary.totalSales*100).toFixed(1)+"%", "0%"],
-            ["Net Profit", allData.summary.netProfit, 
-             (allData.summary.netProfit/allData.summary.totalSales*100).toFixed(1)+"%", "0%"],
-            ["", "", "", ""],
-            ["Detailed Breakdown", "", "", ""],
-            ["Category", "Amount (₹)", "Percentage", "Comparison"]
-        ];
-        
-        // Add breakdown data
-        allData.breakdown.forEach(item => {
-            summaryData.push([
-                item.category,
-                item.amount,
-                item.percentage.toFixed(1)+"%",
-                item.comparison+"%"
-            ]);
-        });
-        
-        const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-        XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
-        
-        // Create Transactions sheet
-        const transactionsData = prepareTransactionsSheetData();
-        const transactionsSheet = XLSX.utils.json_to_sheet(transactionsData);
-        XLSX.utils.book_append_sheet(workbook, transactionsSheet, "Transactions");
-        
-        // Export the file
-        XLSX.writeFile(workbook, `Profit_Loss_${startDate}_to_${endDate}.xlsx`);
-        
-    } catch (error) {
-        console.error("Excel export error:", error);
-        alert("Failed to generate Excel file");
-    } finally {
-        hideLoading();
-    }
-}
-
-function exportToPDF() {
-    showLoading();
-    
-    try {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const startDate = elements.startDate.value;
-        const endDate = elements.endDate.value;
-        
-        // Add title
-        doc.setFontSize(18);
-        doc.text("Profit & Loss Report", 105, 15, { align: 'center' });
-        doc.setFontSize(12);
-        doc.text(`Period: ${startDate} to ${endDate}`, 105, 22, { align: 'center' });
-        doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 28, { align: 'center' });
-        
-        // Add summary section
-        doc.setFontSize(14);
-        doc.text("Summary", 14, 40);
-        doc.setFontSize(10);
-        
-        // Summary table
-        doc.autoTable({
-            startY: 45,
-            head: [['Metric', 'Amount (₹)', 'Percentage', 'Comparison']],
-            body: [
-                ['Total Sales', formatCurrency(allData.summary.totalSales), '100%', '0%'],
-                ['Gross Profit', formatCurrency(allData.summary.totalProfit), 
-                 (allData.summary.totalProfit/allData.summary.totalSales*100).toFixed(1)+'%', '0%'],
-                ['Net Profit', formatCurrency(allData.summary.netProfit), 
-                 (allData.summary.netProfit/allData.summary.totalSales*100).toFixed(1)+'%', '0%']
-            ],
-            styles: { fontSize: 10 },
-            headStyles: { fillColor: [78, 115, 223] }
-        });
-        
-        // Detailed breakdown
-        doc.setFontSize(14);
-        doc.text("Detailed Breakdown", 14, doc.lastAutoTable.finalY + 15);
-        doc.setFontSize(10);
-        
-        const breakdownBody = allData.breakdown.map(item => [
-            item.category,
-            formatCurrency(item.amount),
-            item.percentage.toFixed(1)+'%',
-            item.comparison+'%'
-        ]);
-        
-        doc.autoTable({
-            startY: doc.lastAutoTable.finalY + 20,
-            head: [['Category', 'Amount (₹)', 'Percentage', 'Comparison']],
-            body: breakdownBody,
-            styles: { fontSize: 10 },
-            headStyles: { fillColor: [78, 115, 223] },
-            alternateRowStyles: { fillColor: [240, 240, 240] }
-        });
-        
-        // Save the PDF
-        doc.save(`Profit_Loss_${startDate}_to_${endDate}.pdf`);
-        
-    } catch (error) {
-        console.error("PDF export error:", error);
-        alert("Failed to generate PDF");
-    } finally {
-        hideLoading();
-    }
-}
-
-function formatCurrency(amount) {
-    return '₹' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
-}
-
-function prepareExportData() {
-    const startDate = new Date(elements.startDate.value);
-    const endDate = new Date(elements.endDate.value);
-    endDate.setHours(23, 59, 59, 999);
-    
-    // Filter data by date range
-    const filteredSales = allSalesData.filter(t => {
-        const transDate = new Date(t.date);
-        return transDate >= startDate && transDate <= endDate;
-    });
-    
-    const filteredPurchases = allPurchaseData.filter(p => {
-        const purchaseDate = new Date(p.date);
-        return purchaseDate >= startDate && purchaseDate <= endDate;
-    });
-    
-    const filteredMaintenance = allMaintenanceData.filter(m => {
-        const maintDate = new Date(m.date);
-        return maintDate >= startDate && maintDate <= endDate;
-    });
-    
-    // Calculate totals
-    const totalSales = filteredSales.reduce((sum, t) => sum + t.totalAmount, 0);
-    const totalProfit = filteredSales.reduce((sum, t) => sum + t.totalProfit, 0);
-    const totalPurchases = filteredPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
-    
-    // Group maintenance by category
-    const maintenanceByCategory = {};
-    filteredMaintenance.forEach(m => {
-        if (!maintenanceByCategory[m.category]) {
-            maintenanceByCategory[m.category] = 0;
-        }
-        maintenanceByCategory[m.category] += m.amount;
-    });
-    
-    const totalMaintenance = filteredMaintenance.reduce((sum, m) => sum + m.amount, 0);
-    const totalExpenses = totalPurchases + totalMaintenance;
-    const netProfit = totalProfit - totalExpenses;
-    
-    // Prepare detailed breakdown
-    const breakdown = [];
-    
-    // Sales section
-    breakdown.push({
-        category: 'Total Sales',
-        amount: totalSales,
-        percentage: 100,
-        comparison: 0
-    });
-    
-    breakdown.push({
-        category: 'Cost of Goods Sold',
-        amount: totalSales - totalProfit,
-        percentage: (totalSales - totalProfit) / totalSales * 100,
-        comparison: 0
-    });
-    
-    breakdown.push({
-        category: 'Gross Profit',
-        amount: totalProfit,
-        percentage: totalProfit / totalSales * 100,
-        comparison: 0
-    });
-    
-    // Purchases
-    breakdown.push({
-        category: 'Inventory Purchases',
-        amount: totalPurchases,
-        percentage: totalPurchases / totalExpenses * 100,
-        comparison: 0
-    });
-    
-    // Maintenance categories
-    for (const [category, amount] of Object.entries(maintenanceByCategory)) {
-        breakdown.push({
-            category: `${category} Maintenance`,
-            amount: amount,
-            percentage: amount / totalExpenses * 100,
-            comparison: 0
-        });
-    }
-    
-    // Totals
-    breakdown.push({
-        category: 'Total Expenses',
-        amount: totalExpenses,
-        percentage: totalExpenses / totalSales * 100,
-        comparison: 0
-    });
-    
-    breakdown.push({
-        category: 'Net Profit',
-        amount: netProfit,
-        percentage: netProfit / totalSales * 100,
-        comparison: 0
-    });
-    
-    return {
-        summary: {
-            totalSales,
-            totalProfit,
-            totalPurchases,
-            totalMaintenance,
-            totalExpenses,
-            netProfit
-        },
-        breakdown,
-        maintenanceByCategory
-    };
-}
