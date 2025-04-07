@@ -242,12 +242,53 @@ function processAndDisplayData() {
     elements.grossProfit.textContent = `₹${totalProfit.toFixed(2)}`;
     elements.totalExpenses.textContent = `₹${totalExpenses.toFixed(2)}`;
     elements.netProfit.textContent = `₹${netProfit.toFixed(2)}`;
+
+    allData = {
+        summary: {
+            totalSales,
+            totalProfit,
+            totalPurchases,
+            totalMaintenance,
+            totalExpenses: totalPurchases + totalMaintenance,
+            netProfit: totalProfit - (totalPurchases + totalMaintenance)
+        },
+        breakdown: prepareBreakdownData(filteredSales, filteredPurchases, filteredMaintenance),
+        transactions: filteredSales // or prepare more detailed transaction data
+    };
     
     // Prepare data for charts
     prepareChartData(filteredSales, filteredPurchases, filteredMaintenance);
     
     // Prepare detailed breakdown
     prepareDetailedBreakdown(filteredSales, filteredPurchases, filteredMaintenance);
+}
+
+function prepareBreakdownData(salesData, purchaseData, maintenanceData) {
+    const totalSales = salesData.reduce((sum, s) => sum + s.totalAmount, 0);
+    const totalProfit = salesData.reduce((sum, s) => sum + s.totalProfit, 0);
+    const totalPurchases = purchaseData.reduce((sum, p) => sum + p.totalAmount, 0);
+    const totalMaintenance = maintenanceData.reduce((sum, m) => sum + m.amount, 0);
+    const totalExpenses = totalPurchases + totalMaintenance;
+    
+    // Group maintenance by category
+    const maintenanceByCategory = {};
+    maintenanceData.forEach(m => {
+        if (!maintenanceByCategory[m.category]) {
+            maintenanceByCategory[m.category] = 0;
+        }
+        maintenanceByCategory[m.category] += m.amount;
+    });
+    
+    const breakdown = [];
+
+     breakdown.push({
+        category: 'Total Sales',
+        amount: totalSales,
+        percentage: 100,
+        comparison: 0
+    });
+
+     return breakdown;
 }
 
 function prepareChartData(salesData, purchaseData, maintenanceData) {
