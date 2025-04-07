@@ -10,6 +10,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbzlL_nSw4bTq_RkeRvEm42A
 
 // DOM Elements
 const elements = {
+    dateInput: document.getElementById('date'),
     maintenanceForm: document.getElementById('maintenance-form'),
     categorySelect: document.getElementById('category'),
     vendorSelect: document.getElementById('vendor'),
@@ -46,6 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set default date to today
     const today = new Date().toISOString().split('T')[0];
     elements.reportDate.value = today;
+    elements.dateInput.value = today;
     
     // Load initial data
     loadCategories();
@@ -266,14 +268,15 @@ async function addMaintenanceRecord(e) {
     showLoading();
     
     const record = {
-        action: 'addMaintenance',
-        category: elements.categorySelect.value,
-        description: elements.descriptionInput.value,
-        vendor: elements.vendorSelect.value,
-        amount: elements.amountInput.value,
-        paymentMethod: elements.paymentMethodSelect.value,
-        notes: elements.notesTextarea.value
-    };
+    action: 'addMaintenance',
+    date: elements.dateInput.value, // Add this line
+    category: elements.categorySelect.value,
+    description: elements.descriptionInput.value,
+    vendor: elements.vendorSelect.value,
+    amount: elements.amountInput.value,
+    paymentMethod: elements.paymentMethodSelect.value,
+    notes: elements.notesTextarea.value
+};
     
     try {
         const response = await fetch(API_URL, {
@@ -311,6 +314,10 @@ async function openEditModal(transactionId) {
     elements.editForm.innerHTML = `
         <input type="hidden" id="edit-id" value="${transaction.TransactionID}">
         <div class="form-row">
+        <div class="form-group">
+    <label for="edit-date">Date</label>
+    <input type="date" id="edit-date" value="${transaction.Date.toISOString().split('T')[0]}" required>
+</div>
             <div class="form-group">
                 <label for="edit-category">Category</label>
                 <select id="edit-category" required>
@@ -424,16 +431,17 @@ async function updateMaintenanceRecord(e) {
     
     const transactionId = document.getElementById('edit-id').value;
     const updatedData = {
-        action: 'updateMaintenance',
-        id: transactionId,
-        category: document.getElementById('edit-category').value,
-        vendor: document.getElementById('edit-vendor').value,
-        description: document.getElementById('edit-description').value,
-        amount: document.getElementById('edit-amount').value,
-        paymentMethod: document.getElementById('edit-payment-method').value,
-        status: document.getElementById('edit-status').value,
-        notes: document.getElementById('edit-notes').value
-    };
+    action: 'updateMaintenance',
+    id: transactionId,
+    date: document.getElementById('edit-date').value, // Add this line
+    category: document.getElementById('edit-category').value,
+    vendor: document.getElementById('edit-vendor').value,
+    description: document.getElementById('edit-description').value,
+    amount: document.getElementById('edit-amount').value,
+    paymentMethod: document.getElementById('edit-payment-method').value,
+    status: document.getElementById('edit-status').value,
+    notes: document.getElementById('edit-notes').value
+};
     
     try {
         const response = await fetch(API_URL, {
