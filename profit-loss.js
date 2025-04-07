@@ -20,7 +20,9 @@ const elements = {
     totalExpenses: document.getElementById('total-expenses'),
     netProfit: document.getElementById('net-profit'),
     breakdownBody: document.getElementById('breakdownBody'),
-    loadingOverlay: document.getElementById('loading-overlay')
+    loadingOverlay: document.getElementById('loading-overlay'),
+    exportExcel: document.getElementById('export-excel'),
+    exportPdf: document.getElementById('export-pdf')
 };
 
 // Initialize the page
@@ -54,6 +56,10 @@ function setupEventListeners() {
     // Date range changes
     elements.startDate.addEventListener('change', loadAllData);
     elements.endDate.addEventListener('change', loadAllData);
+
+     // Export buttons
+    elements.exportExcel.addEventListener('click', exportToExcel);
+    elements.exportPdf.addEventListener('click', exportToPDF);
 }
 
 function updateDateRangeByPeriod() {
@@ -591,3 +597,226 @@ function showLoading() {
 function hideLoading() {
     elements.loadingOverlay.style.display = 'none';
             }
+
+async function exportToExcel() {
+    showLoading();
+    
+    try {
+        // Prepare data for export
+        const startDate = elements.startDate.value;
+        const endDate = elements.endDate.value;
+        const period = currentPeriod;
+        
+        // Get the current chart data as base64 images
+        const profitLossChartURL = profitLossChart.toBase64Image();
+        const expenseChartURL = expenseChart.toBase64Image();
+        
+        // Prepare detailed data
+        const detailedData = prepareExportData();
+        
+        // Call backend to generate Excel
+        const response = await fetch(`${SALES_API_URL}?action=exportProfitLoss`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                type: 'excel',
+                startDate,
+                endDate,
+                period,
+                profitLossChartURL,
+                expenseChartURL,
+                data: detailedData
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to generate Excel report');
+        }
+        
+        // Download the file
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Profit_Loss_Report_${startDate}_to_${endDate}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+    } catch (error) {
+        console.error('Error exporting to Excel:', error);
+        alert('Failed to export to Excel. Please try again.');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function exportToPDF() {
+    showLoading();
+    
+    try {
+        // Prepare data for export
+        const startDate = elements.startDate.value;
+        const endDate = elements.endDate.value;
+        const period = currentPeriod;
+        
+        // Get the current chart data as base64 images
+        const profitLossChartURL = profitLossChart.toBase64Image();
+        const expenseChartURL = expenseChart.toBase64Image();
+        
+        // Prepare detailed data
+        const detailedData = prepareExportData();
+        
+        // Call backend to generate PDF
+        const response = await fetch(`${SALES_API_URL}?action=exportProfitLoss`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                type: 'pdf',
+                startDate,
+                endDate,
+                period,
+                profitLossChartURL,
+                expenseChartURL,
+                data: detailedData
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to generate PDF report');
+        }
+        
+        // Download the file
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Profit_Loss_Report_${startDate}_to_${endDate}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+    } catch (error) {
+        console.error('Error exporting to PDF:', error);
+        alert('Failed to export to PDF. Please try again.');
+    } finally {
+        hideLoading();
+    }
+}
+
+function prepareExportData() {
+    const startDate = new Date(elements.startDate.value);
+    const endDate = new Date(elements.endDate.value);
+    endDate.setHours(23, 59, 59, 999);
+    
+    // Filter data by date range
+    const filteredSales = allSalesData.filter(t => {
+        const transDate = new Date(t.date);
+        return transDate >= startDate && transDate <= endDate;
+    });
+    
+    const filteredPurchases = allPurchaseData.filter(p => {
+        const purchaseDate = new Date(p.date);
+        return purchaseDate >= startDate && purchaseDate <= endDate;
+    });
+    
+    const filteredMaintenance = allMaintenanceData.filter(m => {
+        const maintDate = new Date(m.date);
+        return maintDate >= startDate && maintDate <= endDate;
+    });
+    
+    // Calculate totals
+    const totalSales = filteredSales.reduce((sum, t) => sum + t.totalAmount, 0);
+    const totalProfit = filteredSales.reduce((sum, t) => sum + t.totalProfit, 0);
+    const totalPurchases = filteredPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+    
+    // Group maintenance by category
+    const maintenanceByCategory = {};
+    filteredMaintenance.forEach(m => {
+        if (!maintenanceByCategory[m.category]) {
+            maintenanceByCategory[m.category] = 0;
+        }
+        maintenanceByCategory[m.category] += m.amount;
+    });
+    
+    const totalMaintenance = filteredMaintenance.reduce((sum, m) => sum + m.amount, 0);
+    const totalExpenses = totalPurchases + totalMaintenance;
+    const netProfit = totalProfit - totalExpenses;
+    
+    // Prepare detailed breakdown
+    const breakdown = [];
+    
+    // Sales section
+    breakdown.push({
+        category: 'Total Sales',
+        amount: totalSales,
+        percentage: 100,
+        comparison: 0
+    });
+    
+    breakdown.push({
+        category: 'Cost of Goods Sold',
+        amount: totalSales - totalProfit,
+        percentage: (totalSales - totalProfit) / totalSales * 100,
+        comparison: 0
+    });
+    
+    breakdown.push({
+        category: 'Gross Profit',
+        amount: totalProfit,
+        percentage: totalProfit / totalSales * 100,
+        comparison: 0
+    });
+    
+    // Purchases
+    breakdown.push({
+        category: 'Inventory Purchases',
+        amount: totalPurchases,
+        percentage: totalPurchases / totalExpenses * 100,
+        comparison: 0
+    });
+    
+    // Maintenance categories
+    for (const [category, amount] of Object.entries(maintenanceByCategory)) {
+        breakdown.push({
+            category: `${category} Maintenance`,
+            amount: amount,
+            percentage: amount / totalExpenses * 100,
+            comparison: 0
+        });
+    }
+    
+    // Totals
+    breakdown.push({
+        category: 'Total Expenses',
+        amount: totalExpenses,
+        percentage: totalExpenses / totalSales * 100,
+        comparison: 0
+    });
+    
+    breakdown.push({
+        category: 'Net Profit',
+        amount: netProfit,
+        percentage: netProfit / totalSales * 100,
+        comparison: 0
+    });
+    
+    return {
+        summary: {
+            totalSales,
+            totalProfit,
+            totalPurchases,
+            totalMaintenance,
+            totalExpenses,
+            netProfit
+        },
+        breakdown,
+        maintenanceByCategory
+    };
+}
