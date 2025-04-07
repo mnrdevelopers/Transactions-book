@@ -508,9 +508,25 @@ async function loadReport() {
         const response = await fetch(`${API_URL}?action=getMaintenanceReports&period=${currentPeriod}&date=${selectedDate}`);
         const data = await response.json();
         
+        console.log('Report API Response:', data); // Debug log
+        
         if (data.status === 'success') {
-            updateSummaryCards(data.data.summary);
-            renderChart(data.data.chartData);
+            console.log('Summary Data:', data.data.summary); // Debug log
+            console.log('Chart Data:', data.data.chartData); // Debug log
+            
+            if (data.data.summary) {
+                updateSummaryCards(data.data.summary);
+            } else {
+                console.error('No summary data in response');
+            }
+            
+            if (data.data.chartData) {
+                renderChart(data.data.chartData);
+            } else {
+                console.error('No chart data in response');
+            }
+        } else {
+            console.error('API Error:', data.message);
         }
     } catch (error) {
         console.error('Error loading report:', error);
@@ -520,14 +536,30 @@ async function loadReport() {
 
 // Update summary cards
 function updateSummaryCards(summary) {
-    elements.totalSpent.textContent = `₹${summary.totalSpent.toFixed(2)}`;
-    elements.totalTransactions.textContent = summary.transactionCount;
+    // Ensure we have a valid summary object
+    if (!summary) {
+        console.error('No summary data provided');
+        return;
+    }
+
+    // Safely handle numeric values
+    const totalSpent = parseFloat(summary.totalSpent) || 0;
+    const transactionCount = parseInt(summary.transactionCount) || 0;
+    const topCategoryAmount = parseFloat(summary.topCategoryAmount) || 0;
+
+    // Update the DOM elements
+    elements.totalSpent.textContent = `₹${totalSpent.toFixed(2)}`;
+    elements.totalTransactions.textContent = transactionCount;
     elements.topCategory.textContent = summary.topCategory || '-';
-    elements.topCategoryAmount.textContent = summary.topCategoryAmount ? `₹${summary.topCategoryAmount.toFixed(2)}` : '-';
+    elements.topCategoryAmount.textContent = topCategoryAmount ? `₹${topCategoryAmount.toFixed(2)}` : '-';
     
-    // These would be calculated in a real implementation
-    elements.spentChange.textContent = '0%';
-    elements.transactionsChange.textContent = '0%';
+    // Handle percentage changes if provided
+    if (summary.spentChange !== undefined) {
+        elements.spentChange.textContent = `${summary.spentChange}%`;
+    }
+    if (summary.transactionsChange !== undefined) {
+        elements.transactionsChange.textContent = `${summary.transactionsChange}%`;
+    }
 }
 
 // Render chart
