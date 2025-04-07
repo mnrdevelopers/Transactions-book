@@ -598,116 +598,132 @@ function hideLoading() {
     elements.loadingOverlay.style.display = 'none';
             }
 
-async function exportToExcel() {
+function exportToExcel() {
     showLoading();
     
     try {
-        // Prepare data for export
+        // Prepare the data
         const startDate = elements.startDate.value;
         const endDate = elements.endDate.value;
-        const period = currentPeriod;
+        const workbook = XLSX.utils.book_new();
         
-        // Get the current chart data as base64 images
-        const profitLossChartURL = profitLossChart.toBase64Image();
-        const expenseChartURL = expenseChart.toBase64Image();
+        // Create Summary sheet
+        const summaryData = [
+            ["Profit & Loss Report", "", "", ""],
+            [`Period: ${startDate} to ${endDate}`, "", "", ""],
+            ["Generated on:", new Date().toLocaleDateString(), "", ""],
+            ["", "", "", ""],
+            ["Summary", "", "", ""],
+            ["Metric", "Amount (₹)", "Percentage", "Comparison"],
+            ["Total Sales", allData.summary.totalSales, "100%", "0%"],
+            ["Gross Profit", allData.summary.totalProfit, 
+             (allData.summary.totalProfit/allData.summary.totalSales*100).toFixed(1)+"%", "0%"],
+            ["Net Profit", allData.summary.netProfit, 
+             (allData.summary.netProfit/allData.summary.totalSales*100).toFixed(1)+"%", "0%"],
+            ["", "", "", ""],
+            ["Detailed Breakdown", "", "", ""],
+            ["Category", "Amount (₹)", "Percentage", "Comparison"]
+        ];
         
-        // Prepare detailed data
-        const detailedData = prepareExportData();
-        
-        // Call backend to generate Excel
-        const response = await fetch(`${SALES_API_URL}?action=exportProfitLoss`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                type: 'excel',
-                startDate,
-                endDate,
-                period,
-                profitLossChartURL,
-                expenseChartURL,
-                data: detailedData
-            })
+        // Add breakdown data
+        allData.breakdown.forEach(item => {
+            summaryData.push([
+                item.category,
+                item.amount,
+                item.percentage.toFixed(1)+"%",
+                item.comparison+"%"
+            ]);
         });
         
-        if (!response.ok) {
-            throw new Error('Failed to generate Excel report');
-        }
+        const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+        XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
         
-        // Download the file
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Profit_Loss_Report_${startDate}_to_${endDate}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        // Create Transactions sheet
+        const transactionsData = prepareTransactionsSheetData();
+        const transactionsSheet = XLSX.utils.json_to_sheet(transactionsData);
+        XLSX.utils.book_append_sheet(workbook, transactionsSheet, "Transactions");
+        
+        // Export the file
+        XLSX.writeFile(workbook, `Profit_Loss_${startDate}_to_${endDate}.xlsx`);
         
     } catch (error) {
-        console.error('Error exporting to Excel:', error);
-        alert('Failed to export to Excel. Please try again.');
+        console.error("Excel export error:", error);
+        alert("Failed to generate Excel file");
     } finally {
         hideLoading();
     }
 }
 
-async function exportToPDF() {
+function exportToPDF() {
     showLoading();
     
     try {
-        // Prepare data for export
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
         const startDate = elements.startDate.value;
         const endDate = elements.endDate.value;
-        const period = currentPeriod;
         
-        // Get the current chart data as base64 images
-        const profitLossChartURL = profitLossChart.toBase64Image();
-        const expenseChartURL = expenseChart.toBase64Image();
+        // Add title
+        doc.setFontSize(18);
+        doc.text("Profit & Loss Report", 105, 15, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text(`Period: ${startDate} to ${endDate}`, 105, 22, { align: 'center' });
+        doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 28, { align: 'center' });
         
-        // Prepare detailed data
-        const detailedData = prepareExportData();
+        // Add summary section
+        doc.setFontSize(14);
+        doc.text("Summary", 14, 40);
+        doc.setFontSize(10);
         
-        // Call backend to generate PDF
-        const response = await fetch(`${SALES_API_URL}?action=exportProfitLoss`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                type: 'pdf',
-                startDate,
-                endDate,
-                period,
-                profitLossChartURL,
-                expenseChartURL,
-                data: detailedData
-            })
+        // Summary table
+        doc.autoTable({
+            startY: 45,
+            head: [['Metric', 'Amount (₹)', 'Percentage', 'Comparison']],
+            body: [
+                ['Total Sales', formatCurrency(allData.summary.totalSales), '100%', '0%'],
+                ['Gross Profit', formatCurrency(allData.summary.totalProfit), 
+                 (allData.summary.totalProfit/allData.summary.totalSales*100).toFixed(1)+'%', '0%'],
+                ['Net Profit', formatCurrency(allData.summary.netProfit), 
+                 (allData.summary.netProfit/allData.summary.totalSales*100).toFixed(1)+'%', '0%']
+            ],
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: [78, 115, 223] }
         });
         
-        if (!response.ok) {
-            throw new Error('Failed to generate PDF report');
-        }
+        // Detailed breakdown
+        doc.setFontSize(14);
+        doc.text("Detailed Breakdown", 14, doc.lastAutoTable.finalY + 15);
+        doc.setFontSize(10);
         
-        // Download the file
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Profit_Loss_Report_${startDate}_to_${endDate}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        const breakdownBody = allData.breakdown.map(item => [
+            item.category,
+            formatCurrency(item.amount),
+            item.percentage.toFixed(1)+'%',
+            item.comparison+'%'
+        ]);
+        
+        doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 20,
+            head: [['Category', 'Amount (₹)', 'Percentage', 'Comparison']],
+            body: breakdownBody,
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: [78, 115, 223] },
+            alternateRowStyles: { fillColor: [240, 240, 240] }
+        });
+        
+        // Save the PDF
+        doc.save(`Profit_Loss_${startDate}_to_${endDate}.pdf`);
         
     } catch (error) {
-        console.error('Error exporting to PDF:', error);
-        alert('Failed to export to PDF. Please try again.');
+        console.error("PDF export error:", error);
+        alert("Failed to generate PDF");
     } finally {
         hideLoading();
     }
+}
+
+function formatCurrency(amount) {
+    return '₹' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
 }
 
 function prepareExportData() {
