@@ -173,7 +173,6 @@ async function loadVendors() {
 // Load transactions from backend
 async function loadTransactions() {
     try {
-        
         const response = await fetch(`${API_URL}?action=getMaintenance`);
         const data = await response.json();
         
@@ -181,7 +180,10 @@ async function loadTransactions() {
             allTransactions = data.data.map(t => ({
                 ...t,
                 Date: new Date(t.Date)
-            }));
+            }))
+            // Sort transactions by date (newest first)
+            .sort((a, b) => b.Date - a.Date);
+            
             filteredTransactions = [...allTransactions];
             totalPages = Math.ceil(filteredTransactions.length / PAGE_SIZE);
             renderTransactions();
@@ -210,7 +212,9 @@ function filterTransactions() {
             (transaction.Notes && transaction.Notes.toLowerCase().includes(searchTerm));
         
         return matchesCategory && matchesVendor && matchesStatus && matchesSearch;
-    });
+    })
+    // Maintain sorting after filtering
+    .sort((a, b) => b.Date - a.Date);
     
     currentPage = 1;
     totalPages = Math.ceil(filteredTransactions.length / PAGE_SIZE);
