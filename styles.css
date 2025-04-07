@@ -351,7 +351,7 @@ button[type="submit"]:hover {
 }
 
 #transactions-table td {
-    padding: 10px 12px;
+    padding: 15px 5px;
     border-bottom: 1px solid #eee;
 }
 
