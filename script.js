@@ -231,7 +231,7 @@ if (document.getElementById("transaction-form")) {
     };
 }
     
-   function displayBillPreview(data) {
+  function displayBillPreview(data) {
     // Hide the template
     document.getElementById("bill-template").style.display = "none";
     
@@ -245,7 +245,7 @@ if (document.getElementById("transaction-form")) {
 
     // Force-show UPI row if needed
     const upiRow = document.getElementById("upi-qr-row");
-    upiRow.style.display = data.paymentMode === "UPI" ? "table-row" : "none";
+    upiRow.style.display = (data.paymentMode === "UPI" || data.paymentMode === "Cash+UPI") ? "table-row" : "none";
     
     // Build the bill with smaller font sizes for thermal printer
     preview.innerHTML = `
@@ -299,7 +299,21 @@ if (document.getElementById("transaction-form")) {
                     <td><strong>₹${document.getElementById('change-amount').value || '0.00'}</strong></td>
                 </tr>
                 ` : ''}
-                ${data.paymentMode === "UPI" ? `
+                ${data.paymentMode === "Cash+UPI" && data.paymentDetails ? `
+                <tr>
+                    <td colspan="3"><strong>Cash Paid</strong></td>
+                    <td><strong>₹${data.paymentDetails.cashAmount.toFixed(2)}</strong></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>UPI Paid</strong></td>
+                    <td><strong>₹${data.paymentDetails.upiAmount.toFixed(2)}</strong></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>Total Paid</strong></td>
+                    <td><strong>₹${(data.paymentDetails.cashAmount + data.paymentDetails.upiAmount).toFixed(2)}</strong></td>
+                </tr>
+                ` : ''}
+                ${(data.paymentMode === "UPI" || data.paymentMode === "Cash+UPI") ? `
                 <tr id="upi-qr-row">
                     <td colspan="4" style="text-align:center; padding:8px 0;">
                         <div style="margin: 0 auto; width: fit-content;">
@@ -418,6 +432,111 @@ function showSuccessMessage() {
 
 let pendingTransactionData = null;
 
+    function setupCashUPIModal() {
+    const modal = document.getElementById('cash-upi-modal');
+    const closeBtn = document.querySelector('#cash-upi-modal .close');
+    const cancelBtn = document.getElementById('cancel-cash-upi-payment');
+    const confirmBtn = document.getElementById('confirm-cash-upi-payment');
+    const cashAmount = document.getElementById('cash-amount');
+    const upiAmount = document.getElementById('upi-amount');
+    
+    // Close modal events
+    closeBtn.onclick = function() {
+        modal.style.display = 'none';
+    }
+    
+    cancelBtn.onclick = function() {
+        modal.style.display = 'none';
+    }
+    
+    // Calculate remaining amount when values change
+    cashAmount.addEventListener('input', calculateRemainingAmount);
+    upiAmount.addEventListener('input', calculateRemainingAmount);
+    
+    function calculateRemainingAmount() {
+        const cashVal = parseFloat(cashAmount.value) || 0;
+        const upiVal = parseFloat(upiAmount.value) || 0;
+        const totalAmount = parseFloat(document.getElementById('cash-upi-total-amount').value) || 0;
+        const remaining = totalAmount - (cashVal + upiVal);
+        
+        document.getElementById('remaining-amount').value = remaining.toFixed(2);
+        
+        // Highlight if remaining amount is positive (customer didn't pay enough)
+        const remainingField = document.getElementById('remaining-amount');
+        if (remaining > 0) {
+            remainingField.style.color = 'red';
+            remainingField.style.fontWeight = 'bold';
+        } else {
+            remainingField.style.color = 'green';
+            remainingField.style.fontWeight = 'normal';
+        }
+    }
+    
+    // Confirm payment
+    confirmBtn.onclick = function() {
+        const cashVal = parseFloat(cashAmount.value) || 0;
+        const upiVal = parseFloat(upiAmount.value) || 0;
+        const totalAmount = parseFloat(document.getElementById('cash-upi-total-amount').value) || 0;
+        
+        if ((cashVal + upiVal) < totalAmount) {
+            if (!confirm('Customer has paid less than the total amount. Are you sure you want to proceed?')) {
+                return;
+            }
+        }
+        
+        modal.style.display = 'none';
+        // Continue with form submission
+        submitTransactionAfterCashUPIPayment(cashVal, upiVal);
+    }
+}
+
+    function showCashUPIPaymentModal(totalAmount) {
+    const modal = document.getElementById('cash-upi-modal');
+    document.getElementById('cash-upi-total-amount').value = totalAmount;
+    document.getElementById('cash-amount').value = '';
+    document.getElementById('upi-amount').value = '';
+    document.getElementById('remaining-amount').value = totalAmount.toFixed(2);
+    modal.style.display = 'flex';
+    
+    // Focus on cash amount field
+    document.getElementById('cash-amount').focus();
+}
+
+// Add this function to handle submission after Cash+UPI payment
+function submitTransactionAfterCashUPIPayment(cashAmount, upiAmount) {
+    if (!pendingTransactionData) return;
+    
+    // Store the payment details
+    pendingTransactionData.paymentDetails = {
+        cashAmount: cashAmount,
+        upiAmount: upiAmount,
+        paymentMode: "Cash+UPI"
+    };
+    
+    // Show loading overlay
+    document.getElementById("loading-overlay").style.display = "flex";
+    
+    submitBill(pendingTransactionData)
+        .then(() => {
+            // Display the bill preview before showing success message
+            displayBillPreview(pendingTransactionData);
+            showSuccessMessage();
+        })
+        .catch(error => {
+            console.error("Submission failed:", error);
+            alert("Transaction submission failed. Please try again.");
+        })
+        .finally(() => {
+            // Hide loading overlay regardless of success/failure
+            document.getElementById("loading-overlay").style.display = "none";
+            pendingTransactionData = null;
+        });
+    
+    // Show print button
+    document.getElementById("print-bill").style.display = "block";
+}
+    
+
 // Modify the handleFormSubmit function
 function handleFormSubmit(e) {
     e.preventDefault();
@@ -436,11 +555,13 @@ function handleFormSubmit(e) {
     
     if (paymentMode === "Cash") {
         showCashPaymentModal(totalAmount);
+    } else if (paymentMode === "Cash+UPI") {
+        showCashUPIPaymentModal(totalAmount);
     } else {
         submitTransaction();
     }
 }
-
+    
 function submitTransactionAfterCashPayment() {
     if (!pendingTransactionData) return;
     
@@ -497,6 +618,7 @@ function submitTransaction() {
 
 // In the existing initialization code, add these:
 setupCashPaymentModal();
+setupCashUPIModal();
 setupSuccessModal();
 
 // In the submitBill function, remove the spinner code since we're handling it globally:
