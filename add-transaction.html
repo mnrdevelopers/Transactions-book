@@ -545,5 +545,79 @@
 </style>
 
     <script src="script.js"></script>
+        <script>
+            // Add to the initialization section
+document.getElementById("cash-flow-btn")?.addEventListener("click", showCashFlowModal);
+setupCashFlowModal();
+
+function setupCashFlowModal() {
+    const modal = document.getElementById('cash-flow-modal');
+    const closeBtn = document.querySelector('#cash-flow-modal .close');
+    const cancelBtn = document.getElementById('cancel-cash-flow');
+    const confirmBtn = document.getElementById('confirm-cash-flow');
+    
+    closeBtn.onclick = function() {
+        modal.style.display = 'none';
+    }
+    
+    cancelBtn.onclick = function() {
+        modal.style.display = 'none';
+    }
+    
+    confirmBtn.onclick = function() {
+        const flowType = document.getElementById('flow-type').value;
+        const amount = parseFloat(document.getElementById('flow-amount').value) || 0;
+        const notes = document.getElementById('flow-notes').value;
+        
+        if (amount <= 0) {
+            alert('Please enter a valid amount');
+            return;
+        }
+        
+        recordCashFlow(flowType, amount, notes);
+        modal.style.display = 'none';
+    }
+}
+
+function showCashFlowModal() {
+    const modal = document.getElementById('cash-flow-modal');
+    document.getElementById('flow-amount').value = '';
+    document.getElementById('flow-notes').value = '';
+    modal.style.display = 'flex';
+    document.getElementById('flow-amount').focus();
+}
+
+function recordCashFlow(flowType, amount, notes) {
+    // Show loading
+    document.getElementById("loading-overlay").style.display = "flex";
+    
+    const data = {
+        action: "recordCashFlow",
+        flowType: flowType,
+        amount: amount,
+        notes: notes || "",
+        date: new Date().toISOString()
+    };
+    
+    fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(() => {
+        showToast('Cash flow recorded successfully');
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        showToast('Failed to record cash flow', 'error');
+    })
+    .finally(() => {
+        document.getElementById("loading-overlay").style.display = "none";
+    });
+}
+        </script>
 </body>
 </html>
