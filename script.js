@@ -627,6 +627,11 @@ function submitBill(data) {
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = 'Processing...';
     submitBtn.disabled = true;
+
+    // Add payment details for Cash+UPI
+    if (data.paymentMode === "Cash+UPI" && data.paymentDetails) {
+        data.paymentDetails = JSON.stringify(data.paymentDetails);
+    }
     
     // Update local stats
     const salesToAdd = data.items.length;
