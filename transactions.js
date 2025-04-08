@@ -306,7 +306,8 @@ function updateCardTitles(dateRange, paymentMode) {
         "all": "",
         "Cash": " (Cash)",
         "Card": " (Card)",
-        "UPI": " (UPI)"
+        "UPI": " (UPI)",
+        "Cash+UPI": " (Cash + UPI)"
     };
     
     const dateTitle = dateTitles[dateRange] || "";
@@ -368,21 +369,37 @@ function processSheetData(sheetData) {
     
     for (let i = startRow; i < sheetData.length; i++) {
         const row = sheetData[i];
-        const siNo = String(row[2] || "").trim(); // Ensure SI No is a string
-        const date = parseDate(row[1]); // Parse date properly
+        const siNo = String(row[2] || "").trim();
+        const date = parseDate(row[1]);
+        const paymentMode = String(row[8] || "");
         
         if (!transactionsMap.has(siNo)) {
-            transactionsMap.set(siNo, {
+            const transaction = {
                 storeName: String(row[0] || ""),
                 date: date,
                 dateString: formatDateForDisplay(date),
                 siNo: siNo,
                 customerName: String(row[3] || ""),
                 items: [],
-                paymentMode: String(row[8] || ""),
+                paymentMode: paymentMode,
                 totalAmount: parseFloat(row[9]) || 0,
                 totalProfit: parseFloat(row[10]) || 0
-            });
+            };
+            
+            // Check if this is a Cash+UPI transaction (assuming payment details are in row[11])
+            if (paymentMode === "Cash+UPI" && row[11]) {
+                try {
+                    transaction.paymentDetails = JSON.parse(row[11]);
+                } catch (e) {
+                    console.warn("Could not parse payment details for transaction", siNo);
+                    transaction.paymentDetails = {
+                        cashAmount: 0,
+                        upiAmount: 0
+                    };
+                }
+            }
+            
+            transactionsMap.set(siNo, transaction);
         }
         
         // Add item to transaction
@@ -638,6 +655,17 @@ function viewTransactionDetails(e) {
         </table>
     `;
     
+    // Check if this is a Cash+UPI transaction
+    const paymentDetailsHtml = transaction.paymentMode === "Cash+UPI" && transaction.paymentDetails
+        ? `
+            <div class="payment-breakdown">
+                <p><strong>Cash Amount:</strong> ₹${transaction.paymentDetails.cashAmount?.toFixed(2) || '0.00'}</p>
+                <p><strong>UPI Amount:</strong> ₹${transaction.paymentDetails.upiAmount?.toFixed(2) || '0.00'}</p>
+                <p><strong>Total Paid:</strong> ₹${((transaction.paymentDetails.cashAmount || 0) + (transaction.paymentDetails.upiAmount || 0)).toFixed(2)}</p>
+            </div>
+        `
+        : '';
+    
     // Create transaction details HTML
     elements.transactionDetails.innerHTML = `
         <div class="transaction-header">
@@ -646,6 +674,7 @@ function viewTransactionDetails(e) {
             <p><strong>Bill No:</strong> ${transaction.siNo}</p>
             <p><strong>Customer:</strong> ${transaction.customerName}</p>
             <p><strong>Payment Mode:</strong> ${transaction.paymentMode}</p>
+            ${paymentDetailsHtml}
         </div>
         
         <div class="transaction-items">
