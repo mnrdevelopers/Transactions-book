@@ -307,7 +307,6 @@ function updateCardTitles(dateRange, paymentMode) {
         "Cash": " (Cash)",
         "Card": " (Card)",
         "UPI": " (UPI)"
-        "Cash + UPI": " (Cash + UPI)"
     };
     
     const dateTitle = dateTitles[dateRange] || "";
