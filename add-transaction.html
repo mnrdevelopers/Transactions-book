@@ -8,18 +8,6 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Add this to your CSS */
-#bill-details .cash-upi-payment-details {
-    background: #f8f8f8;
-    padding: 8px;
-    margin-top: 10px;
-    border-radius: 4px;
-    font-size: 12px;
-}
-
-#bill-details .cash-upi-payment-details p {
-    margin: 5px 0;
-}
         /* Cash payment details in bill */
 #bill-details .cash-payment-details {
     background: #f8f8f8;
@@ -254,12 +242,7 @@
             <a href="maintenance.html" class="nav-btn">
                 <i class="fas fa-tools"></i> Maintenance
             </a>
-            <a href="#" id="cash-flow-btn" class="nav-btn">
-    <i class="fas fa-exchange-alt"></i> Cash Flow
-</a>
         </div>
-
-
 
         <!-- Store Header -->
         <header>
@@ -315,12 +298,11 @@
             <!-- Payment Mode -->
             <div>
                 <label for="payment-mode"><strong>Payment Mode:</strong></label>
-<select id="payment-mode">
-    <option value="Cash">Cash</option>
-    <option value="Card">Card</option>
-    <option value="UPI">UPI</option>
-    <option value="Cash+UPI">Cash + UPI</option>
-</select>
+                <select id="payment-mode">
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="UPI">UPI</option>
+                </select>
             </div>
 
             <!-- Totals -->
@@ -427,61 +409,6 @@
     </div>
 </div>
 
-        <!-- Cash + UPI Payment Modal -->
-<div id="cash-upi-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Cash + UPI Payment</h2>
-        <div class="form-group">
-            <label for="cash-amount">Cash Amount (₹):</label>
-            <input type="number" id="cash-amount" min="0" step="0.01" required>
-        </div>
-        <div class="form-group">
-            <label for="upi-amount">UPI Amount (₹):</label>
-            <input type="number" id="upi-amount" min="0" step="0.01" required>
-        </div>
-        <div class="form-group">
-            <label>Total Bill Amount (₹):</label>
-            <input type="text" id="cash-upi-total-amount" disabled>
-        </div>
-        <div class="form-group">
-            <label>Remaining Amount (₹):</label>
-            <input type="text" id="remaining-amount" disabled>
-        </div>
-        <div class="form-actions">
-            <button type="button" id="cancel-cash-upi-payment" class="cancel-btn">Cancel</button>
-            <button type="button" id="confirm-cash-upi-payment" class="save-btn">Confirm</button>
-        </div>
-    </div>
-</div>
-
-        <!-- Cash Flow Modal -->
-<div id="cash-flow-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Cash Flow Management</h2>
-        <div class="form-group">
-            <label for="flow-type">Transaction Type:</label>
-            <select id="flow-type">
-                <option value="upi-to-cash">UPI Received → Give Cash</option>
-                <option value="cash-to-upi">Cash Received → Send via UPI</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="flow-amount">Amount (₹):</label>
-            <input type="number" id="flow-amount" min="0" step="0.01" required>
-        </div>
-        <div class="form-group">
-            <label for="flow-notes">Notes:</label>
-            <input type="text" id="flow-notes" placeholder="Optional notes">
-        </div>
-        <div class="form-actions">
-            <button type="button" id="cancel-cash-flow" class="cancel-btn">Cancel</button>
-            <button type="button" id="confirm-cash-flow" class="save-btn">Record</button>
-        </div>
-    </div>
-</div>
-
 <!-- Success Message Modal -->
 <div id="success-modal" class="modal" style="display: none;">
     <div class="modal-content" style="text-align: center;">
@@ -540,79 +467,5 @@
 </style>
 
     <script src="script.js"></script>
-        <script>
-            // Add to the initialization section
-document.getElementById("cash-flow-btn")?.addEventListener("click", showCashFlowModal);
-setupCashFlowModal();
-
-function setupCashFlowModal() {
-    const modal = document.getElementById('cash-flow-modal');
-    const closeBtn = document.querySelector('#cash-flow-modal .close');
-    const cancelBtn = document.getElementById('cancel-cash-flow');
-    const confirmBtn = document.getElementById('confirm-cash-flow');
-    
-    closeBtn.onclick = function() {
-        modal.style.display = 'none';
-    }
-    
-    cancelBtn.onclick = function() {
-        modal.style.display = 'none';
-    }
-    
-    confirmBtn.onclick = function() {
-        const flowType = document.getElementById('flow-type').value;
-        const amount = parseFloat(document.getElementById('flow-amount').value) || 0;
-        const notes = document.getElementById('flow-notes').value;
-        
-        if (amount <= 0) {
-            alert('Please enter a valid amount');
-            return;
-        }
-        
-        recordCashFlow(flowType, amount, notes);
-        modal.style.display = 'none';
-    }
-}
-
-function showCashFlowModal() {
-    const modal = document.getElementById('cash-flow-modal');
-    document.getElementById('flow-amount').value = '';
-    document.getElementById('flow-notes').value = '';
-    modal.style.display = 'flex';
-    document.getElementById('flow-amount').focus();
-}
-
-function recordCashFlow(flowType, amount, notes) {
-    // Show loading
-    document.getElementById("loading-overlay").style.display = "flex";
-    
-    const data = {
-        action: "recordCashFlow",
-        flowType: flowType,
-        amount: amount,
-        notes: notes || "",
-        date: new Date().toISOString()
-    };
-    
-    fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-    })
-    .then(() => {
-        showToast('Cash flow recorded successfully');
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        showToast('Failed to record cash flow', 'error');
-    })
-    .finally(() => {
-        document.getElementById("loading-overlay").style.display = "none";
-    });
-}
-        </script>
 </body>
 </html>
