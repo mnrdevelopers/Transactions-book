@@ -3,11 +3,12 @@ if (document.getElementById("transaction-form")) {
     // Constants
     const DAILY_STATS_KEY = 'rkFashionsDailyStats';
     
-    // Initialize date display
-   const today = new Date();
-   document.getElementById("transaction-date").valueAsDate = today;
-   document.getElementById("customer-name").value = generateCustomerName(); // Add this line
-
+    // Initialize date and time display
+const today = new Date();
+document.getElementById("transaction-date").valueAsDate = today;
+document.getElementById("transaction-time").value = today.toTimeString().substring(0, 5);
+document.getElementById("customer-name").value = generateCustomerName();
+    
     // Sequence number management
     function generateBillNumber() {
     // Get current timestamp and random number for uniqueness
@@ -222,6 +223,7 @@ if (document.getElementById("transaction-form")) {
     return {
         storeName: "RK Fashions",
         date: document.getElementById("transaction-date").value,
+        time: document.getElementById("transaction-time").value,
         siNo: document.getElementById("bill-no").value,
         customerName: document.getElementById("customer-name").value,
         items: items,
@@ -229,7 +231,7 @@ if (document.getElementById("transaction-form")) {
         totalAmount: document.getElementById("total-amount").value,
         totalProfit: document.getElementById("total-profit").value
     };
-}
+ }
     
    function displayBillPreview(data) {
     // Hide the template
@@ -255,12 +257,11 @@ if (document.getElementById("transaction-form")) {
             <p class="store-contact-bill">Mobile: +91 7893433457, +91 7842694544</p>
             
             <div class="bill-meta">
-                <p><strong>Date:</strong> ${data.date}</p>
+                <p><strong>Date:</strong> ${data.date} <strong>Time:</strong> ${data.time}</p>
                 <p><strong>Bill No:</strong> ${data.siNo}</p>
                 <p><strong>Customer:</strong> ${data.customerName}</p>
             </div>
         </div>
-        
         <table class="bill-items">
             <thead>
                 <tr>
@@ -523,9 +524,10 @@ function submitBill(data) {
        .then(() => {
     // Reset form but keep customer name and date
     const customerName = document.getElementById("customer-name").value;
-      document.getElementById("transaction-form").reset();
+    document.getElementById("transaction-form").reset();
     document.getElementById("customer-name").value = generateCustomerName();
     document.getElementById("transaction-date").valueAsDate = new Date();
+    document.getElementById("transaction-time").value = new Date().toTimeString().substring(0, 5);
     document.getElementById("bill-no").value = "";
     document.getElementById("items-container").innerHTML = "";
     addItem();
