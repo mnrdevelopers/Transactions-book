@@ -8,7 +8,6 @@ const today = new Date();
 document.getElementById("transaction-date").valueAsDate = today;
 document.getElementById("transaction-time").value = today.toTimeString().substring(0, 5);
 document.getElementById("customer-name").value = generateCustomerName();
-document.getElementById('bill-template').value = 'template1';
     
     // Sequence number management
     function generateBillNumber() {
@@ -23,13 +22,6 @@ document.getElementById('bill-template').value = 'template1';
     document.getElementById("items-container").addEventListener("input", function(e) {
         if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
             calculateTotals();
-   }
- });
-
-document.getElementById('bill-template').addEventListener('change', function() {
-    if (document.getElementById('bill-details').style.display === 'block') {
-        const data = prepareBillData();
-        displayBillPreview(data);
         }
     });
     
@@ -140,14 +132,6 @@ document.getElementById('bill-template').addEventListener('change', function() {
     return `${randomPrefix}-${randomNum}`;
 }
 
-// Add this function to apply the selected template
-function applyBillTemplate(templateId) {
-    const billPreview = document.getElementById('bill-details');
-    billPreview.className = 'bill-details'; // Reset classes
-    billPreview.classList.add(`template-${templateId.replace('template', '')}`);
-}
-
-
     function addItem() {
         const itemsContainer = document.getElementById("items-container");
         const newItem = document.createElement("div");
@@ -245,25 +229,17 @@ function applyBillTemplate(templateId) {
         items: items,
         paymentMode: document.getElementById("payment-mode").value,
         totalAmount: document.getElementById("total-amount").value,
-        totalProfit: document.getElementById("total-profit").value,
-        template: document.getElementById("bill-template").value
+        totalProfit: document.getElementById("total-profit").value
     };
-}
+ }
     
    function displayBillPreview(data) {
-// Get selected template
-    const templateSelect = document.getElementById('bill-template');
-    const selectedTemplate = templateSelect.value.replace('template', '');
-    
     // Hide the template
     document.getElementById("bill-template").style.display = "none";
     
     // Show the preview container
     document.getElementById("bill-preview").style.display = "block";
     document.getElementById("bill-details").style.display = "block";
-    
-    // Apply selected template
-    applyBillTemplate(selectedTemplate);
     
     // Show the dynamic bill container
     const preview = document.getElementById("bill-details");
