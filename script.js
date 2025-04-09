@@ -8,6 +8,7 @@ const today = new Date();
 document.getElementById("transaction-date").valueAsDate = today;
 document.getElementById("transaction-time").value = today.toTimeString().substring(0, 5);
 document.getElementById("customer-name").value = generateCustomerName();
+document.getElementById('bill-template').value = 'template1';
     
     // Sequence number management
     function generateBillNumber() {
@@ -22,6 +23,9 @@ document.getElementById("customer-name").value = generateCustomerName();
     document.getElementById("items-container").addEventListener("input", function(e) {
         if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
             calculateTotals();
+   }
+ });
+
 document.getElementById('bill-template').addEventListener('change', function() {
     if (document.getElementById('bill-details').style.display === 'block') {
         const data = prepareBillData();
@@ -31,14 +35,6 @@ document.getElementById('bill-template').addEventListener('change', function() {
     
     document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
     setupPrintButton();
-
-
-// Add this function to apply the selected template
-function applyBillTemplate(templateId) {
-    const billPreview = document.getElementById('bill-details');
-    billPreview.className = 'bill-details'; // Reset classes
-    billPreview.classList.add(`template-${templateId.replace('template', '')}`);
-}
 
     // ======================
     // DAILY STATS FUNCTIONS
@@ -143,6 +139,14 @@ function applyBillTemplate(templateId) {
     const randomNum = Math.floor(Math.random() * 9000) + 1000; // 4-digit random number
     return `${randomPrefix}-${randomNum}`;
 }
+
+// Add this function to apply the selected template
+function applyBillTemplate(templateId) {
+    const billPreview = document.getElementById('bill-details');
+    billPreview.className = 'bill-details'; // Reset classes
+    billPreview.classList.add(`template-${templateId.replace('template', '')}`);
+}
+
 
     function addItem() {
         const itemsContainer = document.getElementById("items-container");
