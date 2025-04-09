@@ -234,12 +234,19 @@ document.getElementById("customer-name").value = generateCustomerName();
  }
     
    function displayBillPreview(data) {
+// Get selected template
+    const templateSelect = document.getElementById('bill-template');
+    const selectedTemplate = templateSelect.value.replace('template', '');
+    
     // Hide the template
     document.getElementById("bill-template").style.display = "none";
     
     // Show the preview container
     document.getElementById("bill-preview").style.display = "block";
     document.getElementById("bill-details").style.display = "block";
+    
+    // Apply selected template
+    applyBillTemplate(selectedTemplate);
     
     // Show the dynamic bill container
     const preview = document.getElementById("bill-details");
