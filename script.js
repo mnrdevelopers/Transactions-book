@@ -22,11 +22,23 @@ document.getElementById("customer-name").value = generateCustomerName();
     document.getElementById("items-container").addEventListener("input", function(e) {
         if (e.target.matches(".quantity, .sale-price, .purchase-price")) {
             calculateTotals();
+document.getElementById('bill-template').addEventListener('change', function() {
+    if (document.getElementById('bill-details').style.display === 'block') {
+        const data = prepareBillData();
+        displayBillPreview(data);
         }
     });
     
     document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
     setupPrintButton();
+
+
+// Add this function to apply the selected template
+function applyBillTemplate(templateId) {
+    const billPreview = document.getElementById('bill-details');
+    billPreview.className = 'bill-details'; // Reset classes
+    billPreview.classList.add(`template-${templateId.replace('template', '')}`);
+}
 
     // ======================
     // DAILY STATS FUNCTIONS
@@ -229,9 +241,10 @@ document.getElementById("customer-name").value = generateCustomerName();
         items: items,
         paymentMode: document.getElementById("payment-mode").value,
         totalAmount: document.getElementById("total-amount").value,
-        totalProfit: document.getElementById("total-profit").value
+        totalProfit: document.getElementById("total-profit").value,
+        template: document.getElementById("bill-template").value
     };
- }
+}
     
    function displayBillPreview(data) {
 // Get selected template
