@@ -304,16 +304,23 @@
         </div>
     </div>
 
-    <nav class="bottom-nav">
-  <a href="add-transaction.html"><i class="fas fa-plus-circle"></i><span>Add</span></a>
-  <a href="transactions.html"><i class="fas fa-history"></i><span>Transactions</span></a>
-  <a href="reports.html"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
-  <a href="maintenance.html"><i class="fas fa-tools"></i><span>Maintenance</span></a>
-  <a href="purchases.html"><i class="fas fa-boxes"></i><span>Purchases</span></a>
-  <a href="profit-loss.html"><i class="fas fa-chart-line"></i><span>Profit & Loss</span></a>
-        
-</nav>
+  <div id="mobile-nav-placeholder"></div>
+    <script>
+  fetch('mobile-nav.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('mobile-nav-placeholder').innerHTML = html;
 
+      // Highlight the current page
+      const path = window.location.pathname;
+      const page = path.substring(path.lastIndexOf('/') + 1).split('.')[0];
+      document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.dataset.page === page) {
+          link.classList.add('active');
+        }
+      });
+    });
+</script>
 
     <script src="script.js"></script>
     <script src="service-worker.js"></script>
