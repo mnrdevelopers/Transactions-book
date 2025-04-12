@@ -259,46 +259,18 @@
         </div>
     </div>
 
-  <div id="mobile-nav-placeholder"></div>
-    <script>
-  fetch('mobile-nav.html')
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById('mobile-nav-placeholder').innerHTML = html;
+  <!-- Navigation -->
+<div id="nav-placeholder"></div>
 
-  document.addEventListener('DOMContentLoaded', function() {
-  const nav = document.querySelector('.offcanvas-nav');
-  const toggle = document.querySelector('.nav-toggle');
-  const close = document.querySelector('.nav-close');
-  const overlay = document.querySelector('.nav-overlay');
-  
-  // Toggle nav
-  toggle.addEventListener('click', function() {
-    nav.classList.toggle('open');
-  });
-  
-  // Close nav
-  close.addEventListener('click', function() {
-    nav.classList.remove('open');
-  });
-  
-  overlay.addEventListener('click', function() {
-    nav.classList.remove('open');
-  });
-  
-  // Highlight current page after nav is loaded
-    const currentPage = window.location.pathname.split('/').pop().split('.')[0];
-    document.querySelectorAll('.nav-link').forEach(link => {
-      if (link.getAttribute('href').includes(currentPage)) {
-        link.classList.add('active'); // ✅ Use link itself, not parent
-      }
-    });
-
-    // Special case for dashboard
-    if (currentPage === 'dashboard' || currentPage === 'index' || currentPage === '') {
-      const dashLink = document.querySelector('.nav-link[href*="dashboard"]');
-      if (dashLink) dashLink.classList.add('active');
-    }
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(function(){
+  $("#nav-placeholder").load("offcanvas-nav.html", function() {
+    // Load nav.js after navigation is loaded
+    const script = document.createElement('script');
+    script.src = 'nav.js';
+    document.body.appendChild(script);
   });
 });
 </script>
