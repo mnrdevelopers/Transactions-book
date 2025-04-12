@@ -286,19 +286,20 @@
     nav.classList.remove('open');
   });
   
-  // Highlight current page
-  const currentPage = window.location.pathname.split('/').pop().split('.')[0];
-  document.querySelectorAll('.nav-link').forEach(link => {
-    if (link.getAttribute('href').includes(currentPage)) {
-      link.parentElement.classList.add('active');
+  // Highlight current page after nav is loaded
+    const currentPage = window.location.pathname.split('/').pop().split('.')[0];
+    document.querySelectorAll('.nav-link').forEach(link => {
+      if (link.getAttribute('href').includes(currentPage)) {
+        link.classList.add('active'); // ✅ Use link itself, not parent
+      }
+    });
+
+    // Special case for dashboard
+    if (currentPage === 'dashboard' || currentPage === 'index' || currentPage === '') {
+      const dashLink = document.querySelector('.nav-link[href*="dashboard"]');
+      if (dashLink) dashLink.classList.add('active');
     }
   });
-  
-  // Special case for dashboard/index
-  if (currentPage === 'dashboard' || currentPage === 'index' || currentPage === '') {
-    document.querySelector('.nav-link[href="dashboard.html"]').parentElement.classList.add('active');
-     }
-   });
 });
 </script>
 
