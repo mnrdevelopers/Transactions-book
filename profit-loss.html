@@ -306,22 +306,20 @@
         </div>
     </div>
 
-    <div id="mobile-nav-placeholder"></div>
-    <script>
-  fetch('mobile-nav.html')
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById('mobile-nav-placeholder').innerHTML = html;
+  <!-- Navigation -->
+<div id="nav-placeholder"></div>
 
-      // Highlight the current page
-      const path = window.location.pathname;
-      const page = path.substring(path.lastIndexOf('/') + 1).split('.')[0];
-      document.querySelectorAll('.nav-link').forEach(link => {
-        if (link.dataset.page === page) {
-          link.classList.add('active');
-        }
-      });
-    });
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(function(){
+  $("#nav-placeholder").load("offcanvas-nav.html", function() {
+    // Load nav.js after navigation is loaded
+    const script = document.createElement('script');
+    script.src = 'nav.js';
+    document.body.appendChild(script);
+  });
+});
 </script>
 
     <!-- JavaScript Libraries -->
