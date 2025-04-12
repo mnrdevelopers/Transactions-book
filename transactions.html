@@ -296,6 +296,24 @@
         </div>
     </div>
 
+    <div id="mobile-nav-placeholder"></div>
+    <script>
+  fetch('mobile-nav.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('mobile-nav-placeholder').innerHTML = html;
+
+      // Highlight the current page
+      const path = window.location.pathname;
+      const page = path.substring(path.lastIndexOf('/') + 1).split('.')[0];
+      document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.dataset.page === page) {
+          link.classList.add('active');
+        }
+      });
+    });
+</script>
+
 <script src="transactions.js"></script>
 </body>
 </html>
