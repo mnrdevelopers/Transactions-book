@@ -266,14 +266,21 @@
     .then(html => {
       document.getElementById('mobile-nav-placeholder').innerHTML = html;
 
-      // Highlight the current page
-      const path = window.location.pathname;
-      const page = path.substring(path.lastIndexOf('/') + 1).split('.')[0];
-      document.querySelectorAll('.nav-link').forEach(link => {
-        if (link.dataset.page === page) {
-          link.classList.add('active');
-        }
-      });
+    // Add this to your existing script that loads the mobile nav
+document.addEventListener('DOMContentLoaded', function() {
+  // Highlight current page in bottom nav
+  const currentPage = window.location.pathname.split('/').pop().split('.')[0];
+  document.querySelectorAll('.nav-item').forEach(item => {
+    if (item.getAttribute('href').includes(currentPage)) {
+      item.setAttribute('data-current', 'true');
+    }
+  });
+  
+  // If on dashboard, highlight home button
+  if (currentPage === 'dashboard' || currentPage === 'index') {
+    document.querySelector('.nav-home').setAttribute('data-current', 'true');
+  }
+});
     });
 </script>
 
