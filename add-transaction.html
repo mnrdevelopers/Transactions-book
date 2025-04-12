@@ -456,16 +456,39 @@
     .then(res => res.text())
     .then(html => {
       document.getElementById('mobile-nav-placeholder').innerHTML = html;
-
-      // Highlight the current page
-      const path = window.location.pathname;
-      const page = path.substring(path.lastIndexOf('/') + 1).split('.')[0];
-      document.querySelectorAll('.nav-link').forEach(link => {
-        if (link.dataset.page === page) {
-          link.classList.add('active');
-        }
-      });
-    });
+document.addEventListener('DOMContentLoaded', function() {
+  const nav = document.querySelector('.offcanvas-nav');
+  const toggle = document.querySelector('.nav-toggle');
+  const close = document.querySelector('.nav-close');
+  const overlay = document.querySelector('.nav-overlay');
+  
+  // Toggle nav
+  toggle.addEventListener('click', function() {
+    nav.classList.toggle('open');
+  });
+  
+  // Close nav
+  close.addEventListener('click', function() {
+    nav.classList.remove('open');
+  });
+  
+  overlay.addEventListener('click', function() {
+    nav.classList.remove('open');
+  });
+  
+  // Highlight current page
+  const currentPage = window.location.pathname.split('/').pop().split('.')[0];
+  document.querySelectorAll('.nav-link').forEach(link => {
+    if (link.getAttribute('href').includes(currentPage)) {
+      link.parentElement.classList.add('active');
+    }
+  });
+  
+  // Special case for dashboard/index
+  if (currentPage === 'dashboard' || currentPage === 'index' || currentPage === '') {
+    document.querySelector('.nav-link[href="dashboard.html"]').parentElement.classList.add('active');
+  }
+});
 </script>
 
     <script src="script.js"></script>
