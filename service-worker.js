@@ -9,13 +9,16 @@ const ASSETS = [
   '/reports.html',
   '/maintenance.html',
   '/purchases.html',
+  '/profit-loss.html',
+  '/offcanvas-nav.html',
   '/style.css',
   '/script.js',
   '/transactions.js',
   '/reports.js',
   '/maintenance.js',
   '/purchases.js',
-  '/utils.js',
+  '/profit-loss.js',
+  '/nav.js',
   '/manifest.json'
 ];
 
