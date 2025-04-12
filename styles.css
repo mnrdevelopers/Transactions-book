@@ -1071,6 +1071,10 @@ button[type="submit"]:hover {
     text-shadow: 0 0 4px rgba(52, 152, 219, 0.4);
   }
 
+    .nav-dashboard-buttons {
+    display: none;
+  }
+
   @keyframes fadeUp {
     0% {
       transform: translateY(100%);
