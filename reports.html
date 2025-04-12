@@ -90,22 +90,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Navigation -->
-        <div class="nav-buttons">
-            <a href="dashboard.html" class="nav-btn">
-                <i class="fas fa-home"></i> Dashboard
-            </a>
-            <a href="add-transaction.html" class="nav-btn">
-                <i class="fas fa-plus-circle"></i> Add Transaction
-            </a>
-            <a href="transactions.html" class="nav-btn">
-                <i class="fas fa-history"></i> Transactions
-            </a>
-            <a href="maintenance.html" class="nav-btn">
-                <i class="fas fa-tools"></i> Maintenance
-            </a>
-        </div>
-
         <header>
             <h1><i class="fas fa-chart-bar"></i> Sales Reports</h1>
             <p>Analyze your business performance</p>
@@ -178,6 +162,24 @@
             </div>
         </div>
     </div>
+
+    <div id="mobile-nav-placeholder"></div>
+    <script>
+  fetch('mobile-nav.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('mobile-nav-placeholder').innerHTML = html;
+
+      // Highlight the current page
+      const path = window.location.pathname;
+      const page = path.substring(path.lastIndexOf('/') + 1).split('.')[0];
+      document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.dataset.page === page) {
+          link.classList.add('active');
+        }
+      });
+    });
+</script>
 
 <script src="reports.js"></script>
 </body>
