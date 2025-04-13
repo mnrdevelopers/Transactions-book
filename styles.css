@@ -54,47 +54,6 @@ header h1 {
     margin-bottom: 10px;
 }
 
-/* Navigation */
-.nav-dashboard-buttons {
-    display: grid;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 30px;
-}
-
-.nav-buttons {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 30px;
-}
-
-.nav-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 20px;
-    background: var(--primary);
-    color: white;
-    text-decoration: none;
-    border-radius: var(--border-radius);
-    transition: var(--transition);
-    box-shadow: var(--box-shadow);
-    font-weight: 500;
-    min-width: 180px;
-}
-
-.nav-btn:hover {
-    background: var(--secondary);
-    transform: translateY(-2px);
-}
-
-.nav-btn i {
-    margin-right: 8px;
-}
-
 /* Daily Stats */
 .daily-stats {
     display: grid;
