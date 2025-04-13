@@ -141,43 +141,56 @@ header p {
     font-size: 0.9rem;
 }
 
-/* Mobile Navigation */
+/* Mobile Navigation - Updated */
 @media (max-width: 768px) {
     .nav-dashboard-buttons {
         grid-template-columns: repeat(6, 1fr);
-        gap: 10px;
+        gap: 8px;
+        padding: 0 5px;
     }
     
     .nav-btn {
-        padding: 15px 10px;
-        border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        margin: 0 auto;
-    }
-    
-    .nav-btn span {
-        display: none;
+        padding: 12px 0;
+        border-radius: var(--border-radius-sm);
+        width: 100%;
+        height: auto;
+        min-height: 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
     }
     
     .nav-btn i {
-        margin-bottom: 0;
-        font-size: 1.5rem;
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+    }
+    
+    .nav-btn span {
+        display: block;
+        font-size: 0.7rem;
+        text-align: center;
+        line-height: 1.2;
     }
 }
 
 @media (max-width: 480px) {
     .nav-dashboard-buttons {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(6, 1fr);
+        gap: 5px;
     }
     
     .nav-btn {
-        width: 50px;
-        height: 50px;
+        padding: 8px 0;
+        min-height: 50px;
     }
     
     .nav-btn i {
-        font-size: 1.2rem;
+        font-size: 1rem;
+    }
+    
+    .nav-btn span {
+        font-size: 0.6rem;
     }
 }
 
