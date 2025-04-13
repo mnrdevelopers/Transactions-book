@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = 'Bill-Book-v4';
+const CACHE_NAME = 'Bill-Book-v5';
 const ASSETS = [
   '/',
   '/index.html',
@@ -47,4 +47,11 @@ self.addEventListener('activate', (event) => {
             );
         })
     );
+});
+
+// Listen for messages from the main thread
+self.addEventListener('message', (event) => {
+  if (event.data.action === 'skipWaiting') {
+    self.skipWaiting();
+  }
 });
