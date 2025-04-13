@@ -15,7 +15,7 @@
         
         body {
             font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #2d3436 0%, #6c5ce7 100%);
+            background: linear-gradient(135deg, #4E1F00 0%, #74512D 100%);
             height: 100vh;
             overflow: hidden;
             position: relative;
@@ -34,7 +34,7 @@
             text-align: center;
             padding: 20px;
             z-index: 10;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(78, 31, 0, 0.2);
             animation: fadeIn 0.8s ease-out;
         }
         
@@ -47,12 +47,12 @@
             width: 120px;
             height: 120px;
             margin: 0 auto;
-            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            background: linear-gradient(45deg, #74512D, #FEBA17);
             border-radius: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: white;
+            color: #F8F4E1;
             font-weight: bold;
             font-size: 36px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
@@ -66,7 +66,7 @@
         }
         
         h1 {
-            color: white;
+            color: #F8F4E1;
             margin-bottom: 10px;
             font-weight: 700;
             font-size: 2.5rem;
@@ -75,7 +75,7 @@
         }
         
         .welcome-message {
-            color: rgba(255, 255, 255, 0.9);
+            color: rgba(248, 244, 225, 0.9);
             margin-bottom: 30px;
             font-size: 1.2rem;
             max-width: 500px;
@@ -85,8 +85,8 @@
         }
         
         .enter-btn {
-            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
-            color: white;
+            background: linear-gradient(45deg, #74512D, #FEBA17);
+            color: #F8F4E1;
             border: none;
             padding: 15px 40px;
             font-size: 1.1rem;
@@ -122,11 +122,11 @@
             height: 200%;
             background: linear-gradient(
                 to bottom right,
-                rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0) 45%,
-                rgba(255, 255, 255, 0.3) 50%,
-                rgba(255, 255, 255, 0) 55%,
-                rgba(255, 255, 255, 0) 100%
+                rgba(248, 244, 225, 0) 0%,
+                rgba(248, 244, 225, 0) 45%,
+                rgba(248, 244, 225, 0.3) 50%,
+                rgba(248, 244, 225, 0) 55%,
+                rgba(248, 244, 225, 0) 100%
             );
             animation: shine 4s infinite;
             transform: rotate(30deg);
@@ -134,7 +134,7 @@
         
         .version {
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(248, 244, 225, 0.6);
             margin-top: 40px;
             animation: fadeIn 1.5s ease-out;
         }
@@ -146,8 +146,8 @@
             width: 100%;
             height: 100%;
             background-image: 
-                radial-gradient(circle at 25% 25%, rgba(255,255,255,0.05) 1px, transparent 1px),
-                radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 1px, transparent 1px);
+                radial-gradient(circle at 25% 25%, rgba(248, 244, 225, 0.05) 1px, transparent 1px),
+                radial-gradient(circle at 75% 75%, rgba(248, 244, 225, 0.05) 1px, transparent 1px);
             background-size: 40px 40px;
             opacity: 0.5;
         }
@@ -239,12 +239,12 @@
     </div>
 
     <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(reg => console.log("Service Worker Registered"))
-      .catch(err => console.log("Service Worker Registration Failed", err));
-  }
-</script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log("Service Worker Registered"))
+            .catch(err => console.log("Service Worker Registration Failed", err));
+        }
+    </script>
 
     <script>
         document.getElementById('enterBtn').addEventListener('click', function() {
