@@ -1443,6 +1443,118 @@ window.addEventListener("beforeinstallprompt", (event) => {
             
             tipsContainer.innerHTML = tips.join('');
         }
+
+        // Check for updates and notify user
+function checkForUpdates() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed') {
+            if (navigator.serviceWorker.controller) {
+              // New update available
+              showUpdateNotification();
+            }
+          }
+        });
+      });
+    });
+
+    // Check for updates periodically
+    setInterval(() => {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.update();
+      });
+    }, 60 * 60 * 1000); // Check every hour
+  }
+}
+
+// Show update notification
+function showUpdateNotification() {
+  if (Notification.permission === 'granted') {
+    const notification = new Notification('MNR Bill Book Update Available', {
+      body: 'A new version is available. Please reinstall the app for the best experience.',
+      icon: 'https://i.postimg.cc/4dk3wD5Z/20250405-192435.png',
+      tag: 'update-notification'
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      showUpdateDialog();
+    };
+  } else if (Notification.permission !== 'denied') {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        showUpdateNotification();
+      }
+    });
+  }
+
+  // Also show in-app notification
+  showUpdateDialog();
+}
+
+// Show update dialog
+function showUpdateDialog() {
+  const dialog = document.createElement('div');
+  dialog.style.position = 'fixed';
+  dialog.style.bottom = '20px';
+  dialog.style.right = '20px';
+  dialog.style.backgroundColor = 'white';
+  dialog.style.padding = '20px';
+  dialog.style.borderRadius = '12px';
+  dialog.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.1)';
+  dialog.style.zIndex = '1000';
+  dialog.style.maxWidth = '300px';
+  dialog.innerHTML = `
+    <h3 style="margin-top: 0; color: #4E1F00;">Update Available</h3>
+    <p style="color: #74512D;">A new version of MNR Bill Book is available. For the best experience, please:</p>
+    <ol style="color: #74512D; padding-left: 20px;">
+      <li>Uninstall the current app</li>
+      <li>Close all browser tabs</li>
+      <li>Reinstall the app</li>
+    </ol>
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+      <button id="update-now" style="background: #4E1F00; color: white; border: none; padding: 8px 16px; border-radius: 50px; cursor: pointer;">Update Now</button>
+      <button id="update-later" style="background: #F8F4E1; color: #4E1F00; border: 1px solid #4E1F00; padding: 8px 16px; border-radius: 50px; cursor: pointer;">Later</button>
+    </div>
+  `;
+
+  document.body.appendChild(dialog);
+
+  document.getElementById('update-now').addEventListener('click', () => {
+    // Trigger the installation flow again
+    if (window.deferredPrompt) {
+      window.deferredPrompt.prompt();
+      window.deferredPrompt.userChoice.then(choiceResult => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+        }
+        window.deferredPrompt = null;
+      });
+    }
+    dialog.remove();
+  });
+
+  document.getElementById('update-later').addEventListener('click', () => {
+    dialog.remove();
+  });
+}
+
+// Call this when the app loads
+document.addEventListener('DOMContentLoaded', () => {
+  checkForUpdates();
+  
+  // Also check when the service worker claims the page
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.addEventListener('statechange', (event) => {
+      if (event.target.state === 'activated') {
+        checkForUpdates();
+      }
+    });
+  }
+});
     </script>
 </body>
 </html>
