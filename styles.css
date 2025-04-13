@@ -1,14 +1,14 @@
-/* Modern Styles */
+/* Modern Styles with New Color Palette */
 :root {
-    --primary: #4a6bff;
-    --secondary: #6c5ce7;
-    --accent: #00cec9;
-    --light: #f8f9fa;
-    --dark: #343a40;
-    --success: #00b894;
-    --danger: #d63031;
-    --warning: #fdcb6e;
-    --info: #0984e3;
+    --primary: #74512D;       /* Dark brown */
+    --secondary: #4E1F00;     /* Darker brown */
+    --accent: #FEBA17;        /* Gold */
+    --light: #F8F4E1;         /* Cream */
+    --dark: #4E1F00;          /* Dark brown */
+    --success: #2e7d32;       /* Keeping green for success */
+    --danger: #c62828;        /* Keeping red for danger */
+    --warning: #FEBA17;       /* Gold for warning */
+    --info: #1565c0;          /* Keeping blue for info */
     --border-radius: 8px;
     --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     --transition: all 0.3s ease;
@@ -16,7 +16,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: white;
+    background-color: var(--light);
     color: #333;
     line-height: 1.6;
     margin: 0;
@@ -242,7 +242,7 @@ button[type="submit"]:hover {
     margin-top: 15px;
 }
 
-.bill-preview th {
+.bill-preview th { 
     background: var(--primary);
     color: white;
     padding: 10px;
@@ -316,7 +316,7 @@ button[type="submit"]:hover {
 }
 
 #transactions-table tr:hover {
-    background: rgba(74, 107, 255, 0.05);
+    background: rgba(116, 81, 45, 0.05);
 }
 
 .actions button {
@@ -528,7 +528,7 @@ button[type="submit"]:hover {
 }
 
 #report-table tr:hover {
-    background: rgba(74, 107, 255, 0.05);
+    background: rgba(116, 81, 45, 0.05);
 }
 
 /* Mobile Responsive for Reports */
@@ -788,7 +788,7 @@ button[type="submit"]:hover {
 }
 
 #transactions-table tr:hover {
-    background: rgba(74, 107, 255, 0.05);
+    background: rgba(116, 81, 45, 0.05);
 }
 
 .status-badge {
@@ -1083,7 +1083,7 @@ button[type="submit"]:hover {
     #transactions-table th,
     #transactions-table td {
         padding: 8px 6px;
-        white-space: nowrap;
+        font-size: 14px;
     }
 
     #transactions-table th {
