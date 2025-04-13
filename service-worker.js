@@ -1,5 +1,5 @@
-// service-worker.js
-const CACHE_NAME = 'Bill-Book-v5';
+const CACHE_NAME = 'Bill-Book-v6'; // Increment this with each update
+const APP_VERSION = '1.0.6'; // Add version tracking
 const ASSETS = [
   '/',
   '/index.html',
@@ -27,6 +27,28 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(ASSETS))
+      .then(() => self.skipWaiting()) // Force activation
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.filter(cache => cache !== CACHE_NAME)
+          .map(cache => caches.delete(cache))
+          .then(() => {
+            // Notify clients about the update
+            self.clients.matchAll().then(clients => {
+              clients.forEach(client => {
+                client.postMessage({
+                  type: 'UPDATE_AVAILABLE',
+                  version: APP_VERSION
+                });
+              });
+            });
+          });
+    })
   );
 });
 
@@ -36,17 +58,6 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request)
       .then((response) => response || fetch(event.request))
   );
-});
-
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.filter((cache) => cache !== CACHE_NAME)
-                .map((cache) => caches.delete(cache))
-            );
-        })
-    );
 });
 
 // Listen for messages from the main thread
