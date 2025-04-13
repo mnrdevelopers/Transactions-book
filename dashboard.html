@@ -13,33 +13,33 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
-    <style>
- /* Modern Color Scheme */
+ <style>
+/* Updated Color Scheme */
 :root {
-    --primary: #4361ee;
-    --primary-light: #4895ef;
-    --primary-dark: #3a0ca3;
-    --secondary: #7209b7;
-    --accent: #f72585;
-    --success: #4cc9f0;
-    --warning: #f8961e;
-    --danger: #ef233c;
-    --light: #f8f9fa;
-    --dark: #212529;
-    --gray: #6c757d;
-    --light-gray: #e9ecef;
+    --primary: #4E1F00;       /* Dark brown */
+    --primary-light: #74512D;  /* Medium brown */
+    --primary-dark: #2E1200;   /* Darker brown */
+    --secondary: #FEBA17;      /* Gold */
+    --accent: #FEBA17;         /* Gold */
+    --success: #5C9210;        /* Green */
+    --warning: #FEBA17;        /* Gold */
+    --danger: #D32F2F;         /* Red */
+    --light: #F8F4E1;          /* Cream */
+    --dark: #4E1F00;           /* Dark brown */
+    --gray: #74512D;           /* Medium brown */
+    --light-gray: #F8F4E1;     /* Cream */
     
     --border-radius: 12px;
     --border-radius-sm: 8px;
-    --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    --box-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+    --box-shadow: 0 4px 20px rgba(78, 31, 0, 0.08);
+    --box-shadow-hover: 0 8px 30px rgba(78, 31, 0, 0.12);
     --transition: all 0.25s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
 /* Base Styles */
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background-color: #f5f7ff;
+    background-color: var(--light);
     color: var(--dark);
     line-height: 1.6;
     margin: 0;
@@ -60,10 +60,14 @@ header {
     text-align: center;
     margin-bottom: 30px;
     padding: 20px 0;
+    background-color: var(--primary);
+    border-radius: var(--border-radius);
+    color: var(--light);
+    box-shadow: var(--box-shadow);
 }
 
 header h1 {
-    color: var(--primary);
+    color: var(--secondary);
     margin: 0;
     font-size: 2.5rem;
     font-weight: 700;
@@ -71,19 +75,19 @@ header h1 {
 }
 
 header p {
-    color: var(--gray);
+    color: var(--light);
     margin: 8px 0 0;
     font-size: 1.1rem;
 }
 
 .current-date {
     margin-top: 15px;
-    color: var(--gray);
+    color: var(--light);
+    background-color: var(--primary-light);
     font-size: 0.95rem;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: white;
     padding: 8px 16px;
     border-radius: 50px;
     box-shadow: var(--box-shadow);
@@ -102,7 +106,7 @@ header p {
     align-items: center;
     justify-content: center;
     padding: 16px;
-    background: white;
+    background: var(--light);
     color: var(--primary);
     text-decoration: none;
     border-radius: var(--border-radius);
@@ -113,6 +117,7 @@ header p {
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    border: 1px solid var(--primary-light);
 }
 
 .nav-btn::before {
@@ -131,7 +136,8 @@ header p {
 .nav-btn:hover {
     transform: translateY(-3px);
     box-shadow: var(--box-shadow-hover);
-    color: white;
+    color: var(--light);
+    background: var(--primary);
 }
 
 .nav-btn:hover::before {
@@ -152,11 +158,12 @@ header p {
 
 /* Customer Flow Section */
 .customer-flow-section {
-    background: white;
+    background: var(--light);
     padding: 30px;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     margin-bottom: 30px;
+    border: 1px solid var(--primary-light);
 }
 
 .customer-flow-section h2 {
@@ -182,9 +189,10 @@ header p {
 .time-period-selector {
     display: flex;
     gap: 10px;
-    background: var(--light-gray);
+    background: var(--light);
     padding: 6px;
     border-radius: 50px;
+    border: 1px solid var(--primary-light);
 }
 
 .period-btn {
@@ -201,17 +209,18 @@ header p {
 
 .period-btn.active {
     background: var(--primary);
-    color: white;
-    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+    color: var(--light);
+    box-shadow: 0 4px 12px rgba(78, 31, 0, 0.3);
 }
 
 .date-range {
     font-size: 0.95rem;
     color: var(--gray);
-    background: white;
+    background: var(--light);
     padding: 8px 16px;
     border-radius: 50px;
     box-shadow: var(--box-shadow);
+    border: 1px solid var(--primary-light);
 }
 
 /* Summary Cards */
@@ -223,7 +232,7 @@ header p {
 }
 
 .flow-summary-card {
-    background: white;
+    background: var(--light);
     padding: 25px;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
@@ -231,6 +240,7 @@ header p {
     position: relative;
     overflow: hidden;
     border-left: 4px solid var(--primary);
+    border: 1px solid var(--primary-light);
 }
 
 .flow-summary-card::before {
@@ -240,7 +250,7 @@ header p {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, rgba(67, 97, 238, 0.1) 0%, rgba(67, 97, 238, 0) 100%);
+    background: linear-gradient(135deg, rgba(78, 31, 0, 0.1) 0%, rgba(78, 31, 0, 0) 100%);
     opacity: 0;
     transition: var(--transition);
 }
@@ -300,13 +310,14 @@ header p {
 }
 
 .chart-container {
-    background: white;
+    background: var(--light);
     padding: 25px;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     height: 350px;
     position: relative;
     transition: var(--transition);
+    border: 1px solid var(--primary-light);
 }
 
 .chart-container:hover {
@@ -323,11 +334,12 @@ header p {
 }
 
 .secondary-card {
-    background: white;
+    background: var(--light);
     padding: 20px;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     transition: var(--transition);
+    border: 1px solid var(--primary-light);
 }
 
 .secondary-card:hover {
@@ -385,11 +397,12 @@ header p {
 }
 
 .tip-card {
-    background: white;
+    background: var(--light);
     padding: 25px;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     transition: var(--transition);
+    border: 1px solid var(--primary-light);
 }
 
 .tip-card:hover {
@@ -403,6 +416,7 @@ header p {
     display: flex;
     align-items: center;
     gap: 10px;
+    color: var(--primary);
 }
 
 .tip-card p {
@@ -459,13 +473,13 @@ header p {
     bottom: 20px;
     right: 20px;
     background: var(--primary);
-    color: white;
+    color: var(--light);
     border: none;
     padding: 12px 24px;
     border-radius: 50px;
     cursor: pointer;
     font-weight: 600;
-    box-shadow: 0 4px 20px rgba(67, 97, 238, 0.3);
+    box-shadow: 0 4px 20px rgba(78, 31, 0, 0.3);
     z-index: 100;
     transition: var(--transition);
     display: flex;
@@ -476,7 +490,7 @@ header p {
 .btn-install:hover {
     background: var(--primary-dark);
     transform: translateY(-3px);
-    box-shadow: 0 8px 30px rgba(67, 97, 238, 0.4);
+    box-shadow: 0 8px 30px rgba(78, 31, 0, 0.4);
 }
 
 /* Animations */
@@ -497,13 +511,13 @@ header p {
 .flow-summary-card:nth-child(3) { animation-delay: 0.3s; }
 .flow-summary-card:nth-child(4) { animation-delay: 0.4s; }
 
-        @keyframes spin {
+@keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
 .loading-spinner {
-    border: 3px solid rgba(67, 97, 238, 0.1);
+    border: 3px solid rgba(78, 31, 0, 0.1);
     border-top: 3px solid var(--primary);
     border-radius: 50%;
     width: 24px;
@@ -556,7 +570,7 @@ header p {
         text-align: center;
     }
 }
-    </style>
+</style>
 </head>
 <body>
     <button id="install-btn" class="btn btn-install" style="display: none;">Install App</button>
@@ -573,22 +587,28 @@ header p {
 
           <div class="nav-dashboard-buttons">
             <a href="add-transaction.html" class="nav-btn">
-                <i class="fas fa-plus-circle"></i> Add Transaction
+                <i class="fas fa-plus-circle"></i>
+                <span>Add Transaction</span>
             </a>
             <a href="transactions.html" class="nav-btn">
-                <i class="fas fa-history"></i> Transactions
+                <i class="fas fa-history"></i>
+                <span>Transactions</span>
             </a>
             <a href="reports.html" class="nav-btn">
-                <i class="fas fa-chart-bar"></i> Reports
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
             </a>
             <a href="maintenance.html" class="nav-btn">
-                <i class="fas fa-tools"></i> Maintenance
+                <i class="fas fa-tools"></i>
+                <span>Maintenance</span>
             </a>
             <a href="purchases.html" class="nav-btn">
-                <i class="fas fa-boxes"></i> Purchases
+                <i class="fas fa-boxes"></i>
+                <span>Purchases</span>
             </a>
             <a href="profit-loss.html" class="nav-btn">
-                <i class="fas fa-chart-line"></i> Profit & Loss
+                <i class="fas fa-chart-line"></i>
+                <span>Profit & Loss</span>
             </a>
         </div>
     </div>
