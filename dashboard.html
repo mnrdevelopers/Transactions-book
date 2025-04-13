@@ -496,6 +496,21 @@ header p {
 .flow-summary-card:nth-child(3) { animation-delay: 0.3s; }
 .flow-summary-card:nth-child(4) { animation-delay: 0.4s; }
 
+        @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+    border: 3px solid rgba(67, 97, 238, 0.1);
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
     .dashboard-container {
@@ -539,20 +554,6 @@ header p {
     .date-range {
         text-align: center;
     }
-    @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.loading-spinner {
-    border: 3px solid rgba(67, 97, 238, 0.1);
-    border-top: 3px solid var(--primary);
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto;
-  }
 }
     </style>
 </head>
