@@ -737,13 +737,19 @@ header p {
                 .catch((error) => console.log("Service Worker Registration Failed", error));
         }
 
-        // Handle PWA Install Prompt
-        let deferredPrompt;
-        window.addEventListener("beforeinstallprompt", (event) => {
-            event.preventDefault();
-            deferredPrompt = event;
-            document.getElementById("install-btn").style.display = "block";
-        });
+       // Handle PWA Install Prompt
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+    const installBtn = document.getElementById("install-btn");
+    installBtn.style.display = "block";
+    
+    // Hide the button after 30 seconds
+    setTimeout(() => {
+        installBtn.style.display = "none";
+    }, 30000); // 30000 milliseconds = 30 seconds
+});
 
         document.getElementById("install-btn").addEventListener("click", () => {
             if (deferredPrompt) {
