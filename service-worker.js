@@ -1,5 +1,7 @@
-const CACHE_NAME = 'Bill-Book-v6'; // Increment this with each update
-const APP_VERSION = '1.0.6'; // Add version tracking
+// service-worker.js
+const CACHE_NAME = 'Bill-Book-v6';  // Increment this with each update
+const APP_VERSION = '1.0.6';        // Must match version in dashboard.html
+
 const ASSETS = [
   '/',
   '/index.html',
@@ -22,37 +24,38 @@ const ASSETS = [
   '/manifest.json'
 ];
 
-// Install event
+// Install event - Force activation
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(ASSETS))
-      .then(() => self.skipWaiting()) // Force activation
+      .then(() => self.skipWaiting()) // Force immediate activation
   );
 });
 
+// Activate event - Clean old caches & notify UI
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.filter(cache => cache !== CACHE_NAME)
           .map(cache => caches.delete(cache))
-          .then(() => {
-            // Notify clients about the update
-            self.clients.matchAll().then(clients => {
-              clients.forEach(client => {
-                client.postMessage({
-                  type: 'UPDATE_AVAILABLE',
-                  version: APP_VERSION
-                });
-              });
+      ).then(() => {
+        // Notify all open tabs about the update
+        self.clients.matchAll().then(clients => {
+          clients.forEach(client => {
+            client.postMessage({
+              type: 'UPDATE_AVAILABLE',
+              version: APP_VERSION
             });
           });
+        });
+      });
     })
   );
 });
 
-// Fetch event
+// Fetch event (unchanged)
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request)
@@ -60,7 +63,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Listen for messages from the main thread
+// Listen for "skipWaiting" command from UI
 self.addEventListener('message', (event) => {
   if (event.data.action === 'skipWaiting') {
     self.skipWaiting();
