@@ -1556,5 +1556,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
     </script>
+
+     <script>
+// Force service worker update when page loads
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js').then(reg => {
+      reg.update();
+    });
+  });
+}
+</script>
 </body>
 </html>
