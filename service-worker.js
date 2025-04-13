@@ -1,6 +1,6 @@
 // service-worker.js
 const CACHE_NAME = 'Bill-Book-v6';  // Increment this with each update
-const APP_VERSION = '1.0.6';        // Must match version in dashboard.html
+const APP_VERSION = '2.0';        // Must match version in dashboard.html
 
 const ASSETS = [
   '/',
