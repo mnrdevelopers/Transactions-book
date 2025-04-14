@@ -141,55 +141,56 @@ header p {
     font-size: 0.9rem;
 }
 
-/* Updated Mobile Navigation */
+/* Updated Mobile Navigation for Smaller Icons */
 @media (max-width: 800px) {
     .nav-dashboard-buttons {
         grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        padding: 0 5px;
+        gap: 6px;
+        padding: 0;
+        margin-bottom: 20px;
     }
     
     .nav-btn {
-        padding: 12px 5px;
-        border-radius: 10px;
-        min-height: 80px;
+        padding: 8px 2px;
+        border-radius: 8px;
+        min-height: 60px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
     
     .nav-btn i {
-        font-size: 1.8rem;
-        margin-bottom: 8px;
+        font-size: 1.2rem;
+        margin-bottom: 4px;
     }
     
     .nav-btn span {
         display: block;
-        font-size: 0.75rem;
+        font-size: 0.6rem;
         text-align: center;
-        line-height: 1.2;
+        line-height: 1.1;
+        padding: 0 2px;
     }
 }
 
 @media (max-width: 480px) {
     .nav-dashboard-buttons {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
+        gap: 4px;
     }
     
     .nav-btn {
-        padding: 10px 3px;
-        min-height: 70px;
+        padding: 6px 1px;
+        min-height: 55px;
     }
     
     .nav-btn i {
-        font-size: 1.5rem;
-        margin-bottom: 5px;
+        font-size: 1rem;
     }
     
     .nav-btn span {
-        font-size: 0.65rem;
+        font-size: 0.55rem;
     }
 }
 
