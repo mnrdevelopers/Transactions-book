@@ -1,4 +1,27 @@
 /* Mobile Bottom Navigation */
+/* Add this to prevent glitch during page transitions */
+#mobile-nav-placeholder {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    height: 60px; /* Adjust based on your nav height */
+}
+
+/* Add smooth transition for the nav */
+.mobile-bottom-nav {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Hide during page transitions */
+.mobile-bottom-nav.hidden {
+    transform: translateY(100%);
+    opacity: 0;
+}
+
 .mobile-bottom-nav {
     position: fixed;
     bottom: 0;
