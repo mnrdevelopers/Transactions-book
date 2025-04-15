@@ -49,6 +49,8 @@
     border-radius: 8px;
     transition: var(--transition);
     position: relative;
+    -webkit-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
 }
 
 .mobile-nav-btn i {
@@ -94,6 +96,8 @@
     transform: scale(1);
     opacity: 0;
     pointer-events: none;
+    -webkit-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
 }
 
 .fab:hover {
