@@ -1,26 +1,45 @@
-// Show loading state during page transitions
+// nav.js - Universal Navigation Handler
 document.addEventListener('DOMContentLoaded', function() {
-    const navLinks = document.querySelectorAll('.mobile-nav-btn, .fab');
+    // Only run if mobile nav exists on the page
     const navBar = document.querySelector('.mobile-bottom-nav');
-    
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            // Don't prevent default if it's an external link
-            if (!this.href || this.target === '_blank') return;
-            
-            e.preventDefault();
-            
-            // Add loading state
-            if (navBar) navBar.classList.add('hidden');
-            document.body.classList.add('page-transition');
-            
-            // Delay navigation slightly for smooth transition
-            setTimeout(() => {
-                window.location.href = this.href;
-            }, 300);
-        });
+    if (!navBar) return;
+
+    // 1. Smooth transitions for navigation
+    const handleNavigation = (e) => {
+        const link = e.currentTarget;
+        
+        // Skip if it's an external link or anchor link
+        if (link.target === '_blank' || link.href.includes('#') || !link.href.startsWith(window.location.origin)) {
+            return;
+        }
+
+        e.preventDefault();
+        navBar.classList.add('hidden');
+        
+        // Add loading indicator
+        document.body.classList.add('page-transition');
+        
+        setTimeout(() => {
+            window.location.href = link.href;
+        }, 300);
+    };
+
+    // 2. Attach to all nav links
+    document.querySelectorAll('.mobile-nav-btn').forEach(link => {
+        link.addEventListener('click', handleNavigation);
     });
-    
-    // Show nav when page loads
-    if (navBar) navBar.classList.remove('hidden');
+
+    // 3. Initialize active state (redundant check)
+    const currentPage = window.location.pathname.split('/').pop().toLowerCase();
+    document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+        const btnPage = btn.getAttribute('href').split('/').pop().toLowerCase();
+        btn.classList.toggle('active', 
+            currentPage === btnPage || 
+            currentPage.startsWith(btnPage.replace('.html', '')) ||
+            (btnPage === 'dashboard.html' && currentPage === 'index.html')
+        );
+    });
+
+    // 4. Show nav when loaded
+    navBar.classList.remove('hidden');
 });
