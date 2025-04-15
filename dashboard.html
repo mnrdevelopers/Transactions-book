@@ -821,6 +821,26 @@ header p {
     <script src="script.js"></script>
     <script src="service-worker.js"></script>
     <script>
+// Handle FAB button click
+    document.getElementById('fab-btn').addEventListener('click', function() {
+        window.location.href = 'add-transaction.html';
+    });
+    
+    // Highlight current page in mobile nav
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+        const navButtons = document.querySelectorAll('.mobile-nav-btn');
+        
+        navButtons.forEach(btn => {
+            const linkPage = btn.getAttribute('href').split('/').pop();
+            btn.classList.remove('active');
+            
+            if (currentPage === linkPage) {
+                btn.classList.add('active');
+            }
+        });
+    });
+        
         // PWA Installation
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/service-worker.js')
