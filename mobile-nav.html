@@ -1,0 +1,55 @@
+<!-- Bottom Navigation -->
+<div class="mobile-bottom-nav">
+    <a href="dashboard.html" class="mobile-nav-btn">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </a>
+    <a href="transactions.html" class="mobile-nav-btn">
+        <i class="fas fa-history"></i>
+        <span>Transactions</span>
+    </a>
+    <a href="reports.html" class="mobile-nav-btn">
+        <i class="fas fa-chart-bar"></i>
+        <span>Reports</span>
+    </a>
+    <a href="maintenance.html" class="mobile-nav-btn">
+        <i class="fas fa-tools"></i>
+        <span>More</span>
+    </a>
+</div>
+
+<!-- Floating Action Button -->
+<div class="fab" id="fab-btn">
+    <i class="fas fa-plus"></i>
+</div>
+
+<script>
+// Add this script to handle active states and FAB click
+document.addEventListener('DOMContentLoaded', function() {
+    // Set active state for current page
+    const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+    document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+        const btnPage = btn.getAttribute('href').split('/').pop();
+        if(currentPage === btnPage) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // FAB click handler - customize per page
+    const fabBtn = document.getElementById('fab-btn');
+    if (fabBtn) {
+        fabBtn.addEventListener('click', function() {
+            // Default action - override in specific pages if needed
+            if (currentPage === 'dashboard.html' || currentPage === 'transactions.html') {
+                window.location.href = 'add-transaction.html';
+            } else if (currentPage === 'purchases.html') {
+                // Handle purchase add action
+                document.getElementById('add-purchase-btn').click();
+            } else if (currentPage === 'maintenance.html') {
+                // Handle maintenance add action
+                // You might need to trigger your modal here
+            }
+        });
+    }
+});
+</script>
