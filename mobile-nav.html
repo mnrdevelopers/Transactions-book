@@ -28,24 +28,30 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Get current page name without .html
-    const currentPath = window.location.pathname;
-    let currentPage = currentPath.split('/').pop().replace('.html', '') || 'dashboard';
-    
-    // Special case for root/index page
-    if (currentPath.endsWith('/') || currentPath === '') {
-        currentPage = 'dashboard';
-    }
-    
     // Set active state for current page
-    document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
-        const btnPage = btn.getAttribute('data-page');
-        btn.classList.toggle('active', currentPage === btnPage);
+    const currentPage = window.location.pathname.split('/').pop().toLowerCase();
+    const navLinks = document.querySelectorAll('.mobile-nav-btn');
+    
+    navLinks.forEach(btn => {
+        const btnPage = btn.getAttribute('href').split('/').pop().toLowerCase();
+        
+        // Remove active class from all buttons first
+        btn.classList.remove('active');
+        
+        // Check if current page matches or is a subpage
+        if(currentPage === btnPage || 
+           (currentPage.startsWith(btnPage.replace('.html', '')) ||
+           (btnPage === 'dashboard.html' && currentPage === 'index.html')) {
+            btn.classList.add('active');
+        }
     });
     
-    // FAB click handler - always goes to add-transaction
-    document.getElementById('fab-btn').addEventListener('click', function() {
-        window.location.href = 'add-transaction.html';
-    });
+    // FAB click handler
+    const fabBtn = document.getElementById('fab-btn');
+    if (fabBtn) {
+        fabBtn.addEventListener('click', function() {
+            window.location.href = 'add-transaction.html';
+        });
+    }
 });
 </script>
