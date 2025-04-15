@@ -235,7 +235,12 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(function(){
-  $("#mobile-nav-placeholder").load("mobile-nav.html");
+  $("#mobile-nav-placeholder").load("mobile-nav.html", function() {
+    // Load nav.js after navigation is loaded
+    const script = document.createElement('script');
+    script.src = 'nav.js';
+    document.body.appendChild(script);
+  });
 });
 </script>
 
