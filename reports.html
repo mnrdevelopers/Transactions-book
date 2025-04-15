@@ -164,20 +164,54 @@
         </div>
     </div>
 
-<!-- Mobile Navigation -->
-<div id="mobile-nav-placeholder"></div>
+ <div class="mobile-bottom-nav">
+    <a href="dashboard.html" class="mobile-nav-btn active">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </a>
+    <a href="transactions.html" class="mobile-nav-btn">
+        <i class="fas fa-history"></i>
+        <span>Transactions</span>
+    </a>
+    <a href="reports.html" class="mobile-nav-btn">
+        <i class="fas fa-chart-bar"></i>
+        <span>Reports</span>
+    </a>
+    <a href="maintenance.html" class="mobile-nav-btn">
+        <i class="fas fa-tools"></i>
+        <span>Maintenance</span>
+    </a>
+    <a href="profit-loss.html" class="mobile-nav-btn">
+        <i class="fas fa-chart-line"></i>
+        <span>Profit & Loss</span>
+    </a>
+</div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-$(function(){
-  $("#mobile-nav-placeholder").load("mobile-nav.html", function() {
-    // Load nav.js after navigation is loaded
-    const script = document.createElement('script');
-    script.src = 'nav.js';
-    document.body.appendChild(script);
-  });
-});
-</script>
+<div class="fab" id="fab-btn">
+    <i class="fas fa-plus"></i>
+</div>
+
+    <script>
+// Handle FAB button click
+    document.getElementById('fab-btn').addEventListener('click', function() {
+        window.location.href = 'add-transaction.html';
+    });
+    
+    // Highlight current page in mobile nav
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+        const navButtons = document.querySelectorAll('.mobile-nav-btn');
+        
+        navButtons.forEach(btn => {
+            const linkPage = btn.getAttribute('href').split('/').pop();
+            btn.classList.remove('active');
+            
+            if (currentPage === linkPage) {
+                btn.classList.add('active');
+            }
+        });
+    });
+    </script>
 
 <script src="reports.js"></script>
 </body>
