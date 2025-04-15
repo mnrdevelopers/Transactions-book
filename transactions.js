@@ -376,9 +376,8 @@ function processSheetData(sheetData) {
                 storeName: String(row[0] || ""),
                 date: date,
                 dateString: formatDateForDisplay(date),
-                time: String(row[3] || ""),
                 siNo: siNo,
-                customerName: String(row[4] || ""),
+                customerName: String(row[3] || ""),
                 items: [],
                 paymentMode: String(row[8] || ""),
                 totalAmount: parseFloat(row[9]) || 0,
@@ -522,7 +521,6 @@ function renderTransactions() {
         row.innerHTML = `
             <td>${transaction.siNo}</td>
             <td>${transaction.dateString}</td>
-            <td>${transaction.time || "-"}</td>
             <td>${transaction.customerName}</td>
             <td>${itemsSummary}</td>
             <td>₹${transaction.totalAmount.toFixed(2)}</td>
@@ -644,7 +642,7 @@ function viewTransactionDetails(e) {
     elements.transactionDetails.innerHTML = `
         <div class="transaction-header">
             <p><strong>Store:</strong> ${transaction.storeName}</p>
-           <p><strong>Date:</strong> ${transaction.dateString} <strong>Time:</strong> ${transaction.time || "-"}</p>
+            <p><strong>Date:</strong> ${transaction.dateString}</p>
             <p><strong>Bill No:</strong> ${transaction.siNo}</p>
             <p><strong>Customer:</strong> ${transaction.customerName}</p>
             <p><strong>Payment Mode:</strong> ${transaction.paymentMode}</p>
@@ -743,7 +741,7 @@ function closeModal() {
 function showLoading() {
     elements.transactionsBody.innerHTML = `
         <tr>
-            <td colspan="9" class="loading-spinner">
+            <td colspan="8" class="loading-spinner">
                 <div class="spinner"></div>
                 Loading transactions...
             </td>
@@ -754,7 +752,7 @@ function showLoading() {
 function showError(message) {
     elements.transactionsBody.innerHTML = `
         <tr>
-            <td colspan="9" class="error-message">
+            <td colspan="8" class="error-message">
                 ${message}
                 <button onclick="loadTransactions()">Retry</button>
             </td>
