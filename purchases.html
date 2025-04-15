@@ -6,6 +6,7 @@
     <title>Purchase Management - MNR Bill Book</title>
     <link rel="icon" href="https://i.postimg.cc/4dk3wD5Z/20250405-192435.png">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mobile-nav.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -485,19 +486,13 @@
     </div>
 </div
 
-   <!-- Navigation -->
-<div id="nav-placeholder"></div>
+<!-- Mobile Navigation -->
+<div id="mobile-nav-placeholder"></div>
 
-<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(function(){
-  $("#nav-placeholder").load("offcanvas-nav.html", function() {
-    // Load nav.js after navigation is loaded
-    const script = document.createElement('script');
-    script.src = 'nav.js';
-    document.body.appendChild(script);
-  });
+  $("#mobile-nav-placeholder").load("mobile-nav.html");
 });
 </script>
     <script src="script.js"></script>
