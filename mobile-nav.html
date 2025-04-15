@@ -38,20 +38,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // FAB click handler - customize per page
+    // FAB click handler - ALWAYS goes to add-transaction.html
     const fabBtn = document.getElementById('fab-btn');
     if (fabBtn) {
         fabBtn.addEventListener('click', function() {
-            // Default action - override in specific pages if needed
-            if (currentPage === 'dashboard.html' || currentPage === 'transactions.html') {
-                window.location.href = 'add-transaction.html';
-            } else if (currentPage === 'purchases.html') {
-                // Handle purchase add action
-                document.getElementById('add-purchase-btn').click();
-            } else if (currentPage === 'maintenance.html') {
-                // Handle maintenance add action
-                // You might need to trigger your modal here
-            }
+            window.location.href = 'add-transaction.html';
         });
     }
 });
