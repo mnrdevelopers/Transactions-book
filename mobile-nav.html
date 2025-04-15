@@ -27,23 +27,25 @@
 </div>
 
 <script>
-// Add this script to handle active states and FAB click
 document.addEventListener('DOMContentLoaded', function() {
+    // Get current page name without .html
+    const currentPath = window.location.pathname;
+    let currentPage = currentPath.split('/').pop().replace('.html', '') || 'dashboard';
+    
+    // Special case for root/index page
+    if (currentPath.endsWith('/') || currentPath === '') {
+        currentPage = 'dashboard';
+    }
+    
     // Set active state for current page
-    const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
     document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
-        const btnPage = btn.getAttribute('href').split('/').pop();
-        if(currentPage === btnPage) {
-            btn.classList.add('active');
-        }
+        const btnPage = btn.getAttribute('data-page');
+        btn.classList.toggle('active', currentPage === btnPage);
     });
     
-    // FAB click handler - ALWAYS goes to add-transaction.html
-    const fabBtn = document.getElementById('fab-btn');
-    if (fabBtn) {
-        fabBtn.addEventListener('click', function() {
-            window.location.href = 'add-transaction.html';
-        });
-    }
+    // FAB click handler - always goes to add-transaction
+    document.getElementById('fab-btn').addEventListener('click', function() {
+        window.location.href = 'add-transaction.html';
+    });
 });
 </script>
