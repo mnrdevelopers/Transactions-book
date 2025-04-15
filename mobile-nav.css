@@ -1,0 +1,108 @@
+/* Mobile Bottom Navigation */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    display: none;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 0;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+    border-top: 1px solid rgba(78, 31, 0, 0.1);
+}
+
+.mobile-nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--secondary);
+    text-decoration: none;
+    font-size: 0.7rem;
+    padding: 6px 8px;
+    border-radius: 8px;
+    transition: var(--transition);
+    position: relative;
+}
+
+.mobile-nav-btn i {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+    transition: var(--transition);
+}
+
+.mobile-nav-btn.active {
+    color: var(--primary);
+}
+
+.mobile-nav-btn.active i {
+    color: var(--accent);
+}
+
+.mobile-nav-btn:hover {
+    background: rgba(254, 186, 23, 0.1);
+}
+
+.mobile-nav-btn:hover i {
+    transform: translateY(-3px);
+}
+
+/* Floating Action Button */
+.fab {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.fab:hover {
+    background: var(--secondary);
+    transform: scale(1.1) translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.fab i {
+    transition: var(--transition);
+}
+
+.fab:hover i {
+    transform: rotate(90deg);
+}
+
+/* Show only on mobile */
+@media (max-width: 768px) {
+    .mobile-bottom-nav {
+        display: flex;
+    }
+    
+    .fab {
+        display: flex;
+    }
+    
+    /* Adjust page content to account for bottom nav */
+    .dashboard-container,
+    .content-container,
+    .container {
+        padding-bottom: 80px;
+    }
+    
+    /* Adjust install button position if it exists */
+    .btn-install {
+        bottom: 90px !important;
+    }
+}
