@@ -28,8 +28,7 @@ const elements = {
     supplierLastDate: document.getElementById('supplier-last-date'),
     supplierPendingBills: document.getElementById('supplier-pending-bills'),
     supplierUniqueItems: document.getElementById('supplier-unique-items'),
-    supplierAvgDays: document.getElementById('supplier-avg-days')
-};
+    supplierAvgDays: document.getElementById('supplier-avg-days'),
     
 
     
