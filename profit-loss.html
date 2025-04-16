@@ -143,10 +143,19 @@
             display: none;
         }
 
-        .spinner {
-            width: 3rem;
-            height: 3rem;
-        }
+         /* Add this to your existing styles */
+    .loading-logo {
+        width: 60px;
+        height: 60px;
+        margin: 20px auto;
+        animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+        100% { transform: scale(1); opacity: 1; }
+    }
 
         .status-badge {
             padding: 0.25rem 0.5rem;
@@ -300,12 +309,13 @@
         </div>
     </div>
 
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loading-overlay">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
+   <!-- Replace the existing loading overlay with this -->
+<div class="loading-overlay" id="loading-overlay">
+    <div style="text-align: center; color: white;">
+        <img src="https://i.postimg.cc/4dk3wD5Z/20250405-192435.png" class="loading-logo" alt="Loading">
+        <p style="margin-top: 15px; font-size: 1.1rem;">Loading financial data...</p>
     </div>
+</div>
 
  <div class="mobile-bottom-nav">
     <a href="dashboard.html" class="mobile-nav-btn active">
