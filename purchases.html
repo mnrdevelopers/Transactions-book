@@ -10,7 +10,62 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-    /* Add these styles to your existing style section */
+        /* Supplier Analytics Styles */
+.supplier-analytics {
+    margin: 30px 0;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.supplier-analytics h2 {
+    margin-top: 0;
+    color: #4a6bff;
+    font-size: 1.5em;
+}
+
+.supplier-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.supplier-controls select {
+    flex: 1;
+}
+
+.supplier-summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.supplier-card {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #4a6bff;
+}
+
+.supplier-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 1em;
+    color: #555;
+}
+
+.supplier-card .amount {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 5px 0;
+    color: #333;
+}
+
+.supplier-card .meta {
+    font-size: 0.8em;
+    color: #666;
+    margin: 5px 0 0 0;
+}
 /* Loading Overlay Styles */
     #loading-overlay {
         position: fixed;
@@ -279,18 +334,6 @@
             <i class="fas fa-plus-circle"></i> Add New Purchase
         </button>
 
-        <div class="summary-filters" id="summary-filters">
-    <select id="summary-period" class="form-control">
-        <option value="all">All Time</option>
-        <option value="month">This Month</option>
-        <option value="year">This Year</option>
-    </select>
-    <select id="summary-supplier" class="form-control">
-        <option value="">All Suppliers</option>
-        <!-- Suppliers will be populated here -->
-    </select>
-    </div>
-
         <!-- Summary Cards -->
         <div class="summary-cards">
             <div class="summary-card">
@@ -314,6 +357,42 @@
                 <p class="change">Last: <span id="last-supplier">None</span></p>
             </div>
         </div>
+
+        <!-- Supplier Analytics Section -->
+<div class="supplier-analytics">
+    <h2>Supplier Analytics</h2>
+    <div class="supplier-controls">
+        <select id="supplier-analytics-filter" class="form-control">
+            <option value="">Select Supplier</option>
+        </select>
+        <button id="view-supplier-details" class="submit-btn">
+            <i class="fas fa-chart-pie"></i> View Details
+        </button>
+    </div>
+    
+    <div class="supplier-summary-cards">
+        <div class="supplier-card">
+            <h3><i class="fas fa-file-invoice-dollar"></i> Total Business</h3>
+            <p class="amount" id="supplier-total">₹0.00</p>
+            <p class="meta">Last Purchase: <span id="supplier-last-date">None</span></p>
+        </div>
+        <div class="supplier-card">
+            <h3><i class="fas fa-money-bill-wave"></i> Pending Payments</h3>
+            <p class="amount" id="supplier-pending">₹0.00</p>
+            <p class="meta"><span id="supplier-pending-bills">0</span> pending bills</p>
+        </div>
+        <div class="supplier-card">
+            <h3><i class="fas fa-boxes"></i> Items Purchased</h3>
+            <p class="amount" id="supplier-items">0</p>
+            <p class="meta"><span id="supplier-unique-items">0</span> unique items</p>
+        </div>
+        <div class="supplier-card">
+            <h3><i class="fas fa-calendar-alt"></i> Purchase Frequency</h3>
+            <p class="amount" id="supplier-frequency">0</p>
+            <p class="meta"><span id="supplier-avg-days">0</span> days between orders</p>
+        </div>
+    </div>
+</div>
 
         <!-- Charts -->
         <div class="chart-container">
