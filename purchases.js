@@ -119,86 +119,85 @@ document.addEventListener('DOMContentLoaded', function() {
 function setupEventListeners() {
     // Period buttons
     elements.periodBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', () => {
             elements.periodBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            currentPeriod = this.dataset.period;
+            btn.classList.add('active');
+            currentPeriod = btn.dataset.period;
             loadPurchases();
         });
     });
-    
+
     // Generate report button
-    elements.generateBtn.addEventListener('click', loadPurchases);
+    elements.generateBtn?.addEventListener('click', loadPurchases);
 
-    elements.viewSupplierDetails.addEventListener('click', showSupplierDetails);
-
-    elements.supplierAnalyticsFilter.addEventListener('change', function() {
-    updateSupplierAnalytics(this.value || null);
-    });
+    // Summary dropdowns
+    elements.summaryPeriod?.addEventListener('change', updateSummaryCards);
+    elements.summarySupplier?.addEventListener('change', updateSummaryCards);
 
     // Filters
-    elements.supplierFilter.addEventListener('change', filterPurchases);
-    elements.paymentFilter.addEventListener('change', filterPurchases);
-    elements.itemFilter.addEventListener('change', filterPurchases);
-    elements.searchInput.addEventListener('keyup', function(e) {
+    elements.supplierFilter?.addEventListener('change', filterPurchases);
+    elements.paymentFilter?.addEventListener('change', filterPurchases);
+    elements.itemFilter?.addEventListener('change', filterPurchases);
+
+    elements.searchInput?.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') filterPurchases();
     });
-    elements.searchBtn.addEventListener('click', filterPurchases);
-    
+    elements.searchBtn?.addEventListener('click', filterPurchases);
+
     // Pagination
-    elements.prevBtn.addEventListener('click', goToPrevPage);
-    elements.nextBtn.addEventListener('click', goToNextPage);
-    
+    elements.prevBtn?.addEventListener('click', goToPrevPage);
+    elements.nextBtn?.addEventListener('click', goToNextPage);
+
     // Add purchase button
-    elements.addPurchaseBtn.addEventListener('click', showAddPurchaseModal);
-    
+    elements.addPurchaseBtn?.addEventListener('click', showAddPurchaseModal);
+
     // Modal close buttons
     document.querySelectorAll('.close').forEach(btn => {
         btn.addEventListener('click', closeModal);
     });
-    
+
     // Cancel purchase button
-    elements.cancelPurchase.addEventListener('click', closeModal);
-    
+    elements.cancelPurchase?.addEventListener('click', closeModal);
+
     // Payment type change
-    elements.paymentType.addEventListener('change', function() {
-        if (this.value === 'spot') {
+    elements.paymentType?.addEventListener('change', () => {
+        const type = elements.paymentType.value;
+        if (type === 'spot') {
             elements.amountPaid.value = '';
             elements.amountPaid.readOnly = true;
             elements.dueDate.disabled = true;
-        } else if (this.value === 'credit') {
-            elements.amountPaid.value = '0';
-            elements.amountPaid.readOnly = false;
-            elements.dueDate.disabled = false;
-        } else { // partial
-            elements.amountPaid.value = '';
+        } else {
+            elements.amountPaid.value = type === 'credit' ? '0' : '';
             elements.amountPaid.readOnly = false;
             elements.dueDate.disabled = false;
         }
     });
-    
+
     // Bill image upload
-    elements.billImage.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
+    elements.billImage?.addEventListener('change', () => {
+        const file = elements.billImage.files?.[0];
+        if (file) {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 elements.imagePreview.innerHTML = `
-                    <img src="${e.target.result}" style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;">
+                    <img src="${e.target.result}" 
+                         style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;">
                 `;
             };
-            reader.readAsDataURL(this.files[0]);
+            reader.readAsDataURL(file);
         }
     });
-    
+
     // Add item button
-    elements.addItemBtn.addEventListener('click', addPurchaseItem);
-    
+    elements.addItemBtn?.addEventListener('click', addPurchaseItem);
+
     // Form submission
-    elements.purchaseForm.addEventListener('submit', handlePurchaseSubmit);
-    
+    elements.purchaseForm?.addEventListener('submit', handlePurchaseSubmit);
+
     // Initialize with one item
     addPurchaseItem();
 }
+
 
 async function loadPurchases() {
     try {
