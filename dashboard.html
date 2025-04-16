@@ -75,6 +75,19 @@ header p {
     justify-content: center;
     gap: 8px;
 }
+  
+  .loading-logo {
+    width: 60px;
+    height: 60px;
+    margin: 20px auto;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
 
 /* Modern Navigation */
 .nav-dashboard-buttons {
@@ -910,11 +923,12 @@ window.addEventListener("beforeinstallprompt", (event) => {
         async function loadCustomerFlowData(timePeriod = 'week') {
             try {
                 // Show loading states
-                document.getElementById('business-tips').innerHTML = `
-                    <div class="tip-loading">
-                        <i class="fas fa-spinner fa-spin"></i> Analyzing business patterns...
-                    </div>
-                `;
+              document.getElementById('business-tips').innerHTML = `
+    <div style="text-align: center; padding: 20px;">
+        <img src="https://i.postimg.cc/4dk3wD5Z/20250405-192435.png" class="loading-logo" alt="Loading">
+        <p style="color: var(--secondary);">Analyzing business patterns...</p>
+    </div>
+`;
                 
                 // Update date range display
                 updateDateRangeDisplay(timePeriod);
