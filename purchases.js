@@ -308,32 +308,7 @@ function updateSupplierFilter() {
 
 function updateSummaryCards() {
     if (allPurchases.length === 0) return;
-    const periodFilter = elements.summaryPeriod.value;
-    const supplierFilter = elements.summarySupplier.value;
-    
-    let filteredPurchases = allPurchases;
-    
-    // Apply period filter
-    if (periodFilter === 'month') {
-        const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
-        filteredPurchases = filteredPurchases.filter(p => {
-            const purchaseDate = new Date(p.date);
-            return purchaseDate.getMonth() === currentMonth && 
-                   purchaseDate.getFullYear() === currentYear;
-        });
-    } else if (periodFilter === 'year') {
-        const currentYear = new Date().getFullYear();
-        filteredPurchases = filteredPurchases.filter(p => {
-            return new Date(p.date).getFullYear() === currentYear;
-        });
-    }
-    
-    // Apply supplier filter
-    if (supplierFilter) {
-        filteredPurchases = filteredPurchases.filter(p => p.supplier === supplierFilter);
-    }
-    
+   
     // Total purchases
     const total = allPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
     elements.totalPurchases.textContent = `₹${total.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
