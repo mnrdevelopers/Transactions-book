@@ -19,6 +19,10 @@ const elements = {
     pendingChange: document.getElementById('pending-change'),
     stockChange: document.getElementById('stock-change'),
     lastSupplier: document.getElementById('last-supplier'),
+    summaryFilters: document.getElementById('summary-filters'),
+    summaryPeriod: document.getElementById('summary-period'),
+    summarySupplier: document.getElementById('summary-supplier'),
+
     
     // Chart
     purchaseChart: document.getElementById('purchaseChart'),
@@ -116,7 +120,10 @@ function setupEventListeners() {
     
     // Generate report button
     elements.generateBtn.addEventListener('click', loadPurchases);
-    
+
+    elements.summaryPeriod.addEventListener('change', updateSummaryCards);
+    elements.summarySupplier.addEventListener('change', updateSummaryCards);
+
     // Filters
     elements.supplierFilter.addEventListener('change', filterPurchases);
     elements.paymentFilter.addEventListener('change', filterPurchases);
@@ -283,6 +290,31 @@ function updateFilters() {
 
 function updateSummaryCards() {
     if (allPurchases.length === 0) return;
+    const periodFilter = elements.summaryPeriod.value;
+    const supplierFilter = elements.summarySupplier.value;
+    
+    let filteredPurchases = allPurchases;
+    
+    // Apply period filter
+    if (periodFilter === 'month') {
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        filteredPurchases = filteredPurchases.filter(p => {
+            const purchaseDate = new Date(p.date);
+            return purchaseDate.getMonth() === currentMonth && 
+                   purchaseDate.getFullYear() === currentYear;
+        });
+    } else if (periodFilter === 'year') {
+        const currentYear = new Date().getFullYear();
+        filteredPurchases = filteredPurchases.filter(p => {
+            return new Date(p.date).getFullYear() === currentYear;
+        });
+    }
+    
+    // Apply supplier filter
+    if (supplierFilter) {
+        filteredPurchases = filteredPurchases.filter(p => p.supplier === supplierFilter);
+    }
     
     // Total purchases
     const total = allPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
