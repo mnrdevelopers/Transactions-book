@@ -37,7 +37,7 @@ const elements = {
     purchaseChart: document.getElementById('purchaseChart'),
     
     // Controls
-    periodBtns: document.querySelectorAll('.period-btn'),
+    periodBtn: document.querySelectorAll('.period-btn'),
     reportDate: document.getElementById('report-date'),
     generateBtn: document.getElementById('generate-report'),
     supplierFilter: document.getElementById('supplier-filter'),
