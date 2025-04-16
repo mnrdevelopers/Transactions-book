@@ -129,9 +129,9 @@ function setupEventListeners() {
     // Generate report button
     elements.generateBtn?.addEventListener('click', loadPurchases);
 
-    // Summary dropdowns
-    elements.summaryPeriod?.addEventListener('change', updateSummaryCards);
-    elements.summarySupplier?.addEventListener('change', updateSummaryCards);
+   elements.supplierAnalyticsFilter.addEventListener('change', function() {
+    updateSupplierAnalytics(this.value || null);
+});
 
     // Filters
     elements.supplierFilter?.addEventListener('change', filterPurchases);
@@ -213,7 +213,7 @@ async function loadPurchases() {
         allPurchases = processPurchaseData(data);
         
         updateFilters();
-        updateSupplierFilter(); // Add this line
+        updateSupplierFilter(); // Make sure this is called
         updateSummaryCards();
         renderChart();
         filterPurchases();
