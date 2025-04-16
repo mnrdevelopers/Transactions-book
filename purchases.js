@@ -19,9 +19,18 @@ const elements = {
     pendingChange: document.getElementById('pending-change'),
     stockChange: document.getElementById('stock-change'),
     lastSupplier: document.getElementById('last-supplier'),
-    summaryFilters: document.getElementById('summary-filters'),
-    summaryPeriod: document.getElementById('summary-period'),
-    summarySupplier: document.getElementById('summary-supplier'),
+    supplierAnalyticsFilter: document.getElementById('supplier-analytics-filter'),
+    viewSupplierDetails: document.getElementById('view-supplier-details'),
+    supplierTotal: document.getElementById('supplier-total'),
+    supplierPending: document.getElementById('supplier-pending'),
+    supplierItems: document.getElementById('supplier-items'),
+    supplierFrequency: document.getElementById('supplier-frequency'),
+    supplierLastDate: document.getElementById('supplier-last-date'),
+    supplierPendingBills: document.getElementById('supplier-pending-bills'),
+    supplierUniqueItems: document.getElementById('supplier-unique-items'),
+    supplierAvgDays: document.getElementById('supplier-avg-days')
+};
+    
 
     
     // Chart
@@ -121,8 +130,11 @@ function setupEventListeners() {
     // Generate report button
     elements.generateBtn.addEventListener('click', loadPurchases);
 
-    elements.summaryPeriod.addEventListener('change', updateSummaryCards);
-    elements.summarySupplier.addEventListener('change', updateSummaryCards);
+    elements.viewSupplierDetails.addEventListener('click', showSupplierDetails);
+
+    elements.supplierAnalyticsFilter.addEventListener('change', function() {
+    updateSupplierAnalytics(this.value || null);
+    });
 
     // Filters
     elements.supplierFilter.addEventListener('change', filterPurchases);
@@ -192,30 +204,26 @@ async function loadPurchases() {
     try {
         showLoading();
         
-        // This would be replaced with your actual API call
         const scriptUrl = "https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec";
         const response = await fetch(scriptUrl);
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         const data = await response.json();
-        // Check if we got an error response
-        if (data.error) {
-            throw new Error(data.error);
-        }
+        if (data.error) throw new Error(data.error);
         
         allPurchases = processPurchaseData(data);
         
-        // Update filters and UI
         updateFilters();
+        updateSupplierFilter(); // Add this line
         updateSummaryCards();
         renderChart();
         filterPurchases();
     } catch (error) {
         console.error("Error loading purchases:", error);
         showError("Failed to load purchases. Please try again.");
+    } finally {
+        hideLoading();
     }
 }
 
@@ -285,6 +293,18 @@ function updateFilters() {
         option.value = item;
         option.textContent = item;
         elements.itemFilter.appendChild(option);
+    });
+}
+
+function updateSupplierFilter() {
+    const suppliers = [...new Set(allPurchases.map(p => p.supplier))].filter(s => s);
+    elements.supplierAnalyticsFilter.innerHTML = '<option value="">Select Supplier</option>';
+    
+    suppliers.forEach(supplier => {
+        const option = document.createElement('option');
+        option.value = supplier;
+        option.textContent = supplier;
+        elements.supplierAnalyticsFilter.appendChild(option);
     });
 }
 
@@ -358,6 +378,176 @@ function updateSummaryCards() {
     // Calculate changes (simplified - would compare with previous period)
     elements.purchaseChange.textContent = '0%';
     elements.pendingChange.textContent = allPurchases.filter(p => p.status === 'pending').length;
+}
+
+function updateSupplierAnalytics(selectedSupplier = null) {
+    if (!selectedSupplier) {
+        resetSupplierAnalytics();
+        return;
+    }
+
+    const supplierPurchases = allPurchases.filter(p => p.supplier === selectedSupplier);
+    if (supplierPurchases.length === 0) {
+        resetSupplierAnalytics();
+        return;
+    }
+
+    // Total business
+    const total = supplierPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+    elements.supplierTotal.textContent = `₹${total.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+
+    // Pending payments
+    const pending = supplierPurchases
+        .filter(p => p.status === 'pending' || p.status === 'partial')
+        .reduce((sum, p) => sum + p.balance, 0);
+    elements.supplierPending.textContent = `₹${pending.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    elements.supplierPendingBills.textContent = supplierPurchases
+        .filter(p => p.status === 'pending' || p.status === 'partial').length;
+
+    // Items purchased
+    const allItems = [];
+    const uniqueItems = new Set();
+    supplierPurchases.forEach(p => {
+        p.items.forEach(item => {
+            allItems.push({
+                name: item.name,
+                quantity: parseFloat(item.quantity) || 0
+            });
+            uniqueItems.add(item.name);
+        });
+    });
+    const totalItems = allItems.reduce((sum, item) => sum + item.quantity, 0);
+    elements.supplierItems.textContent = totalItems;
+    elements.supplierUniqueItems.textContent = uniqueItems.size;
+
+    // Purchase frequency
+    const sortedDates = supplierPurchases
+        .map(p => new Date(p.date))
+        .sort((a, b) => a - b);
+    
+    elements.supplierFrequency.textContent = supplierPurchases.length;
+    
+    if (sortedDates.length > 1) {
+        const dateDiffs = [];
+        for (let i = 1; i < sortedDates.length; i++) {
+            dateDiffs.push((sortedDates[i] - sortedDates[i-1]) / (1000 * 60 * 60 * 24));
+        }
+        const avgDays = Math.round(dateDiffs.reduce((a, b) => a + b, 0) / dateDiffs.length);
+        elements.supplierAvgDays.textContent = avgDays;
+    } else {
+        elements.supplierAvgDays.textContent = 'N/A';
+    }
+
+    // Last purchase date
+    const lastPurchase = sortedDates[sortedDates.length - 1];
+    elements.supplierLastDate.textContent = lastPurchase.toLocaleDateString();
+}
+
+function resetSupplierAnalytics() {
+    elements.supplierTotal.textContent = '₹0.00';
+    elements.supplierPending.textContent = '₹0.00';
+    elements.supplierItems.textContent = '0';
+    elements.supplierFrequency.textContent = '0';
+    elements.supplierLastDate.textContent = 'None';
+    elements.supplierPendingBills.textContent = '0';
+    elements.supplierUniqueItems.textContent = '0';
+    elements.supplierAvgDays.textContent = '0';
+}
+
+function showSupplierDetails() {
+    const selectedSupplier = elements.supplierAnalyticsFilter.value;
+    if (!selectedSupplier) {
+        alert('Please select a supplier first');
+        return;
+    }
+
+    const supplierPurchases = allPurchases.filter(p => p.supplier === selectedSupplier);
+    if (supplierPurchases.length === 0) {
+        alert('No purchases found for this supplier');
+        return;
+    }
+
+    // Create detailed HTML
+    const html = `
+        <div class="supplier-details-header">
+            <h2>${selectedSupplier}</h2>
+            <p>${supplierPurchases.length} purchases since ${new Date(supplierPurchases[supplierPurchases.length-1].date).toLocaleDateString()}</p>
+        </div>
+        
+        <div class="supplier-stats-grid">
+            <div class="stat-card">
+                <h3>Total Business</h3>
+                <p class="stat-value">₹${supplierPurchases.reduce((sum, p) => sum + p.totalAmount, 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Avg. Purchase Value</h3>
+                <p class="stat-value">₹${(supplierPurchases.reduce((sum, p) => sum + p.totalAmount, 0) / supplierPurchases.length).toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Pending Payments</h3>
+                <p class="stat-value">₹${supplierPurchases.filter(p => p.status === 'pending' || p.status === 'partial').reduce((sum, p) => sum + p.balance, 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Payment Compliance</h3>
+                <p class="stat-value">${Math.round((supplierPurchases.filter(p => p.status === 'paid').length / supplierPurchases.length * 100)}%</p>
+            </div>
+        </div>
+        
+        <h3>Purchase History</h3>
+        <div class="purchase-history">
+            ${supplierPurchases.slice(0, 10).map(purchase => `
+                <div class="purchase-item">
+                    <div class="purchase-date">${formatDate(purchase.date)}</div>
+                    <div class="purchase-amount">₹${purchase.totalAmount.toFixed(2)}</div>
+                    <div class="purchase-status ${purchase.status}">${purchase.status}</div>
+                    <div class="purchase-actions">
+                        <button class="view-btn" data-id="${purchase.id}">View</button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        
+        <h3>Top Purchased Items</h3>
+        <div class="top-items">
+            ${getTopItems(supplierPurchases, 5).map(item => `
+                <div class="item-row">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-quantity">${item.quantity} units</div>
+                    <div class="item-value">₹${item.totalValue.toFixed(2)}</div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+
+    elements.purchaseDetails.innerHTML = html;
+    elements.viewModal.style.display = 'flex';
+    
+    // Add event listeners to view buttons
+    document.querySelectorAll('.purchase-actions .view-btn').forEach(btn => {
+        btn.addEventListener('click', viewPurchaseDetails);
+    });
+}
+
+function getTopItems(purchases, limit = 5) {
+    const itemsMap = {};
+    
+    purchases.forEach(purchase => {
+        purchase.items.forEach(item => {
+            if (!itemsMap[item.name]) {
+                itemsMap[item.name] = {
+                    name: item.name,
+                    quantity: 0,
+                    totalValue: 0
+                };
+            }
+            itemsMap[item.name].quantity += parseFloat(item.quantity) || 0;
+            itemsMap[item.name].totalValue += (parseFloat(item.quantity) || 0) * (parseFloat(item.price) || 0);
+        });
+    });
+    
+    return Object.values(itemsMap)
+        .sort((a, b) => b.totalValue - a.totalValue)
+        .slice(0, limit);
 }
 
 function renderChart() {
