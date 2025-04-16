@@ -10,6 +10,123 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Supplier Details Modal Styles */
+.supplier-details-header {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.supplier-details-header h2 {
+    margin: 0;
+    color: #4a6bff;
+}
+
+.supplier-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.stat-card {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.stat-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 1em;
+    color: #555;
+}
+
+.stat-value {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 0;
+    color: #333;
+}
+
+.purchase-history {
+    margin: 20px 0;
+}
+
+.purchase-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.purchase-item:hover {
+    background-color: #f5f5f5;
+}
+
+.purchase-date {
+    flex: 1;
+}
+
+.purchase-amount {
+    flex: 0 0 100px;
+    text-align: right;
+    font-family: 'Courier New', monospace;
+}
+
+.purchase-status {
+    flex: 0 0 100px;
+    text-align: center;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    text-transform: capitalize;
+}
+
+.purchase-status.paid {
+    background-color: #e6f7ee;
+    color: #10b759;
+}
+
+.purchase-status.pending {
+    background-color: #ffebee;
+    color: #f44336;
+}
+
+.purchase-status.partial {
+    background-color: #fff8e1;
+    color: #ffa000;
+}
+
+.purchase-actions {
+    flex: 0 0 80px;
+    text-align: right;
+}
+
+.top-items {
+    margin: 20px 0;
+}
+
+.item-row {
+    display: flex;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.item-name {
+    flex: 2;
+}
+
+.item-quantity {
+    flex: 1;
+    text-align: right;
+}
+
+.item-value {
+    flex: 1;
+    text-align: right;
+    font-family: 'Courier New', monospace;
+}
         /* Supplier Analytics Styles */
 .supplier-analytics {
     margin: 30px 0;
