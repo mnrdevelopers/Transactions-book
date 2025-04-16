@@ -79,6 +79,35 @@ function updateDateRangeByPeriod() {
 
 async function loadAllData() {
     showLoading();
+
+     // Add loading states to summary cards
+    document.querySelectorAll('.summary-card .value').forEach(el => {
+        el.innerHTML = `<img src="https://i.postimg.cc/4dk3wD5Z/20250405-192435.png" style="width: 30px; height: 30px; opacity: 0.7;">`;
+    });
+    
+    // Add loading state to charts
+    document.querySelectorAll('.chart-container').forEach(container => {
+        const canvas = container.querySelector('canvas');
+        if (canvas) {
+            container.innerHTML = `
+                <div style="text-align: center; padding-top: 100px;">
+                    <img src="https://i.postimg.cc/4dk3wD5Z/20250405-192435.png" class="loading-logo" alt="Loading">
+                    <p style="color: var(--secondary-color);">Preparing chart data...</p>
+                </div>
+            `;
+            container.dataset.hasCanvas = 'true';
+        }
+    });
+    
+    // Add loading state to breakdown table
+    document.getElementById('breakdownBody').innerHTML = `
+        <tr>
+            <td colspan="4" style="text-align: center; padding: 20px;">
+                <img src="https://i.postimg.cc/4dk3wD5Z/20250405-192435.png" style="width: 30px; height: 30px; opacity: 0.7;">
+                <p style="color: var(--secondary-color); margin-top: 10px;">Calculating financial breakdown...</p>
+            </td>
+        </tr>
+    `;
     
     try {
         // Load data from all three sources in parallel
@@ -367,6 +396,11 @@ function groupDataByPeriod(salesData, purchaseData, maintenanceData) {
 }
 
 function renderProfitLossChart(groupedData) {
+    const container = document.getElementById('profitLossChart').parentElement;
+    if (container.dataset.hasCanvas === 'true') {
+        container.innerHTML = '<canvas id="profitLossChart"></canvas>';
+        container.removeAttribute('data-has-canvas');
+    }
     const ctx = document.getElementById('profitLossChart').getContext('2d');
     const labels = groupedData.map(g => g.label);
     const profitData = groupedData.map(g => g.profit);
@@ -438,6 +472,11 @@ function renderProfitLossChart(groupedData) {
 }
 
 function renderExpenseChart(purchaseData, maintenanceData) {
+    const container = document.getElementById('expenseChart').parentElement;
+    if (container.dataset.hasCanvas === 'true') {
+        container.innerHTML = '<canvas id="expenseChart"></canvas>';
+        container.removeAttribute('data-has-canvas');
+    }
     const ctx = document.getElementById('expenseChart').getContext('2d');
     
     // Group maintenance by category
