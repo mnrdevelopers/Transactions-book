@@ -485,11 +485,12 @@ function showSupplierDetails() {
                 <h3>Pending Payments</h3>
                 <p class="stat-value">₹${supplierPurchases.filter(p => p.status === 'pending' || p.status === 'partial').reduce((sum, p) => sum + p.balance, 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
             </div>
-            <div class="stat-card">
-                <h3>Payment Compliance</h3>
-                <p class="stat-value">${Math.round((supplierPurchases.filter(p => p.status === 'paid').length / supplierPurchases.length * 100)}%</p>
-            </div>
-        </div>
+           <div class="stat-card">
+    <h3>Payment Compliance</h3>
+    <p class="stat-value">${Math.round((supplierPurchases.filter(p => p.status === 'paid').length / supplierPurchases.length) * 100)})%</p>
+    </div>
+</div>
+
         
         <h3>Purchase History</h3>
         <div class="purchase-history">
