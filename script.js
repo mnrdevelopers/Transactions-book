@@ -103,10 +103,10 @@ const Auth = {
 
  register: async function(data) {
   try {
-    // Use a different CORS proxy
-    const proxyUrl = 'https://api.allorigins.win/raw?url=';
-    const targetUrl = 'https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec';
-    
+      
+  const targetUrl = 'https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec';
+  const response = await fetch(targetUrl, {
+
     const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
       method: 'POST',
       headers: {
