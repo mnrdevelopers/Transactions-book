@@ -205,15 +205,14 @@
 
         <!-- Report Period Selector -->
         <div class="report-period">
-           <div style="margin-bottom: 1rem;">
-  <label for="start-date">Start Date:</label>
-  <input type="date" id="start-date" />
-
-  <label for="end-date">End Date:</label>
-  <input type="date" id="end-date" />
-
-  <button id="apply-date-range">Apply</button>
-</div>
+            <button class="period-btn active" data-period="daily">Daily</button>
+            <button class="period-btn" data-period="weekly">Weekly</button>
+            <button class="period-btn" data-period="monthly">Monthly</button>
+            <button class="period-btn" data-period="yearly">Yearly</button>
+            <div class="date-picker">
+                <input type="date" id="report-date">
+                <button id="generate-report"><i class="fas fa-sync-alt"></i> Generate</button>
+            </div>
         </div>
 
         <!-- Summary Cards -->
