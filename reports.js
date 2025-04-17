@@ -319,24 +319,30 @@ function calculateSummary(groups) {
     let totalSales = 0;
     let totalProfit = 0;
     let transactionCount = 0;
-    
+
     groups.forEach(group => {
         totalSales += group.totalSales;
         totalProfit += group.totalProfit;
         transactionCount += group.transactions.length;
     });
-    
-    // Calculate percentage changes (you would compare with previous period)
-    const salesChange = 0; // Calculate based on previous period
-    const profitChange = 0; // Calculate based on previous period
-    
-    return {
-        totalSales,
-        totalProfit,
-        transactionCount,
-        salesChange,
-        profitChange
-    };
+
+    // Compare with previous period if data exists
+    let salesChange = 0;
+    let profitChange = 0;
+
+    if (groups.length >= 2) {
+        const last = groups[groups.length - 1];
+        const prev = groups[groups.length - 2];
+        salesChange = calculatePercentChange(prev.totalSales, last.totalSales);
+        profitChange = calculatePercentChange(prev.totalProfit, last.totalProfit);
+    }
+
+    return { totalSales, totalProfit, transactionCount, salesChange, profitChange };
+}
+
+function calculatePercentChange(oldValue, newValue) {
+    if (oldValue === 0) return newValue > 0 ? 100 : 0;
+    return ((newValue - oldValue) / oldValue * 100).toFixed(2);
 }
 
 function prepareChartData(groups, period) {
