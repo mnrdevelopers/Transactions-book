@@ -85,7 +85,6 @@ const Auth = {
       const data = await response.json();
       
       if (data.status === "success") {
-        // Get store details after successful login
         const storeResponse = await fetch(`https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=getStoreDetails&retailerId=${data.retailerId}&token=${data.token}`);
         const storeData = await storeResponse.json();
         
@@ -102,15 +101,15 @@ const Auth = {
     }
   },
 
-    register: async function(data) {
-  try {
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // or another proxy
-    const response = await fetch(proxyUrl + 'https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data)({
+  register: async function(data) {
+    try {
+      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+      const response = await fetch(proxyUrl + 'https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           action: "register",
           username: data.username,
           password: data.password,
@@ -123,12 +122,12 @@ const Auth = {
         })
       });
       
-     return await response.json();
-  } catch (error) {
-    console.error('Registration error:', error);
-    return { status: "error", message: "Failed to connect to server" };
-  }
-},
+      return await response.json();
+    } catch (error) {
+      console.error('Registration error:', error);
+      return { status: "error", message: "Failed to connect to server" };
+    }
+  },
 
   updateStoreDetails: async function(details) {
     try {
@@ -148,7 +147,6 @@ const Auth = {
       const result = await response.json();
       
       if (result.status === "success") {
-        // Update local store details
         this.storeDetails = {
           ...this.storeDetails,
           ...details
@@ -170,6 +168,9 @@ const Auth = {
 
 // Initialize auth when script loads
 Auth.init();
+
+// Make Auth available globally
+window.Auth = Auth;
 
 // Transaction page specific code
 if (document.getElementById("transaction-form")) {
