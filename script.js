@@ -128,7 +128,7 @@ const Auth = {
     console.error('Registration error:', error);
     return { status: "error", message: "Failed to connect to server" };
   }
-}
+},
 
   updateStoreDetails: async function(details) {
     try {
