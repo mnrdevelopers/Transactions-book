@@ -527,6 +527,76 @@ function filterTransactions() {
     });
 }
 
+// ==========================
+// DOWNLOAD REPORTS SECTION
+// ==========================
+
+function exportToCSV(filename, rows) {
+    if (!rows.length) return;
+
+    const headers = Object.keys(rows[0]);
+    const csvContent = [
+        headers.join(","),
+        ...rows.map(row =>
+            headers.map(field => `"${(row[field] ?? "").toString().replace(/"/g, '""')}"`).join(",")
+        )
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+}
+
+function downloadDailyReport() {
+    const today = new Date().toDateString();
+    const allReports = processSheetData(sheetData); // ensure sheetData is available globally
+    const todayReports = allReports.filter(r => formatDateForDisplay(r.date) === formatDateForDisplay(new Date()));
+    exportToCSV(`Daily_Report_${today}.csv`, todayReports);
+}
+
+function downloadMonthlyReport() {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const allReports = processSheetData(sheetData);
+    const monthReports = allReports.filter(r => {
+        const d = new Date(r.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
+    exportToCSV(`Monthly_Report_${now.getFullYear()}-${now.getMonth() + 1}.csv`, monthReports);
+}
+
+function addDownloadButtons() {
+    const container = document.getElementById("reports-buttons") || document.body;
+    const dailyBtn = document.createElement("button");
+    const monthlyBtn = document.createElement("button");
+
+    dailyBtn.textContent = "Download Daily Report";
+    monthlyBtn.textContent = "Download Monthly Report";
+
+    [dailyBtn, monthlyBtn].forEach(btn => {
+        btn.style.margin = "5px";
+        btn.style.padding = "10px";
+        btn.style.background = "#007bff";
+        btn.style.color = "#fff";
+        btn.style.border = "none";
+        btn.style.borderRadius = "5px";
+        btn.style.cursor = "pointer";
+    });
+
+    dailyBtn.onclick = downloadDailyReport;
+    monthlyBtn.onclick = downloadMonthlyReport;
+
+    container.appendChild(dailyBtn);
+    container.appendChild(monthlyBtn);
+}
+
+// Call this after DOM loads
+document.addEventListener("DOMContentLoaded", addDownloadButtons);
+
+
 function showLoading() {
     elements.reportData.innerHTML = `
         <tr>
