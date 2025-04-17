@@ -102,14 +102,15 @@ const Auth = {
     }
   },
 
-  register: async function(data) {
-    try {
-      const response = await fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
+    register: async function(data) {
+  try {
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // or another proxy
+    const response = await fetch(proxyUrl + 'https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)({
           action: "register",
           username: data.username,
           password: data.password,
@@ -122,13 +123,12 @@ const Auth = {
         })
       });
       
-      const result = await response.json();
-      return result;
-    } catch (error) {
-      console.error("Registration error:", error);
-      return { status: "error", message: "Network error. Please try again." };
-    }
-  },
+     return await response.json();
+  } catch (error) {
+    console.error('Registration error:', error);
+    return { status: "error", message: "Failed to connect to server" };
+  }
+}
 
   updateStoreDetails: async function(details) {
     try {
