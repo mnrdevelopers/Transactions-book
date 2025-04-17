@@ -570,24 +570,38 @@ function downloadMonthlyReport() {
 
 function addDownloadButtons() {
     const container = document.getElementById("reports-buttons") || document.body;
-    const dailyBtn = document.createElement("button");
-    const monthlyBtn = document.createElement("button");
 
-    dailyBtn.textContent = "Download Daily Report";
-    monthlyBtn.textContent = "Download Monthly Report";
+    const buttonStyles = `
+        background: linear-gradient(to right, #4A00E0, #8E2DE2);
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 10px 16px;
+        margin: 10px 5px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    `;
 
-    [dailyBtn, monthlyBtn].forEach(btn => {
-        btn.style.margin = "5px";
-        btn.style.padding = "10px";
-        btn.style.background = "#007bff";
-        btn.style.color = "#fff";
-        btn.style.border = "none";
-        btn.style.borderRadius = "5px";
-        btn.style.cursor = "pointer";
-    });
+    const hoverStyles = `
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    `;
 
-    dailyBtn.onclick = downloadDailyReport;
-    monthlyBtn.onclick = downloadMonthlyReport;
+    function createStyledButton(label, onClick) {
+        const btn = document.createElement("button");
+        btn.textContent = label;
+        btn.style.cssText = buttonStyles;
+        btn.onmouseenter = () => btn.style.cssText += hoverStyles;
+        btn.onmouseleave = () => btn.style.cssText = buttonStyles;
+        btn.onclick = onClick;
+        return btn;
+    }
+
+    const dailyBtn = createStyledButton("📅 Download Daily Report", downloadDailyReport);
+    const monthlyBtn = createStyledButton("🗓️ Download Monthly Report", downloadMonthlyReport);
 
     container.appendChild(dailyBtn);
     container.appendChild(monthlyBtn);
