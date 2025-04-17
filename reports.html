@@ -10,7 +10,114 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Report actions */
+        /* Pagination Styles */
+.pagination-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+    align-items: center;
+}
+
+.pagination-info {
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.pagination-buttons {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.pagination-btn {
+    padding: 8px 12px;
+    background: var(--light);
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    color: var(--primary);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: var(--primary);
+    color: white;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.page-numbers button {
+    padding: 8px 12px;
+    min-width: 36px;
+    background: var(--light);
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    color: var(--primary);
+    transition: var(--transition);
+}
+
+.page-numbers button.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.page-numbers button:hover:not(.active) {
+    background: rgba(116, 81, 45, 0.1);
+}
+
+.page-numbers span {
+    padding: 0 5px;
+    color: #777;
+}
+
+/* Mobile Pagination */
+@media (max-width: 768px) {
+    .pagination-wrapper {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .pagination-buttons {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .page-numbers {
+        order: 1;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .pagination-info {
+        order: 2;
+        text-align: center;
+    }
+    
+    .pagination-btn:first-child {
+        order: 0;
+    }
+    
+    .pagination-btn:last-child {
+        order: 3;
+    }
+        
+    /* Report actions */
 .report-actions {
     display: flex;
     gap: 10px;
