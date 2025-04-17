@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - MNR Bill Book</title>
+    <link rel="icon" href="https://i.postimg.cc/4dk3wD5Z/20250405-192435.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .auth-container {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 30px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .auth-container h2 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 25px;
+        }
+        
+        .auth-form {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .form-section {
+            margin-bottom: 20px;
+        }
+        
+        .form-section h3 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+            color: var(--secondary);
+            margin-bottom: 15px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .form-group {
+            display: grid;
+            gap: 8px;
+        }
+        
+        .form-group label {
+            font-weight: 500;
+            color: var(--secondary);
+        }
+        
+        .form-group input, .form-group textarea {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .auth-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 16px;
+        }
+        
+        .auth-btn:hover {
+            background: var(--secondary);
+        }
+        
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        
+        .auth-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .error-message {
+            color: var(--danger);
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .success-message {
+            color: var(--success);
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .logo-preview {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            border: 1px dashed #ddd;
+            display: block;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h2><i class="fas fa-store"></i> Retailer Registration</h2>
+        
+        <form id="register-form" class="auth-form">
+            <div class="form-section">
+                <h3><i class="fas fa-user"></i> Account Information</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="reg-username">Username*</label>
+                        <input type="text" id="reg-username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reg-password">Password* (min 6 characters)</label>
+                        <input type="password" id="reg-password" minlength="6" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3><i class="fas fa-store-alt"></i> Store Information</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="reg-store-name">Store Name*</label>
+                        <input type="text" id="reg-store-name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reg-store-contact">Contact Number*</label>
+                        <input type="tel" id="reg-store-contact" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg-store-address">Store Address*</label>
+                    <textarea id="reg-store-address" required></textarea>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="reg-store-email">Email</label>
+                        <input type="email" id="reg-store-email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reg-upi-id">UPI ID</label>
+                        <input type="text" id="reg-upi-id" placeholder="For digital payments">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg-logo-url">Store Logo URL (optional)</label>
+                    <input type="url" id="reg-logo-url" placeholder="https://example.com/logo.jpg">
+                    <img id="logo-preview" class="logo-preview" style="display:none;">
+                </div>
+            </div>
+            
+            <button type="submit" class="auth-btn">Register My Store</button>
+            
+            <div id="register-error" class="error-message" style="display: none;"></div>
+            <div id="register-success" class="success-message" style="display: none;"></div>
+        </form>
+        
+        <div class="auth-footer">
+            Already have an account? <a href="login.html">Login</a>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Preview logo when URL changes
+            document.getElementById('reg-logo-url').addEventListener('input', function() {
+                const preview = document.getElementById('logo-preview');
+                if (this.value) {
+                    preview.src = this.value;
+                    preview.style.display = 'block';
+                } else {
+                    preview.style.display = 'none';
+                }
+            });
+            
+            // Handle registration form submission
+            document.getElementById('register-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    username: document.getElementById('reg-username').value,
+                    password: document.getElementById('reg-password').value,
+                    storeName: document.getElementById('reg-store-name').value,
+                    storeAddress: document.getElementById('reg-store-address').value,
+                    storeContact: document.getElementById('reg-store-contact').value,
+                    storeEmail: document.getElementById('reg-store-email').value,
+                    upiId: document.getElementById('reg-upi-id').value,
+                    logoUrl: document.getElementById('reg-logo-url').value
+                };
+                
+                const errorElement = document.getElementById('register-error');
+                const successElement = document.getElementById('register-success');
+                
+                errorElement.style.display = 'none';
+                successElement.style.display = 'none';
+                
+                // Basic validation
+                if (formData.password.length < 6) {
+                    errorElement.textContent = "Password must be at least 6 characters";
+                    errorElement.style.display = 'block';
+                    return;
+                }
+                
+                if (!formData.storeName || !formData.storeAddress || !formData.storeContact) {
+                    errorElement.textContent = "Please fill all required store information";
+                    errorElement.style.display = 'block';
+                    return;
+                }
+                
+                const result = await Auth.register(formData);
+                
+                if (result.status === "success") {
+                    successElement.textContent = "Registration successful! You can now login.";
+                    successElement.style.display = 'block';
+                    document.getElementById('register-form').reset();
+                    document.getElementById('logo-preview').style.display = 'none';
+                    
+                    // Auto-redirect to login after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 3000);
+                } else {
+                    errorElement.textContent = result.message || "Registration failed";
+                    errorElement.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
