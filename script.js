@@ -1,3 +1,27 @@
+// Add this at the top of your existing script sections
+document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication
+    if (!Auth.isAuthenticated() && 
+        !window.location.pathname.endsWith('login.html') && 
+        !window.location.pathname.endsWith('register.html')) {
+        window.location.href = 'login.html';
+    }
+    
+    // Add logout functionality to your navigation
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            Auth.logout();
+        });
+    }
+    
+    // Show current user in header
+    const userDisplay = document.getElementById('current-user');
+    if (userDisplay) {
+        userDisplay.textContent = Auth.currentUser;
+    }
+});
+
 // Enhanced Auth module for retailers
 const Auth = {
   currentUser: null,
