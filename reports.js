@@ -491,10 +491,24 @@ function getTooltipTitle(context, period) {
     }
 }
 
+let currentPage = 1;
+const rowsPerPage = 10;
+let paginatedTransactions = [];
+
 function renderTransactionsTable(transactions) {
+    paginatedTransactions = transactions;
+    currentPage = 1;
+    renderPage(currentPage);
+    renderPaginationControls();
+}
+
+function renderPage(page) {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageData = paginatedTransactions.slice(start, end);
+
     let html = '';
-    
-    transactions.forEach(transaction => {
+    pageData.forEach(transaction => {
         html += `
             <tr>
                 <td>${transaction.siNo}</td>
@@ -506,9 +520,40 @@ function renderTransactionsTable(transactions) {
             </tr>
         `;
     });
-    
+
     elements.reportData.innerHTML = html || '<tr><td colspan="6">No transactions found</td></tr>';
 }
+
+function renderPaginationControls() {
+    let paginationContainer = document.getElementById('pagination-controls');
+
+    if (!paginationContainer) {
+        paginationContainer = document.createElement('div');
+        paginationContainer.id = 'pagination-controls';
+        paginationContainer.style.textAlign = 'center';
+        paginationContainer.style.marginTop = '10px';
+        elements.reportData.parentElement.appendChild(paginationContainer);
+    }
+
+    const totalPages = Math.ceil(paginatedTransactions.length / rowsPerPage);
+
+    paginationContainer.innerHTML = `
+        <button ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(-1)">⬅️ Previous</button>
+        <span> Page ${currentPage} of ${totalPages} </span>
+        <button ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(1)">Next ➡️</button>
+    `;
+}
+
+window.changePage = function (delta) {
+    const totalPages = Math.ceil(paginatedTransactions.length / rowsPerPage);
+    currentPage += delta;
+    if (currentPage < 1) currentPage = 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    renderPage(currentPage);
+    renderPaginationControls();
+};
+
 
 function filterTransactions() {
     const paymentFilter = elements.paymentFilter.value.toLowerCase();
