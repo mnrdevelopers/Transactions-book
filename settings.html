@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Settings - MNR Bill Book</title>
+    <link rel="icon" href="https://i.postimg.cc/4dk3wD5Z/20250405-192435.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .settings-container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 30px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .settings-container h2 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 25px;
+        }
+        
+        .settings-form {
+            display: grid;
+            gap: 25px;
+        }
+        
+        .form-section {
+            margin-bottom: 20px;
+        }
+        
+        .form-section h3 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+            color: var(--secondary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .form-group {
+            display: grid;
+            gap: 8px;
+        }
+        
+        .form-group label {
+            font-weight: 500;
+            color: var(--secondary);
+        }
+        
+        .form-group input, .form-group textarea {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .save-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 16px;
+            width: fit-content;
+            margin-left: auto;
+        }
+        
+        .save-btn:hover {
+            background: var(--secondary);
+        }
+        
+        .message {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            padding: 10px;
+            border-radius: var(--border-radius);
+        }
+        
+        .error-message {
+            color: var(--danger);
+            background-color: rgba(216, 58, 86, 0.1);
+        }
+        
+        .success-message {
+            color: var(--success);
+            background-color: rgba(46, 125, 50, 0.1);
+        }
+        
+        .logo-preview-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-preview {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            border: 1px dashed #ddd;
+            border-radius: var(--border-radius);
+            background-color: #f9f9f9;
+        }
+        
+        .logo-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .logo-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .change-logo {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .remove-logo {
+            background: #f5f5f5;
+            color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <h2><i class="fas fa-store"></i> Store Settings</h2>
+        
+        <form id="settings-form" class="settings-form">
+            <div class="form-section">
+                <h3><i class="fas fa-info-circle"></i> Basic Information</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="store-name">Store Name*</label>
+                        <input type="text" id="store-name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="store-contact">Contact Number*</label>
+                        <input type="tel" id="store-contact" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="store-address">Store Address*</label>
+                    <textarea id="store-address" required></textarea>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="store-email">Email</label>
+                        <input type="email" id="store-email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="upi-id">UPI ID</label>
+                        <input type="text" id="upi-id" placeholder="For digital payments">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3><i class="fas fa-image"></i> Store Logo</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="logo-url">Logo URL</label>
+                        <input type="url" id="logo-url" placeholder="https://example.com/logo.jpg">
+                    </div>
+                    
+                    <div class="logo-preview-container">
+                        <img id="logo-preview" class="logo-preview" style="display:none;">
+                        <div class="logo-actions">
+                            <button type="button" id="change-logo" class="logo-btn change-logo">
+                                <i class="fas fa-sync-alt"></i> Change
+                            </button>
+                            <button type="button" id="remove-logo" class="logo-btn remove-logo">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="save-btn">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            
+            <div id="settings-message" class="message" style="display:none;"></div>
+        </form>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            if (!Auth.isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Load current store details
+            if (Auth.storeDetails) {
+                document.getElementById('store-name').value = Auth.storeDetails.storeName || '';
+                document.getElementById('store-contact').value = Auth.storeDetails.storeContact || '';
+                document.getElementById('store-address').value = Auth.storeDetails.storeAddress || '';
+                document.getElementById('store-email').value = Auth.storeDetails.storeEmail || '';
+                document.getElementById('upi-id').value = Auth.storeDetails.upiId || '';
+                document.getElementById('logo-url').value = Auth.storeDetails.logoUrl || '';
+                
+                if (Auth.storeDetails.logoUrl) {
+                    const preview = document.getElementById('logo-preview');
+                    preview.src = Auth.storeDetails.logoUrl;
+                    preview.style.display = 'block';
+                }
+            }
+            
+            // Preview logo when URL changes
+            document.getElementById('logo-url').addEventListener('input', function() {
+                const preview = document.getElementById('logo-preview');
+                if (this.value) {
+                    preview.src = this.value;
+                    preview.style.display = 'block';
+                }
+            });
+            
+            // Remove logo
+            document.getElementById('remove-logo').addEventListener('click', function() {
+                document.getElementById('logo-url').value = '';
+                document.getElementById('logo-preview').style.display = 'none';
+            });
+            
+            // Change logo
+            document.getElementById('change-logo').addEventListener('click', function() {
+                document.getElementById('logo-url').focus();
+            });
+            
+            // Handle form submission
+            document.getElementById('settings-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    storeName: document.getElementById('store-name').value,
+                    storeAddress: document.getElementById('store-address').value,
+                    storeContact: document.getElementById('store-contact').value,
+                    storeEmail: document.getElementById('store-email').value,
+                    upiId: document.getElementById('upi-id').value,
+                    logoUrl: document.getElementById('logo-url').value
+                };
+                
+                const messageElement = document.getElementById('settings-message');
+                messageElement.style.display = 'none';
+                
+                // Basic validation
+                if (!formData.storeName || !formData.storeAddress || !formData.storeContact) {
+                    messageElement.textContent = "Please fill all required fields";
+                    messageElement.className = "message error-message";
+                    messageElement.style.display = 'block';
+                    return;
+                }
+                
+                const result = await Auth.updateStoreDetails(formData);
+                
+                if (result.status === "success") {
+                    messageElement.textContent = "Store details updated successfully";
+                    messageElement.className = "message success-message";
+                    messageElement.style.display = 'block';
+                    
+                    // Hide message after 3 seconds
+                    setTimeout(() => {
+                        messageElement.style.display = 'none';
+                    }, 3000);
+                } else {
+                    messageElement.textContent = result.message || "Failed to update store details";
+                    messageElement.className = "message error-message";
+                    messageElement.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
