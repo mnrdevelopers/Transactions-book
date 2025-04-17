@@ -1,3 +1,152 @@
+// Enhanced Auth module for retailers
+const Auth = {
+  currentUser: null,
+  token: null,
+  storeDetails: null,
+
+  init: function() {
+    // Check for saved session
+    const savedSession = localStorage.getItem('mnrBillBookSession');
+    if (savedSession) {
+      try {
+        const session = JSON.parse(savedSession);
+        this.currentUser = session.user;
+        this.token = session.token;
+        this.storeDetails = session.storeDetails;
+      } catch (e) {
+        this.clearSession();
+      }
+    }
+  },
+
+  isAuthenticated: function() {
+    return !!this.token;
+  },
+
+  saveSession: function(user, token, storeDetails) {
+    this.currentUser = user;
+    this.token = token;
+    this.storeDetails = storeDetails;
+    localStorage.setItem('mnrBillBookSession', JSON.stringify({ 
+      user, 
+      token,
+      storeDetails
+    }));
+  },
+
+  clearSession: function() {
+    this.currentUser = null;
+    this.token = null;
+    this.storeDetails = null;
+    localStorage.removeItem('mnrBillBookSession');
+    if (!window.location.pathname.endsWith('login.html')) {
+      window.location.href = 'login.html';
+    }
+  },
+
+  login: async function(username, password) {
+    try {
+      const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          action: "login",
+          username: username,
+          password: password
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.status === "success") {
+        // Get store details after successful login
+        const storeResponse = await fetch(`https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=getStoreDetails&retailerId=${data.retailerId}&token=${data.token}`);
+        const storeData = await storeResponse.json();
+        
+        const storeDetails = storeData.status === "success" ? storeData.data : null;
+        
+        this.saveSession(data.retailerId, data.token, storeDetails);
+        return { success: true, storeName: data.storeName };
+      } else {
+        return { success: false, message: data.message || "Login failed" };
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      return { success: false, message: "Network error. Please try again." };
+    }
+  },
+
+  register: async function(data) {
+    try {
+      const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          action: "register",
+          username: data.username,
+          password: data.password,
+          storeName: data.storeName,
+          storeAddress: data.storeAddress,
+          storeContact: data.storeContact,
+          storeEmail: data.storeEmail,
+          upiId: data.upiId,
+          logoUrl: data.logoUrl
+        })
+      });
+      
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error("Registration error:", error);
+      return { status: "error", message: "Network error. Please try again." };
+    }
+  },
+
+  updateStoreDetails: async function(details) {
+    try {
+      const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          action: "updateStoreDetails",
+          retailerId: this.currentUser,
+          token: this.token,
+          ...details
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.status === "success") {
+        // Update local store details
+        this.storeDetails = {
+          ...this.storeDetails,
+          ...details
+        };
+        this.saveSession(this.currentUser, this.token, this.storeDetails);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Update store details error:", error);
+      return { status: "error", message: "Network error. Please try again." };
+    }
+  },
+
+  logout: function() {
+    this.clearSession();
+  }
+};
+
+// Initialize auth when script loads
+Auth.init();
+
 // Transaction page specific code
 if (document.getElementById("transaction-form")) {
     // Constants
