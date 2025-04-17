@@ -133,7 +133,7 @@ const Auth = {
       message: "Registration failed. Please try again later." 
     };
   }
-}
+},
 
   updateStoreDetails: async function(details) {
     try {
