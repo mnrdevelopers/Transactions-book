@@ -46,7 +46,7 @@ const Auth = {
 
   login: async function(username, password) {
     try {
-      const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -62,7 +62,7 @@ const Auth = {
       
       if (data.status === "success") {
         // Get store details after successful login
-        const storeResponse = await fetch(`https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=getStoreDetails&retailerId=${data.retailerId}&token=${data.token}`);
+        const storeResponse = await fetch(`https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=getStoreDetails&retailerId=${data.retailerId}&token=${data.token}`);
         const storeData = await storeResponse.json();
         
         const storeDetails = storeData.status === "success" ? storeData.data : null;
@@ -80,7 +80,7 @@ const Auth = {
 
   register: async function(data) {
     try {
-      const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -108,7 +108,7 @@ const Auth = {
 
   updateStoreDetails: async function(details) {
     try {
-      const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
