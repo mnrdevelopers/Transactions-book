@@ -265,13 +265,13 @@
 <body>
     <div class="container">
         <!-- Store Header -->
-        <header>
-            <div class="store-info">
-                <h1>RK Fashions</h1>
-                <p>Gram Panchayath Complex, Dichpally Busstand - 503174</p>
-                <p>Mobile: +91 7893433457, +91 7842694544</p>
-            </div>
-        </header>
+      <header>
+    <div class="store-info">
+        <h1 id="store-name-header">Loading store information...</h1>
+        <p id="store-address-header"></p>
+        <p id="store-contact-header"></p>
+    </div>
+</header>
 
       <!-- Daily Stats Section -->
 <div class="daily-stats">
@@ -498,6 +498,52 @@
             }
         });
     });
+
+        document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication
+    if (!Auth.isAuthenticated()) {
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    // Load store details
+    if (Auth.storeDetails) {
+        document.getElementById('store-name-header').textContent = Auth.storeDetails.storeName || 'My Store';
+        document.getElementById('store-address-header').textContent = Auth.storeDetails.storeAddress || '';
+        document.getElementById('store-contact-header').textContent = Auth.storeDetails.storeContact ? 
+            `Mobile: ${Auth.storeDetails.storeContact}` : '';
+            
+        // Update UPI QR code if payment mode is UPI
+        const upiQr = document.querySelector('#upi-qr-row img');
+        if (upiQr && Auth.storeDetails.upiId) {
+            // You would generate a QR code based on the UPI ID here
+            // For now, we'll just show the UPI ID
+            const upiIdElement = document.querySelector('#upi-qr-row p');
+            if (upiIdElement) {
+                upiIdElement.textContent = `UPI ID: ${Auth.storeDetails.upiId}`;
+            }
+        }
+    } else {
+        // Fetch store details if not loaded
+        fetch(`https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec?action=getStoreDetails&retailerId=${Auth.currentUser}&token=${Auth.token}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    Auth.storeDetails = data.data;
+                    Auth.saveSession(Auth.currentUser, Auth.token, Auth.storeDetails);
+                    
+                    document.getElementById('store-name-header').textContent = data.data.storeName || 'My Store';
+                    document.getElementById('store-address-header').textContent = data.data.storeAddress || '';
+                    document.getElementById('store-contact-header').textContent = data.data.storeContact ? 
+                        `Mobile: ${data.data.storeContact}` : '';
+                }
+            })
+            .catch(error => {
+                console.error("Error loading store details:", error);
+                document.getElementById('store-name-header').textContent = "My Store";
+            });
+    }
+});
     </script>
     <script src="script.js"></script>
 </body>
