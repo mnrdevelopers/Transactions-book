@@ -108,7 +108,9 @@ const elements = {
     salesChart: document.getElementById('sales-chart'),
     paymentFilter: document.getElementById('payment-filter'),
     searchInput: document.getElementById('search-transactions'),
-    reportData: document.getElementById('report-data')
+    reportData: document.getElementById('report-data'),
+    paginationContainer: document.getElementById('pagination-controls'),
+    paginationInfo: document.getElementById('pagination-info')
 };
 
 // Initialize the page
@@ -525,26 +527,45 @@ function renderPage(page) {
 }
 
 function renderPaginationControls() {
-    let paginationContainer = document.getElementById('pagination-controls');
-
-    if (!paginationContainer) {
-        paginationContainer = document.createElement('div');
-        paginationContainer.id = 'pagination-controls';
-        paginationContainer.style.textAlign = 'center';
-        paginationContainer.style.marginTop = '10px';
-        elements.reportData.parentElement.appendChild(paginationContainer);
-    }
-
     const totalPages = Math.ceil(paginatedTransactions.length / rowsPerPage);
-
-    paginationContainer.innerHTML = `
-        <button ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(-1)">⬅️ Previous</button>
-        <span> Page ${currentPage} of ${totalPages} </span>
-        <button ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(1)">Next ➡️</button>
+    
+    // Create pagination info text
+    const startItem = (currentPage - 1) * rowsPerPage + 1;
+    const endItem = Math.min(currentPage * rowsPerPage, paginatedTransactions.length);
+    
+    elements.paginationContainer.innerHTML = `
+        <div class="pagination-info" id="pagination-info">
+            Showing ${startItem}-${endItem} of ${paginatedTransactions.length} transactions
+        </div>
+        <div class="pagination-buttons">
+            <button class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(-1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <span class="page-numbers">
+                ${Math.max(1, currentPage - 2) > 1 ? '<span>...</span>' : ''}
+                ${Array.from({length: Math.min(5, totalPages)}, (_, i) => {
+                    const page = Math.max(1, currentPage - 2) + i;
+                    if (page > totalPages) return '';
+                    return `<button class="${page === currentPage ? 'active' : ''}" onclick="goToPage(${page})">${page}</button>`;
+                }).join('')}
+                ${Math.min(totalPages, currentPage + 2) < totalPages ? '<span>...</span>' : ''}
+            </span>
+            <button class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
     `;
 }
 
-window.changePage = function (delta) {
+// Add this new function
+window.goToPage = function(page) {
+    currentPage = page;
+    renderPage(currentPage);
+    renderPaginationControls();
+};
+
+// Update the changePage function
+window.changePage = function(delta) {
     const totalPages = Math.ceil(paginatedTransactions.length / rowsPerPage);
     currentPage += delta;
     if (currentPage < 1) currentPage = 1;
@@ -554,23 +575,26 @@ window.changePage = function (delta) {
     renderPaginationControls();
 };
 
-
 function filterTransactions() {
     const paymentFilter = elements.paymentFilter.value.toLowerCase();
     const searchTerm = elements.searchInput.value.toLowerCase();
     
-    const rows = elements.reportData.querySelectorAll('tr');
-    
-    rows.forEach(row => {
-        const payment = row.cells[5].textContent.toLowerCase();
-        const rowText = row.textContent.toLowerCase();
+    // Filter the full dataset
+    const filtered = reportData.flatMap(g => g.transactions).filter(transaction => {
+        const paymentMatch = !paymentFilter || 
+            transaction.paymentMode.toLowerCase().includes(paymentFilter);
+        const searchMatch = !searchTerm || 
+            transaction.siNo.toLowerCase().includes(searchTerm) || 
+            transaction.customerName.toLowerCase().includes(searchTerm);
         
-        const paymentMatch = !paymentFilter || payment.includes(paymentFilter);
-        const searchMatch = !searchTerm || rowText.includes(searchTerm);
-        
-        row.style.display = paymentMatch && searchMatch ? '' : 'none';
+        return paymentMatch && searchMatch;
     });
-}
+    
+    paginatedTransactions = filtered;
+    currentPage = 1;
+    renderPage(currentPage);
+    renderPaginationControls();
+};
 
 function showLoading() {
     elements.reportData.innerHTML = `
