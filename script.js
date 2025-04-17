@@ -101,33 +101,39 @@ const Auth = {
     }
   },
 
-  register: async function(data) {
-    try {
-      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-      const response = await fetch(proxyUrl + 'https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: "register",
-          username: data.username,
-          password: data.password,
-          storeName: data.storeName,
-          storeAddress: data.storeAddress,
-          storeContact: data.storeContact,
-          storeEmail: data.storeEmail,
-          upiId: data.upiId,
-          logoUrl: data.logoUrl
-        })
-      });
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Registration error:', error);
-      return { status: "error", message: "Failed to connect to server" };
-    }
-  },
+ register: async function(data) {
+  try {
+    // Use a different CORS proxy
+    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+    const targetUrl = 'https://script.google.com/macros/s/AKfycbzqpQ-Yf6QTNQwBJOt9AZgnrgwKs8vzJxYMLRl-gOaspbKJuFYZm6IvYXAx6QRMbCdN/exec';
+    
+    const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: "register",
+        username: data.username,
+        password: data.password,
+        storeName: data.storeName,
+        storeAddress: data.storeAddress,
+        storeContact: data.storeContact,
+        storeEmail: data.storeEmail,
+        upiId: data.upiId,
+        logoUrl: data.logoUrl
+      })
+    });
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Registration error:', error);
+    return { 
+      status: "error", 
+      message: "Registration failed. Please try again later." 
+    };
+  }
+}
 
   updateStoreDetails: async function(details) {
     try {
