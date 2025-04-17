@@ -1314,7 +1314,6 @@ function showError(message) {
 
 // ===== End of transactions.js =====
 
-
 // ===== Start of purchases.js =====
 // Purchase Management System
 const PAGE_SIZE = 10;
