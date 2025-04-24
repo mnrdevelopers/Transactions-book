@@ -368,13 +368,15 @@ function processSheetData(sheetData) {
     
     for (let i = startRow; i < sheetData.length; i++) {
         const row = sheetData[i];
-        const siNo = String(row[2] || "").trim(); // Ensure SI No is a string
-        const date = parseDate(row[1]); // Parse date properly
+        const siNo = String(row[2] || "").trim();
+        const date = parseDate(row[1]);
+        const timestamp = row[11] || new Date().toISOString(); // Use existing timestamp or create new one
         
         if (!transactionsMap.has(siNo)) {
             transactionsMap.set(siNo, {
                 storeName: String(row[0] || ""),
                 date: date,
+                timestamp: timestamp, // Add timestamp
                 dateString: formatDateForDisplay(date),
                 siNo: siNo,
                 customerName: String(row[3] || ""),
@@ -394,6 +396,13 @@ function processSheetData(sheetData) {
             itemTotal: (parseFloat(row[5]) || 0) * (parseFloat(row[7]) || 0)
         });
     }
+    
+    // Convert to array and sort by timestamp (newest first)
+    const transactions = Array.from(transactionsMap.values());
+    transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    return transactions;
+}
     
     // Convert to array and sort by date (newest first)
     const transactions = Array.from(transactionsMap.values());
@@ -496,15 +505,25 @@ function renderTransactions() {
 
     // Render transactions (already sorted by date)
     let currentDateHeader = null;
-    pageTransactions.forEach(transaction => {
-        // Add date header if this is a new date
+   pageTransactions.forEach(transaction => {
+        // Add timestamp to the date header
         if (transaction.dateString !== currentDateHeader) {
             currentDateHeader = transaction.dateString;
             const dateHeader = document.createElement("tr");
             dateHeader.className = "date-header";
+            
+            // Format the timestamp for display
+            const timestamp = new Date(transaction.timestamp);
+            const timeString = timestamp.toLocaleTimeString('en-IN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
             dateHeader.innerHTML = `
                 <td colspan="8">
                     <strong>${getDateHeaderText(transaction.date)}</strong>
+                    <span class="timestamp">${timeString}</span>
                 </td>
             `;
             elements.transactionsBody.appendChild(dateHeader);
