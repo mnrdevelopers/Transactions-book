@@ -76,6 +76,119 @@ header p {
     gap: 8px;
 }
 
+       /* PIN Modal Styles */
+.pin-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(78, 31, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(5px);
+}
+
+.pin-modal-content {
+    background: var(--light);
+    padding: 30px;
+    border-radius: var(--border-radius);
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.pin-modal-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.pin-modal-header h3 {
+    color: var(--primary);
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.pin-modal-header p {
+    color: var(--secondary);
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.pin-input-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.pin-digit {
+    width: 50px;
+    height: 60px;
+    text-align: center;
+    font-size: 1.8rem;
+    border: 2px solid rgba(78, 31, 0, 0.2);
+    border-radius: 8px;
+    background: white;
+    color: var(--primary);
+    transition: var(--transition);
+}
+
+.pin-digit:focus {
+    border-color: var(--accent);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(254, 186, 23, 0.3);
+}
+
+.pin-modal-footer {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.pin-btn {
+    padding: 12px 25px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: var(--transition);
+    min-width: 120px;
+}
+
+.pin-btn:hover {
+    background: var(--secondary);
+    transform: translateY(-2px);
+}
+
+.pin-btn-secondary {
+    background: white;
+    color: var(--primary);
+    border: 1px solid rgba(78, 31, 0, 0.2);
+}
+
+.pin-btn-secondary:hover {
+    background: rgba(254, 186, 23, 0.1);
+}
+
+.pin-feedback {
+    text-align: center;
+    min-height: 20px;
+    margin: 15px 0;
+    font-size: 0.9rem;
+    color: var(--danger);
+}
+
 /* Modern Navigation */
 .nav-dashboard-buttons {
     display: grid;
@@ -826,6 +939,27 @@ header p {
     <i class="fas fa-plus"></i>
 </div>
 
+    <!-- PIN Entry Modal -->
+<div id="pin-modal" class="pin-modal" style="display: none;">
+    <div class="pin-modal-content">
+        <div class="pin-modal-header">
+            <h3><i class="fas fa-lock"></i> Enter MPIN</h3>
+            <p>Please enter your secure access PIN</p>
+        </div>
+        <div class="pin-input-container">
+            <input type="password" maxlength="1" class="pin-digit" data-index="0" autofocus>
+            <input type="password" maxlength="1" class="pin-digit" data-index="1">
+            <input type="password" maxlength="1" class="pin-digit" data-index="2">
+            <input type="password" maxlength="1" class="pin-digit" data-index="3">
+        </div>
+        <div class="pin-feedback" id="pin-feedback"></div>
+        <div class="pin-modal-footer">
+            <button id="pin-submit" class="pin-btn">Submit</button>
+            <button id="pin-clear" class="pin-btn pin-btn-secondary">Clear</button>
+        </div>
+    </div>
+</div>
+
     <script src="script.js"></script>
     <script src="service-worker.js"></script>
     <script>
@@ -1562,8 +1696,155 @@ window.addEventListener("beforeinstallprompt", (event) => {
             
             tipsContainer.innerHTML = tips.join('');
         }
+    </script>
 
-     
+    <script>
+        // Secure PIN System - Developer Controlled
+(function() {
+    // DEVELOPER: Set your secure PIN here (4 digits)
+    // Share this only with authorized users
+    const DEVELOPER_PIN = "2580"; // Change this to your desired PIN
+    
+    // Security settings
+    const pinSettings = {
+        attempts: 0,
+        maxAttempts: 5,
+        lockDuration: 5 * 60 * 1000, // 5 minutes lock after max attempts
+        lockedUntil: 0
+    };
+
+    // Check if PIN is locked
+    function isPinLocked() {
+        if (pinSettings.lockedUntil > Date.now()) {
+            const minutesLeft = Math.ceil((pinSettings.lockedUntil - Date.now()) / (60 * 1000));
+            return {
+                locked: true,
+                message: `Too many attempts. Try again in ${minutesLeft} minute${minutesLeft > 1 ? 's' : ''}.`
+            };
+        }
+        return { locked: false };
+    }
+
+    // Verify entered PIN
+    function verifyPin(enteredPin) {
+        const lockStatus = isPinLocked();
+        if (lockStatus.locked) {
+            return {
+                valid: false,
+                message: lockStatus.message
+            };
+        }
+
+        if (enteredPin === DEVELOPER_PIN) {
+            pinSettings.attempts = 0; // Reset attempts
+            return { valid: true };
+        } else {
+            pinSettings.attempts++;
+            
+            if (pinSettings.attempts >= pinSettings.maxAttempts) {
+                pinSettings.lockedUntil = Date.now() + pinSettings.lockDuration;
+                return {
+                    valid: false,
+                    message: `Too many attempts. Account locked for ${pinSettings.lockDuration / (60 * 1000)} minutes.`
+                };
+            }
+            
+            const attemptsLeft = pinSettings.maxAttempts - pinSettings.attempts;
+            return {
+                valid: false,
+                message: `Invalid PIN. ${attemptsLeft} attempt${attemptsLeft > 1 ? 's' : ''} left.`
+            };
+        }
+    }
+
+    // PIN Modal Elements
+    const pinModal = document.getElementById('pin-modal');
+    const pinDigits = document.querySelectorAll('.pin-digit');
+    const pinFeedback = document.getElementById('pin-feedback');
+    const pinSubmit = document.getElementById('pin-submit');
+    const pinClear = document.getElementById('pin-clear');
+
+    // Show PIN modal on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Skip PIN check if already verified in this session
+        if (sessionStorage.getItem('pinVerified') === 'true') {
+            return;
+        }
+        
+        pinModal.style.display = 'flex';
+        document.querySelector('.pin-digit').focus();
+        
+        // Hide dashboard content until verified
+        document.querySelector('.dashboard-container').style.display = 'none';
+        document.querySelector('.customer-flow-section').style.display = 'none';
+    });
+
+    // PIN digit input handling
+    pinDigits.forEach((digit, index) => {
+        digit.addEventListener('input', function() {
+            if (this.value.length === 1) {
+                if (index < pinDigits.length - 1) {
+                    pinDigits[index + 1].focus();
+                }
+            }
+        });
+        
+        digit.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && this.value.length === 0 && index > 0) {
+                pinDigits[index - 1].focus();
+            }
+        });
+    });
+
+    // PIN submit
+    pinSubmit.addEventListener('click', function() {
+        const enteredPin = Array.from(pinDigits).map(d => d.value).join('');
+        
+        if (enteredPin.length !== 4) {
+            pinFeedback.textContent = "Please enter 4-digit PIN";
+            return;
+        }
+        
+        const result = verifyPin(enteredPin);
+        pinFeedback.textContent = result.message || "";
+        
+        if (result.valid) {
+            sessionStorage.setItem('pinVerified', 'true');
+            pinModal.style.display = 'none';
+            // Show dashboard content
+            document.querySelector('.dashboard-container').style.display = 'block';
+            document.querySelector('.customer-flow-section').style.display = 'block';
+        } else {
+            // Shake animation for wrong PIN
+            const pinModalContent = document.querySelector('.pin-modal-content');
+            pinModalContent.style.animation = 'none';
+            void pinModalContent.offsetWidth; // Trigger reflow
+            pinModalContent.style.animation = 'shake 0.5s';
+            
+            // Clear PIN fields
+            pinDigits.forEach(d => d.value = '');
+            pinDigits[0].focus();
+        }
+    });
+
+    // PIN clear
+    pinClear.addEventListener('click', function() {
+        pinDigits.forEach(d => d.value = '');
+        pinDigits[0].focus();
+        pinFeedback.textContent = "";
+    });
+
+    // Add shake animation for wrong PIN
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+    `;
+    document.head.appendChild(style);
+})();
     </script>
 </body>
 </html>
