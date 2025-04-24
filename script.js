@@ -208,7 +208,7 @@ document.getElementById("customer-name").value = generateCustomerName();
         return valid;
     }
 
- function prepareBillData() {
+function prepareBillData() {
     const items = [];
     document.querySelectorAll(".item-row").forEach(row => {
         items.push({
@@ -220,10 +220,15 @@ document.getElementById("customer-name").value = generateCustomerName();
         });
     });
     
+    // Get current timestamp
+    const now = new Date();
+    const timestamp = now.toISOString();
+    
     return {
         storeName: "RK Fashions",
         date: document.getElementById("transaction-date").value,
         time: document.getElementById("transaction-time").value,
+        timestamp: timestamp, // Add timestamp field
         siNo: document.getElementById("bill-no").value,
         customerName: document.getElementById("customer-name").value,
         items: items,
@@ -231,7 +236,7 @@ document.getElementById("customer-name").value = generateCustomerName();
         totalAmount: document.getElementById("total-amount").value,
         totalProfit: document.getElementById("total-profit").value
     };
- }
+}
     
    function displayBillPreview(data) {
     // Hide the template
