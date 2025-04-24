@@ -657,11 +657,23 @@ function viewTransactionDetails(e) {
         </table>
     `;
     
+   // Format the timestamp
+    const timestamp = new Date(transaction.timestamp);
+    const fullDateTime = timestamp.toLocaleString('en-IN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    
     // Create transaction details HTML
     elements.transactionDetails.innerHTML = `
         <div class="transaction-header">
             <p><strong>Store:</strong> ${transaction.storeName}</p>
             <p><strong>Date:</strong> ${transaction.dateString}</p>
+            <p><strong>Time:</strong> ${fullDateTime}</p>
             <p><strong>Bill No:</strong> ${transaction.siNo}</p>
             <p><strong>Customer:</strong> ${transaction.customerName}</p>
             <p><strong>Payment Mode:</strong> ${transaction.paymentMode}</p>
