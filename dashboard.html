@@ -38,6 +38,144 @@ body {
     padding: 0;
     min-height: 100vh;
 }
+       /* MPIN Modal Styles */
+.mpin-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(78, 31, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.mpin-container {
+    background-color: var(--light);
+    border-radius: var(--border-radius);
+    padding: 30px;
+    width: 100%;
+    max-width: 350px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.mpin-header {
+    margin-bottom: 25px;
+}
+
+.mpin-header h2 {
+    color: var(--primary);
+    margin: 15px 0 5px;
+}
+
+.mpin-header p {
+    color: var(--secondary);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.mpin-logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: contain;
+}
+
+.mpin-display {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.mpin-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: rgba(78, 31, 0, 0.1);
+    border: 1px solid rgba(78, 31, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.mpin-dot.active {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.mpin-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.mpin-btn {
+    background-color: white;
+    border: 1px solid rgba(78, 31, 0, 0.1);
+    border-radius: 50px;
+    padding: 15px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--primary);
+    cursor: pointer;
+    transition: var(--transition);
+    -webkit-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
+}
+
+.mpin-btn:hover {
+    background-color: rgba(254, 186, 23, 0.1);
+    transform: translateY(-2px);
+}
+
+.mpin-btn:active {
+    transform: translateY(0);
+}
+
+#mpin-submit, #setup-submit {
+    background-color: var(--primary);
+    color: white;
+}
+
+#mpin-submit:hover, #setup-submit:hover {
+    background-color: var(--secondary);
+}
+
+#mpin-clear, #setup-clear {
+    font-size: 1.1rem;
+}
+
+.mpin-footer {
+    margin-top: 20px;
+    font-size: 0.8rem;
+    color: var(--secondary);
+}
+
+.mpin-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.mpin-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Error state */
+.mpin-error .mpin-dot {
+    border-color: var(--danger);
+    animation: shake 0.5s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-5px); }
+    40%, 80% { transform: translateX(5px); }
+}
 
 .dashboard-container {
     max-width: 1400px;
@@ -678,6 +816,80 @@ header p {
 </style>
 </head>
 <body>
+    <!-- MPIN Entry Modal -->
+<div id="mpin-modal" class="mpin-modal" style="display: none;">
+    <div class="mpin-container">
+        <div class="mpin-header">
+            <img src="https://i.postimg.cc/4dk3wD5Z/20250405-192435.png" alt="App Logo" class="mpin-logo">
+            <h2>Enter MPIN to Continue</h2>
+            <p id="mpin-message">Please enter your 4-digit MPIN</p>
+        </div>
+        
+        <div class="mpin-display">
+            <div class="mpin-dot" id="dot1"></div>
+            <div class="mpin-dot" id="dot2"></div>
+            <div class="mpin-dot" id="dot3"></div>
+            <div class="mpin-dot" id="dot4"></div>
+        </div>
+        
+        <div class="mpin-keypad">
+            <button class="mpin-btn" data-number="1">1</button>
+            <button class="mpin-btn" data-number="2">2</button>
+            <button class="mpin-btn" data-number="3">3</button>
+            <button class="mpin-btn" data-number="4">4</button>
+            <button class="mpin-btn" data-number="5">5</button>
+            <button class="mpin-btn" data-number="6">6</button>
+            <button class="mpin-btn" data-number="7">7</button>
+            <button class="mpin-btn" data-number="8">8</button>
+            <button class="mpin-btn" data-number="9">9</button>
+            <button class="mpin-btn" id="mpin-clear">⌫</button>
+            <button class="mpin-btn" data-number="0">0</button>
+            <button class="mpin-btn" id="mpin-submit">✓</button>
+        </div>
+        
+        <div class="mpin-footer">
+            <a href="#" id="mpin-forgot">Forgot MPIN?</a>
+        </div>
+    </div>
+</div>
+
+<!-- MPIN Setup Modal (for first-time users) -->
+<div id="setup-mpin-modal" class="mpin-modal" style="display: none;">
+    <div class="mpin-container">
+        <div class="mpin-header">
+            <img src="https://i.postimg.cc/4dk3wD5Z/20250405-192435.png" alt="App Logo" class="mpin-logo">
+            <h2>Setup Your MPIN</h2>
+            <p id="setup-message">Create a 4-digit MPIN for security</p>
+        </div>
+        
+        <div class="mpin-display">
+            <div class="mpin-dot" id="setup-dot1"></div>
+            <div class="mpin-dot" id="setup-dot2"></div>
+            <div class="mpin-dot" id="setup-dot3"></div>
+            <div class="mpin-dot" id="setup-dot4"></div>
+        </div>
+        
+        <div class="mpin-keypad">
+            <button class="mpin-btn" data-number="1">1</button>
+            <button class="mpin-btn" data-number="2">2</button>
+            <button class="mpin-btn" data-number="3">3</button>
+            <button class="mpin-btn" data-number="4">4</button>
+            <button class="mpin-btn" data-number="5">5</button>
+            <button class="mpin-btn" data-number="6">6</button>
+            <button class="mpin-btn" data-number="7">7</button>
+            <button class="mpin-btn" data-number="8">8</button>
+            <button class="mpin-btn" data-number="9">9</button>
+            <button class="mpin-btn" id="setup-clear">⌫</button>
+            <button class="mpin-btn" data-number="0">0</button>
+            <button class="mpin-btn" id="setup-submit">✓</button>
+        </div>
+        
+        <div class="mpin-footer">
+            <p>MPIN will be required to access the app</p>
+        </div>
+    </div>
+</div>
+    
     <button id="install-btn" class="btn-install" style="display: none;">
         <i class="fas fa-download"></i> Install App
     </button>
