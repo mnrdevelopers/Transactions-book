@@ -403,13 +403,6 @@ function processSheetData(sheetData) {
     
     return transactions;
 }
-    
-    // Convert to array and sort by date (newest first)
-    const transactions = Array.from(transactionsMap.values());
-    transactions.sort((a, b) => b.date - a.date);
-    
-    return transactions;
-}
 
 // Update the parseDate function to:
 function parseDate(dateValue) {
