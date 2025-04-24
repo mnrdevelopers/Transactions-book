@@ -1041,6 +1041,230 @@ header p {
     <script src="script.js"></script>
     <script src="service-worker.js"></script>
     <script>
+// MPIN System
+let mpinAttempts = 0;
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_TIME = 5 * 60 * 1000; // 5 minutes in milliseconds
+const STORAGE_KEY = 'mnr_billbook_mpin';
+const BACKUP_CODE = '1969'; // Default backup code (change this in production)
+
+// Check if MPIN is set on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Hide the main content initially
+    document.querySelector('.dashboard-container').style.display = 'none';
+    document.querySelector('.customer-flow-section').style.display = 'none';
+    
+    const storedMPIN = localStorage.getItem(STORAGE_KEY);
+    
+    if (!storedMPIN) {
+        // First-time user - show setup modal
+        showSetupMPINModal();
+    } else {
+        // Existing user - show MPIN entry
+        showMPINModal();
+    }
+});
+
+// Show MPIN entry modal
+function showMPINModal() {
+    const modal = document.getElementById('mpin-modal');
+    modal.style.display = 'flex';
+    
+    let enteredMPIN = '';
+    const dots = [
+        document.getElementById('dot1'),
+        document.getElementById('dot2'),
+        document.getElementById('dot3'),
+        document.getElementById('dot4')
+    ];
+    
+    // Reset dots
+    dots.forEach(dot => dot.classList.remove('active'));
+    
+    // Keypad event listeners
+    document.querySelectorAll('.mpin-btn[data-number]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (enteredMPIN.length < 4) {
+                enteredMPIN += this.dataset.number;
+                updateDots();
+            }
+        });
+    });
+    
+    // Clear button
+    document.getElementById('mpin-clear').addEventListener('click', function() {
+        enteredMPIN = '';
+        updateDots();
+    });
+    
+    // Submit button
+    document.getElementById('mpin-submit').addEventListener('click', function() {
+        verifyMPIN(enteredMPIN);
+    });
+    
+    // Forgot MPIN
+    document.getElementById('mpin-forgot').addEventListener('click', function(e) {
+        e.preventDefault();
+        showForgotMPIN();
+    });
+    
+    function updateDots() {
+        dots.forEach((dot, index) => {
+            if (index < enteredMPIN.length) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
+}
+
+// Show MPIN setup modal (for first-time users)
+function showSetupMPINModal() {
+    const modal = document.getElementById('setup-mpin-modal');
+    modal.style.display = 'flex';
+    
+    let enteredMPIN = '';
+    const dots = [
+        document.getElementById('setup-dot1'),
+        document.getElementById('setup-dot2'),
+        document.getElementById('setup-dot3'),
+        document.getElementById('setup-dot4')
+    ];
+    
+    // Reset dots
+    dots.forEach(dot => dot.classList.remove('active'));
+    
+    // Keypad event listeners
+    document.querySelectorAll('.mpin-btn[data-number]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (enteredMPIN.length < 4) {
+                enteredMPIN += this.dataset.number;
+                updateDots();
+            }
+        });
+    });
+    
+    // Clear button
+    document.getElementById('setup-clear').addEventListener('click', function() {
+        enteredMPIN = '';
+        updateDots();
+    });
+    
+    // Submit button
+    document.getElementById('setup-submit').addEventListener('click', function() {
+        if (enteredMPIN.length === 4) {
+            localStorage.setItem(STORAGE_KEY, btoa(enteredMPIN)); // Simple base64 encoding
+            modal.style.display = 'none';
+            showMainContent();
+        } else {
+            document.getElementById('setup-message').textContent = 'Please enter 4 digits';
+            document.getElementById('setup-message').style.color = 'var(--danger)';
+            setTimeout(() => {
+                document.getElementById('setup-message').textContent = 'Create a 4-digit MPIN for security';
+                document.getElementById('setup-message').style.color = '';
+            }, 2000);
+        }
+    });
+    
+    function updateDots() {
+        dots.forEach((dot, index) => {
+            if (index < enteredMPIN.length) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
+}
+
+// Verify entered MPIN
+function verifyMPIN(enteredMPIN) {
+    const storedMPIN = localStorage.getItem(STORAGE_KEY);
+    const modal = document.getElementById('mpin-modal');
+    
+    if (storedMPIN && atob(storedMPIN) === enteredMPIN) {
+        // Correct MPIN
+        mpinAttempts = 0;
+        modal.style.display = 'none';
+        showMainContent();
+    } else if (enteredMPIN === BACKUP_CODE) {
+        // Backup code entered
+        mpinAttempts = 0;
+        modal.style.display = 'none';
+        showMainContent();
+        document.getElementById('mpin-message').textContent = 'Please setup a new MPIN';
+        document.getElementById('mpin-message').style.color = 'var(--success)';
+        setTimeout(() => {
+            showSetupMPINModal();
+        }, 1000);
+    } else {
+        // Incorrect MPIN
+        mpinAttempts++;
+        
+        if (mpinAttempts >= MAX_ATTEMPTS) {
+            // Lockout after too many attempts
+            document.getElementById('mpin-message').textContent = `Too many attempts. Try again in ${LOCKOUT_TIME/60000} minutes.`;
+            document.getElementById('mpin-message').style.color = 'var(--danger)';
+            modal.classList.add('mpin-error');
+            
+            setTimeout(() => {
+                mpinAttempts = 0;
+                modal.classList.remove('mpin-error');
+                document.getElementById('mpin-message').textContent = 'Please enter your 4-digit MPIN';
+                document.getElementById('mpin-message').style.color = '';
+            }, LOCKOUT_TIME);
+        } else {
+            // Show error
+            document.getElementById('mpin-message').textContent = `Incorrect MPIN (${MAX_ATTEMPTS - mpinAttempts} attempts left)`;
+            document.getElementById('mpin-message').style.color = 'var(--danger)';
+            modal.classList.add('mpin-error');
+            
+            setTimeout(() => {
+                modal.classList.remove('mpin-error');
+            }, 500);
+        }
+    }
+}
+
+// Show forgot MPIN flow
+function showForgotMPIN() {
+    const modal = document.getElementById('mpin-modal');
+    const backupCode = prompt("Enter backup code to reset MPIN:");
+    
+    if (backupCode === BACKUP_CODE) {
+        modal.style.display = 'none';
+        showSetupMPINModal();
+    } else {
+        document.getElementById('mpin-message').textContent = 'Invalid backup code';
+        document.getElementById('mpin-message').style.color = 'var(--danger)';
+    }
+}
+
+// Show main content after successful MPIN verification
+function showMainContent() {
+    document.querySelector('.dashboard-container').style.display = 'block';
+    document.querySelector('.customer-flow-section').style.display = 'block';
+    
+    // Continue with the rest of your app initialization
+    initializeApp();
+}
+
+function initializeApp() {
+    // Your existing initialization code here
+    // Highlight current page in mobile nav
+    const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+    const navButtons = document.querySelectorAll('.mobile-nav-btn');
+    
+    navButtons.forEach(btn => {
+        const linkPage = btn.getAttribute('href').split('/').pop();
+        btn.classList.remove('active');
+        
+        if (currentPage === linkPage) {
+            btn.classList.add('active');
+        }
+    });
+        
 // Handle FAB button click
     document.getElementById('fab-btn').addEventListener('click', function() {
         window.location.href = 'add-transaction.html';
@@ -1774,8 +1998,7 @@ window.addEventListener("beforeinstallprompt", (event) => {
             
             tipsContainer.innerHTML = tips.join('');
         }
-
-     
+}
     </script>
 </body>
 </html>
