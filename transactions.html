@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="mobile-nav.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
     <style>
 .summary-filters {
     display: flex;
@@ -310,6 +311,19 @@
 
 <div class="fab" id="fab-btn">
     <i class="fas fa-plus"></i>
+</div>
+
+    <!-- Delete Animation (hidden by default) -->
+<div id="delete-animation-container" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; display: none; justify-content: center; align-items: center;">
+    <dotlottie-player 
+        id="delete-animation"
+        src="https://lottie.host/dd6e9c26-4d41-4c71-8d2d-39d5a896b00b/G4IUUx51BU.lottie" 
+        background="transparent" 
+        speed="1" 
+        style="width: 300px; height: 300px" 
+        loop
+        autoplay>
+    </dotlottie-player>
 </div>
 
     <script>
