@@ -1,3 +1,5 @@
+let availablePurchasedItems = [];
+
 // Transaction page specific code
 if (document.getElementById("transaction-form")) {
     // Constants
@@ -24,6 +26,32 @@ document.getElementById("customer-name").value = generateCustomerName();
             calculateTotals();
         }
     });
+
+document.getElementById("add-purchased-item")?.addEventListener("click", function() {
+    const dropdown = document.getElementById("select-purchase-item");
+    const selectedOption = dropdown.options[dropdown.selectedIndex];
+    
+    if (selectedOption.value) {
+        const itemData = JSON.parse(selectedOption.dataset.itemData);
+        addItem({
+            name: itemData.name,
+            purchasePrice: itemData.purchasePrice,
+            salePrice: "", // Let user enter sale price
+            quantity: 1,
+            saleId: itemData.saleId,
+            availableQty: itemData.availableQty
+        });
+    }
+});
+     // Load purchased items
+    loadPurchasedItems();
+    
+    // Update the dropdown when new items are added
+    document.getElementById("add-item").addEventListener("click", function() {
+        // After adding a blank item, refresh the dropdown
+        setTimeout(updatePurchasedItemsDropdown, 0);
+    });
+});
     
     document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
     setupPrintButton();
@@ -132,6 +160,95 @@ document.getElementById("customer-name").value = generateCustomerName();
     return `${randomPrefix}-${randomNum}`;
 }
 
+    async function loadPurchasedItems() {
+    try {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbzrXjUC62d6LsjiXfuMRNmx7UpOy116g8SIwzRfdNRHg0eNE7vHDkvgSky71Z4RrW1b/exec");
+        if (!response.ok) throw new Error("Failed to load purchases");
+        
+        const purchases = await response.json();
+        availablePurchasedItems = [];
+        
+        // Extract all purchased items with their sale IDs
+        purchases.forEach(purchase => {
+            purchase.items.forEach(item => {
+                availablePurchasedItems.push({
+                    saleId: item.saleId,
+                    name: item.name,
+                    purchasePrice: item.price,
+                    availableQty: item.quantity,
+                    purchaseDate: purchase.date,
+                    supplier: purchase.supplier
+                });
+            });
+        });
+        
+        updatePurchasedItemsDropdown();
+    } catch (error) {
+        console.error("Error loading purchased items:", error);
+    }
+}
+
+// Update the dropdown with available items
+function updatePurchasedItemsDropdown() {
+    const dropdown = document.getElementById("select-purchase-item");
+    dropdown.innerHTML = '<option value="">-- Select Purchased Item --</option>';
+    
+    availablePurchasedItems.forEach(item => {
+        if (item.availableQty > 0) {
+            const option = document.createElement("option");
+            option.value = item.saleId;
+            option.textContent = `${item.name} (Qty: ${item.availableQty}, Purchased: ${formatDate(item.purchaseDate)})`;
+            option.dataset.itemData = JSON.stringify(item);
+            dropdown.appendChild(option);
+        }
+    });
+}
+
+// Modified addItem function to support purchased items
+function addItem(itemData = {}) {
+    const itemsContainer = document.getElementById("items-container");
+    const newItem = document.createElement("div");
+    newItem.className = "item-row";
+    
+    // Default values
+    const defaultName = itemData.name || "";
+    const defaultQty = itemData.quantity || 1;
+    const defaultPurchasePrice = itemData.purchasePrice || "";
+    const defaultSalePrice = itemData.salePrice || "";
+    const saleId = itemData.saleId || "";
+    
+    newItem.innerHTML = `
+        <label>Item Name:</label>
+        <input type="text" class="item-name" value="${defaultName}" required>
+        
+        <label>Quantity:</label>
+        <input type="number" class="quantity" min="1" value="${defaultQty}" max="${itemData.availableQty || ''}" required>
+        
+        <label>Purchase Price (₹):</label>
+        <input type="number" class="purchase-price" min="0" step="0.01" value="${defaultPurchasePrice}" required>
+        
+        <label>Sale Price (₹):</label>
+        <input type="number" class="sale-price" min="0" step="0.01" value="${defaultSalePrice}" required>
+        
+        <input type="hidden" class="sale-id" value="${saleId}">
+        
+        <button type="button" class="remove-item">Remove</button>
+    `;
+    
+    itemsContainer.appendChild(newItem);
+    
+    // Add remove event
+    newItem.querySelector(".remove-item").addEventListener("click", function() {
+        newItem.remove();
+        calculateTotals();
+    });
+    
+    // Calculate if we have all required values
+    if (defaultName && defaultPurchasePrice && defaultSalePrice) {
+        calculateTotals();
+    }
+}
+
     function addItem() {
         const itemsContainer = document.getElementById("items-container");
         const newItem = document.createElement("div");
@@ -216,11 +333,12 @@ function prepareBillData() {
             quantity: row.querySelector(".quantity").value,
             purchasePrice: row.querySelector(".purchase-price").value,
             salePrice: row.querySelector(".sale-price").value,
+            saleId: row.querySelector(".sale-id")?.value || "", // Include sale ID
             total: (row.querySelector(".quantity").value * row.querySelector(".sale-price").value).toFixed(2)
         });
     });
     
-    // Get current timestamp
+    // Rest of the function remains the same
     const now = new Date();
     const timestamp = now.toISOString();
     
@@ -228,7 +346,7 @@ function prepareBillData() {
         storeName: "RK Fashions",
         date: document.getElementById("transaction-date").value,
         time: document.getElementById("transaction-time").value,
-        timestamp: timestamp, // Add timestamp field
+        timestamp: timestamp,
         siNo: document.getElementById("bill-no").value,
         customerName: document.getElementById("customer-name").value,
         items: items,
