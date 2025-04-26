@@ -754,15 +754,12 @@ function renderPurchases() {
             ? purchase.items[0].name 
             : `${purchase.items.length} items`;
         
-        // Create sale IDs summary
-        const saleIdsSummary = purchase.items.map(item => item.saleId).join(', ');
-        
         // Create image link or placeholder
         const billImageLink = purchase.billImage 
             ? `<a href="${purchase.billImage}" target="_blank" class="view-image-btn">View Bill</a>`
             : '<span class="no-image">No Image</span>';
         
-       const row = document.createElement('tr');
+        const row = document.createElement('tr');
         row.innerHTML = `
             <td>${formatDate(purchase.date)}</td>
             <td>${purchase.billNo}</td>
@@ -773,7 +770,6 @@ function renderPurchases() {
             <td>₹${purchase.balance.toFixed(2)}</td>
             <td><span class="status-badge ${purchase.status}">${purchase.status}</span></td>
             <td>${billImageLink}</td>
-            <td class="sale-ids">${saleIdsSummary}</td>
             <td class="actions">
                 <button class="view-btn" data-id="${purchase.id}">View</button>
                 <button class="edit-btn" data-id="${purchase.id}">Edit</button>
@@ -952,8 +948,6 @@ function showAddPurchaseModal() {
 
 function addPurchaseItem(itemData = {}) {
     const itemId = `item-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const saleId = `sale-${Date.now()}-${Math.floor(Math.random() * 1000)}`; // New sale ID
-    
     const itemRow = document.createElement('div');
     itemRow.className = 'item-row';
     itemRow.id = itemId;
@@ -974,7 +968,6 @@ function addPurchaseItem(itemData = {}) {
             <label for="${itemId}-total">Total (₹)</label>
             <input type="number" id="${itemId}-total" class="item-total" min="0" step="0.01" value="${(itemData.quantity || 0) * (itemData.price || 0)}" readonly>
         </div>
-        <input type="hidden" id="${itemId}-saleid" class="item-saleid" value="${itemData.saleId || saleId}">
         <button type="button" class="remove-item" data-item="${itemId}">
             <i class="fas fa-trash"></i>
         </button>
@@ -1047,8 +1040,7 @@ async function handlePurchaseSubmit(e) {
         items.push({
             name: row.querySelector('.item-name').value,
             quantity: parseFloat(row.querySelector('.item-quantity').value),
-            price: parseFloat(row.querySelector('.item-price').value),
-            saleId: row.querySelector('.item-saleid').value // Include sale ID
+            price: parseFloat(row.querySelector('.item-price').value)
         });
     });
     
