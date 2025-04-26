@@ -948,6 +948,8 @@ function showAddPurchaseModal() {
 
 function addPurchaseItem(itemData = {}) {
     const itemId = `item-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const saleId = `sale-${Date.now()}-${Math.floor(Math.random() * 1000)}`; // New sale ID
+    
     const itemRow = document.createElement('div');
     itemRow.className = 'item-row';
     itemRow.id = itemId;
@@ -968,6 +970,7 @@ function addPurchaseItem(itemData = {}) {
             <label for="${itemId}-total">Total (₹)</label>
             <input type="number" id="${itemId}-total" class="item-total" min="0" step="0.01" value="${(itemData.quantity || 0) * (itemData.price || 0)}" readonly>
         </div>
+        <input type="hidden" id="${itemId}-saleid" class="item-saleid" value="${itemData.saleId || saleId}">
         <button type="button" class="remove-item" data-item="${itemId}">
             <i class="fas fa-trash"></i>
         </button>
@@ -1040,7 +1043,8 @@ async function handlePurchaseSubmit(e) {
         items.push({
             name: row.querySelector('.item-name').value,
             quantity: parseFloat(row.querySelector('.item-quantity').value),
-            price: parseFloat(row.querySelector('.item-price').value)
+            price: parseFloat(row.querySelector('.item-price').value),
+            saleId: row.querySelector('.item-saleid').value // Include sale ID
         });
     });
     
