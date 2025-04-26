@@ -8,42 +8,29 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="mobile-nav.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
     <style>
-          #loading-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 9999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    
-    .loading-spinner {
-        background: white;
-        padding: 30px;
-        border-radius: 8px;
-        text-align: center;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    }
-    
-    .spinner {
-        border: 4px solid rgba(0, 0, 0, 0.1);
-        border-radius: 50%;
-        border-top: 4px solid var(--primary);
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 15px;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .loading-spinner {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+ 
         /* Cash payment details in bill */
 #bill-details .cash-payment-details {
     background: #f8f8f8;
@@ -443,13 +430,20 @@
     </div>
 </div>
  
-        <!-- Add this right before the closing </body> tag in add-transaction.html -->
-<div id="loading-overlay" style="display: none;">
-    <div class="loading-spinner">
-        <div class="spinner"></div>
-        <p>Processing transaction...</p>
+ <!-- Loading Overlay with Lottie Animation -->
+    <div id="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <dotlottie-player 
+                src="https://lottie.host/35e70584-44aa-44ff-b642-1eae6797ee32/416NnB6QwK.lottie" 
+                background="transparent" 
+                speed="1" 
+                style="width: 300px; height: 300px" 
+                loop 
+                autoplay>
+            </dotlottie-player>
+            <p>Processing transaction...</p>
+        </div>
     </div>
-</div>
 
   <div class="mobile-bottom-nav">
     <a href="dashboard.html" class="mobile-nav-btn active">
