@@ -295,6 +295,15 @@
         <!-- Rest of the file remains the same -->
         <!-- Transaction Form -->
         <form id="transaction-form">
+            <div class="form-group">
+    <label for="select-purchase-item"><strong>Select Purchased Item:</strong></label>
+    <select id="select-purchase-item" class="form-control">
+        <option value="">-- Select Purchased Item --</option>
+    </select>
+    <button type="button" id="add-purchased-item" class="btn-secondary">
+        <i class="fas fa-cart-plus"></i> Add Selected Item
+    </button>
+</div>
             <div id="items-container">
                 <!-- Items will be added here dynamically -->
             </div>
