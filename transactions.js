@@ -694,11 +694,13 @@ async function deleteTransaction(e) {
         return;
     }
     
-    // Add deleting class for animation
-    row.classList.add('deleting');
+    // Show delete animation
+    const deleteAnimContainer = document.getElementById('delete-animation-container');
+    const deleteAnim = document.getElementById('delete-animation');
+    deleteAnimContainer.style.display = 'flex';
     
-    // Wait for animation to complete
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Wait for animation to play (you might adjust this timing based on your animation)
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
     try {
         // Call backend to delete
@@ -711,6 +713,9 @@ async function deleteTransaction(e) {
         allTransactions = allTransactions.filter(t => t.siNo !== siNo);
         filteredTransactions = filteredTransactions.filter(t => t.siNo !== siNo);
         
+        // Hide animation
+        deleteAnimContainer.style.display = 'none';
+        
         // Re-render
         renderTransactions();
         updateSummaryCards();
@@ -719,8 +724,9 @@ async function deleteTransaction(e) {
         showToast('Transaction deleted successfully');
     } catch (error) {
         console.error("Delete failed:", error);
+        // Hide animation even if error occurs
+        deleteAnimContainer.style.display = 'none';
         showToast('Failed to delete transaction', 'error');
-        row.classList.remove('deleting');
     }
 }
 
