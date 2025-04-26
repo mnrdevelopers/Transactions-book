@@ -700,7 +700,7 @@ async function deleteTransaction(e) {
     deleteAnimContainer.style.display = 'flex';
     
     // Wait for animation to play (you might adjust this timing based on your animation)
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     try {
         // Call backend to delete
