@@ -754,12 +754,15 @@ function renderPurchases() {
             ? purchase.items[0].name 
             : `${purchase.items.length} items`;
         
+        // Create sale IDs summary
+        const saleIdsSummary = purchase.items.map(item => item.saleId).join(', ');
+        
         // Create image link or placeholder
         const billImageLink = purchase.billImage 
             ? `<a href="${purchase.billImage}" target="_blank" class="view-image-btn">View Bill</a>`
             : '<span class="no-image">No Image</span>';
         
-        const row = document.createElement('tr');
+       const row = document.createElement('tr');
         row.innerHTML = `
             <td>${formatDate(purchase.date)}</td>
             <td>${purchase.billNo}</td>
@@ -770,6 +773,7 @@ function renderPurchases() {
             <td>₹${purchase.balance.toFixed(2)}</td>
             <td><span class="status-badge ${purchase.status}">${purchase.status}</span></td>
             <td>${billImageLink}</td>
+            <td class="sale-ids">${saleIdsSummary}</td>
             <td class="actions">
                 <button class="view-btn" data-id="${purchase.id}">View</button>
                 <button class="edit-btn" data-id="${purchase.id}">Edit</button>
