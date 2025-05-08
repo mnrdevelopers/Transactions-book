@@ -1110,35 +1110,46 @@ window.addEventListener("beforeinstallprompt", (event) => {
             return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
         }
 
-        function processBusinessData(sheetData) {
-            const transactions = [];
-            const startRow = sheetData[0][0] === "Store Name" ? 1 : 0;
-            
-            for (let i = startRow; i < sheetData.length; i++) {
-                const row = sheetData[i];
-                const date = parseDate(row[1]);
-                const dayOfWeek = date.getDay(); // 0=Sunday, 1=Monday, etc.
-                const month = date.getMonth();
-                const year = date.getFullYear();
-                
-                transactions.push({
-                    date: date,
-                    timestamp: date.getTime(),
-                    dayOfWeek: dayOfWeek,
-                    dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
-                    month: month,
-                    monthName: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month],
-                    year: year,
-                    customerName: String(row[3] || ""),
-                    totalAmount: parseFloat(row[9]) || 0,
-                    totalProfit: parseFloat(row[10]) || 0,
-                    items: parseFloat(row[5]) || 0 // Using quantity as proxy for items
-                });
-            }
-            
-            return transactions;
+      function processBusinessData(sheetData) {
+    const transactions = [];
+    const startRow = sheetData[0][0] === "Store Name" ? 1 : 0;
+    const processedSiNos = new Set(); // Track processed SI Nos
+    
+    for (let i = startRow; i < sheetData.length; i++) {
+        const row = sheetData[i];
+        const siNo = String(row[0] || "").trim(); // Get SI No from first column
+        
+        // Skip if we've already processed this SI No
+        if (processedSiNos.has(siNo)) {
+            continue;
         }
-
+        
+        // Mark this SI No as processed
+        processedSiNos.add(siNo);
+        
+        const date = parseDate(row[1]);
+        const dayOfWeek = date.getDay(); // 0=Sunday, 1=Monday, etc.
+        const month = date.getMonth();
+        const year = date.getFullYear();
+        
+        transactions.push({
+            date: date,
+            timestamp: date.getTime(),
+            dayOfWeek: dayOfWeek,
+            dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
+            month: month,
+            monthName: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month],
+            year: year,
+            customerName: String(row[3] || ""),
+            totalAmount: parseFloat(row[9]) || 0, // Assuming total amount is in column 10 (index 9)
+            totalProfit: parseFloat(row[10]) || 0,
+            items: parseFloat(row[5]) || 0 // Using quantity as proxy for items
+        });
+    }
+    
+    return transactions;
+}
+        
         function parseDate(dateValue) {
             if (dateValue instanceof Date) return dateValue;
             
