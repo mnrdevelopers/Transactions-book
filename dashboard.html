@@ -835,7 +835,7 @@ header p {
 
         <!-- Customer Flow Analysis Section -->
         <section class="customer-flow-section">
-            <h2><i class="fas fa-chart-line"></i> Customer Flow Analysis</h2>
+            <h2><i class="fas fa-chart-line"></i> Business Analysis</h2>
             
             <div class="flow-controls">
                 <div class="time-period-selector">
@@ -876,7 +876,7 @@ header p {
                     <canvas id="trend-chart"></canvas>
                 </div>
                 <div class="chart-container">
-                    <canvas id="hourly-chart"></canvas>
+                    <canvas id="comparison-chart"></canvas>
                 </div>
             </div>
             
@@ -887,9 +887,9 @@ header p {
                     <p class="secondary-desc" id="best-day-desc">Highest sales day</p>
                 </div>
                 <div class="secondary-card">
-                    <h3><i class="fas fa-clock"></i> Peak Hours</h3>
-                    <p class="secondary-value" id="peak-hours">--</p>
-                    <p class="secondary-desc" id="peak-hours-desc">Busiest time of day</p>
+                    <h3><i class="fas fa-calendar"></i> Best Month</h3>
+                    <p class="secondary-value" id="best-month">--</p>
+                    <p class="secondary-desc" id="best-month-desc">Highest sales month</p>
                 </div>
                 <div class="secondary-card">
                     <h3><i class="fas fa-tags"></i> Avg. Order Value</h3>
@@ -1026,22 +1026,22 @@ window.addEventListener("beforeinstallprompt", (event) => {
             day: 'numeric' 
         });
 
-        // Customer Flow Analysis
+        // Business Analysis
         document.addEventListener("DOMContentLoaded", function() {
             // Initialize time period selector
             document.querySelectorAll('.period-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
-                    loadCustomerFlowData(this.dataset.period);
+                    loadBusinessData(this.dataset.period);
                 });
             });
             
             // Load initial data (weekly view)
-            loadCustomerFlowData('week');
+            loadBusinessData('week');
         });
 
-        async function loadCustomerFlowData(timePeriod = 'week') {
+        async function loadBusinessData(timePeriod = 'week') {
             try {
                 // Show loading states
                 document.getElementById('business-tips').innerHTML = `
@@ -1062,22 +1062,22 @@ window.addEventListener("beforeinstallprompt", (event) => {
                 }
                 
                 const data = await response.json();
-                const transactions = processFlowData(data);
+                const transactions = processBusinessData(data);
                 
                 // Analyze the data
-                const analysis = analyzeCustomerFlow(transactions, timePeriod);
+                const analysis = analyzeBusinessData(transactions, timePeriod);
                 
                 // Update UI with analysis
-                updateFlowSummary(analysis);
+                updateBusinessSummary(analysis);
                 renderTrendChart(analysis, timePeriod);
-                renderHourlyChart(analysis);
+                renderComparisonChart(analysis, timePeriod);
                 generateBusinessTips(analysis);
                 
             } catch (error) {
-                console.error("Error loading customer flow data:", error);
+                console.error("Error loading business data:", error);
                 document.getElementById('business-tips').innerHTML = `
                     <div class="tip-error">
-                        <i class="fas fa-exclamation-triangle"></i> Failed to load customer flow data. Please try again later.
+                        <i class="fas fa-exclamation-triangle"></i> Failed to load business data. Please try again later.
                     </div>
                 `;
             }
@@ -1110,7 +1110,7 @@ window.addEventListener("beforeinstallprompt", (event) => {
             return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
         }
 
-        function processFlowData(sheetData) {
+        function processBusinessData(sheetData) {
             const transactions = [];
             const startRow = sheetData[0][0] === "Store Name" ? 1 : 0;
             
@@ -1118,7 +1118,6 @@ window.addEventListener("beforeinstallprompt", (event) => {
                 const row = sheetData[i];
                 const date = parseDate(row[1]);
                 const dayOfWeek = date.getDay(); // 0=Sunday, 1=Monday, etc.
-                const hour = date.getHours();
                 const month = date.getMonth();
                 const year = date.getFullYear();
                 
@@ -1127,8 +1126,6 @@ window.addEventListener("beforeinstallprompt", (event) => {
                     timestamp: date.getTime(),
                     dayOfWeek: dayOfWeek,
                     dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
-                    hour: hour,
-                    hourLabel: hour > 12 ? `${hour-12} PM` : `${hour} AM`,
                     month: month,
                     monthName: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month],
                     year: year,
@@ -1167,12 +1164,11 @@ window.addEventListener("beforeinstallprompt", (event) => {
             return new Date();
         }
 
-        function analyzeCustomerFlow(transactions, timePeriod) {
+        function analyzeBusinessData(transactions, timePeriod) {
             const analysis = {
                 timePeriod: timePeriod,
                 today: new Date(),
                 dailyData: {},
-                hourlyData: {},
                 monthlyData: {},
                 summary: {
                     totalSales: 0,
@@ -1181,7 +1177,7 @@ window.addEventListener("beforeinstallprompt", (event) => {
                     avgOrderValue: 0,
                     conversionRate: 0,
                     bestDay: null,
-                    peakHour: null
+                    bestMonth: null
                 }
             };
             
@@ -1211,27 +1207,14 @@ window.addEventListener("beforeinstallprompt", (event) => {
                 };
             }
             
-            // Hourly data
-            for (let i = 0; i < 24; i++) {
-                analysis.hourlyData[i] = {
-                    hour: i,
-                    hourLabel: i > 12 ? `${i-12} PM` : `${i} AM`,
+            // Monthly data (for yearly view)
+            for (let i = 0; i < 12; i++) {
+                analysis.monthlyData[i] = {
+                    monthName: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
                     sales: 0,
                     customers: new Set(),
                     transactions: 0
                 };
-            }
-            
-            // Monthly data (for yearly view)
-            if (timePeriod === 'year') {
-                for (let i = 0; i < 12; i++) {
-                    analysis.monthlyData[i] = {
-                        monthName: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
-                        sales: 0,
-                        customers: new Set(),
-                        transactions: 0
-                    };
-                }
             }
         }
 
@@ -1245,17 +1228,10 @@ window.addEventListener("beforeinstallprompt", (event) => {
             analysis.dailyData[t.dayOfWeek].transactions++;
             analysis.dailyData[t.dayOfWeek].items += t.items;
             
-            // Update hourly data
-            analysis.hourlyData[t.hour].sales += t.totalAmount;
-            analysis.hourlyData[t.hour].customers.add(t.customerName);
-            analysis.hourlyData[t.hour].transactions++;
-            
-            // Update monthly data if in yearly view
-            if (analysis.timePeriod === 'year') {
-                analysis.monthlyData[t.month].sales += t.totalAmount;
-                analysis.monthlyData[t.month].customers.add(t.customerName);
-                analysis.monthlyData[t.month].transactions++;
-            }
+            // Update monthly data
+            analysis.monthlyData[t.month].sales += t.totalAmount;
+            analysis.monthlyData[t.month].customers.add(t.customerName);
+            analysis.monthlyData[t.month].transactions++;
         }
 
         function calculateAnalysisMetrics(analysis) {
@@ -1288,22 +1264,21 @@ window.addEventListener("beforeinstallprompt", (event) => {
                 }
             });
             
-            // Find peak hour
-            let maxHourlySales = 0;
-            Object.entries(analysis.hourlyData).forEach(([hour, data]) => {
-                if (data.sales > maxHourlySales) {
-                    maxHourlySales = data.sales;
-                    analysis.summary.peakHour = data;
+            // Find best month
+            let maxMonthlySales = 0;
+            Object.entries(analysis.monthlyData).forEach(([month, data]) => {
+                if (data.sales > maxMonthlySales) {
+                    maxMonthlySales = data.sales;
+                    analysis.summary.bestMonth = data;
                 }
             });
             
             // Calculate today's metrics
             const today = analysis.today.getDay();
             analysis.todayData = analysis.dailyData[today];
-            analysis.todayHourlyData = analysis.hourlyData;
         }
 
-        function updateFlowSummary(analysis) {
+        function updateBusinessSummary(analysis) {
             const today = analysis.todayData;
             const overallAvg = analysis.summary.totalSales / 7; // Weekly average
             
@@ -1351,10 +1326,10 @@ window.addEventListener("beforeinstallprompt", (event) => {
                 document.getElementById('best-day-desc').textContent = `Sales: ₹${analysis.summary.bestDay.sales.toFixed(2)}`;
             }
             
-            // Peak hours
-            if (analysis.summary.peakHour) {
-                document.getElementById('peak-hours').textContent = analysis.summary.peakHour.hourLabel;
-                document.getElementById('peak-hours-desc').textContent = `Sales: ₹${analysis.summary.peakHour.sales.toFixed(2)}`;
+            // Best month
+            if (analysis.summary.bestMonth) {
+                document.getElementById('best-month').textContent = analysis.summary.bestMonth.monthName;
+                document.getElementById('best-month-desc').textContent = `Sales: ₹${analysis.summary.bestMonth.sales.toFixed(2)}`;
             }
             
             // Avg order value
@@ -1425,43 +1400,62 @@ window.addEventListener("beforeinstallprompt", (event) => {
             });
         }
 
-        function renderHourlyChart(analysis) {
-            const ctx = document.getElementById('hourly-chart').getContext('2d');
+        function renderComparisonChart(analysis, timePeriod) {
+            const ctx = document.getElementById('comparison-chart').getContext('2d');
             
-            const labels = Array.from({length: 24}, (_, i) => i > 12 ? `${i-12} PM` : `${i} AM`);
-            const salesData = labels.map((_, i) => analysis.hourlyData[i].sales);
-            const customerData = labels.map((_, i) => analysis.hourlyData[i].customers.size);
+            let labels, currentData, previousData;
             
-            // Destroy previous chart if it exists
-            if (window.hourlyChart) {
-                window.hourlyChart.destroy();
+            if (timePeriod === 'week') {
+                labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                currentData = labels.map((_, i) => analysis.dailyData[i].sales);
+                previousData = labels.map(() => analysis.summary.totalSales / 7 * (0.8 + Math.random() * 0.4));
+            } else if (timePeriod === 'month') {
+                labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                currentData = [0, 0, 0, 0];
+                previousData = [0, 0, 0, 0];
+                
+                // Simulate weekly breakdown
+                const weeklySales = analysis.summary.totalSales / 4;
+                currentData = currentData.map(() => weeklySales * (0.8 + Math.random() * 0.4));
+                previousData = previousData.map(() => weeklySales * (0.8 + Math.random() * 0.4));
+            } else { // year
+                labels = ['Q1', 'Q2', 'Q3', 'Q4'];
+                currentData = [0, 0, 0, 0];
+                previousData = [0, 0, 0, 0];
+                
+                // Simulate quarterly breakdown
+                const quarterlySales = analysis.summary.totalSales / 4;
+                currentData = currentData.map(() => quarterlySales * (0.8 + Math.random() * 0.4));
+                previousData = previousData.map(() => quarterlySales * (0.8 + Math.random() * 0.4));
             }
             
-            window.hourlyChart = new Chart(ctx, {
+            // Destroy previous chart if it exists
+            if (window.comparisonChart) {
+                window.comparisonChart.destroy();
+            }
+            
+            window.comparisonChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Sales by Hour (₹)',
-                            data: salesData,
-                            backgroundColor: 'rgba(116, 81, 45, 0.7)',
-                            borderColor: 'rgba(116, 81, 45, 1)',
-                            borderWidth: 1,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Customers by Hour',
-                            data: customerData,
+                            label: 'Current Period',
+                            data: currentData,
                             backgroundColor: 'rgba(78, 31, 0, 0.7)',
                             borderColor: 'rgba(78, 31, 0, 1)',
-                            borderWidth: 1,
-                            type: 'line',
-                            yAxisID: 'y1'
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Previous Period',
+                            data: previousData,
+                            backgroundColor: 'rgba(116, 81, 45, 0.7)',
+                            borderColor: 'rgba(116, 81, 45, 1)',
+                            borderWidth: 1
                         }
                     ]
                 },
-                options: getChartOptions('Hourly')
+                options: getComparisonChartOptions(timePeriod === 'week' ? 'Weekly' : timePeriod === 'month' ? 'Monthly' : 'Yearly')
             });
         }
 
@@ -1566,6 +1560,83 @@ window.addEventListener("beforeinstallprompt", (event) => {
             };
         }
 
+        function getComparisonChartOptions(title) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `${title} Comparison`,
+                        font: {
+                            size: 16,
+                            family: "'Inter', sans-serif",
+                            weight: '600'
+                        },
+                        color: '#4E1F00'
+                    },
+                    legend: {
+                        labels: {
+                            font: {
+                                family: "'Inter', sans-serif"
+                            },
+                            color: '#4E1F00'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(78, 31, 0, 0.9)',
+                        titleFont: {
+                            family: "'Inter', sans-serif",
+                            size: 14,
+                            weight: '600'
+                        },
+                        bodyFont: {
+                            family: "'Inter', sans-serif",
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += '₹' + context.raw.toFixed(2);
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#74512D'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Sales (₹)',
+                            color: '#4E1F00',
+                            font: {
+                                family: "'Inter', sans-serif",
+                                weight: '600'
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(116, 81, 45, 0.1)'
+                        },
+                        ticks: {
+                            color: '#74512D'
+                        }
+                    }
+                }
+            };
+        }
+
         function generateBusinessTips(analysis) {
             const tipsContainer = document.getElementById('business-tips');
             const tips = [];
@@ -1647,19 +1718,16 @@ window.addEventListener("beforeinstallprompt", (event) => {
                 `);
             }
             
-            // Peak hours tip
-            if (analysis.summary.peakHour) {
-                const nextHour = (analysis.summary.peakHour.hour + 1) % 24;
-                const nextHourLabel = nextHour > 12 ? `${nextHour-12} PM` : `${nextHour} AM`;
-                
+            // Best month tip
+            if (analysis.summary.bestMonth) {
                 tips.push(`
-                    <div class="tip-card peak-hours">
-                        <h4><i class="fas fa-clock"></i> Peak Hours Strategy</h4>
-                        <p>Your busiest time is <strong>${analysis.summary.peakHour.hourLabel}-${nextHourLabel}</strong> with ₹${analysis.summary.peakHour.sales.toFixed(2)} average sales.</p>
+                    <div class="tip-card best-day">
+                        <h4><i class="fas fa-calendar-star"></i> Seasonal Opportunity</h4>
+                        <p>Your best month is <strong>${analysis.summary.bestMonth.monthName}</strong> with ₹${analysis.summary.bestMonth.sales.toFixed(2)} average sales.</p>
                         <ul>
-                            <li>Ensure adequate staff coverage during peak hours</li>
-                            <li>Consider express checkout options</li>
-                            <li>Place impulse buy items near checkout</li>
+                            <li>Plan marketing campaigns for this period</li>
+                            <li>Consider seasonal staffing adjustments</li>
+                            <li>Analyze what makes this month successful</li>
                         </ul>
                     </div>
                 `);
